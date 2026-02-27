@@ -1,0 +1,87 @@
+# Define combined variables
+x-common-vars: &common-vars
+  PUID: ${PUID:-1000}
+  PGID: ${PGID:-1000}
+  TZ: Europe/Oslo
+
+
+services:
+  peristeri:
+    container_name: peristeri
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: demo
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      <<: *common-vars
+      ENVIRONMENT: demo
+      SPRING_PROFILES_ACTIVE: demo,postgres
+      APP_ADMIN_EMAIL: admin@peristeri.no
+      APP_ADMIN_NAME: admin
+      APP_ADMIN_PASSWORD: admin
+      # set postgres connection string
+      # SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/peristeri
+#    healthcheck:
+#      test: [ "CMD", "wget", "-q", "--spider", "http://peristeri:8080/actuator/health", "||", "exit", "1" ]
+#      interval: 30s
+#      timeout: 3s
+#      retries: 3
+#      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  postgres:
+    container_name: postgres
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: peristeri
+      POSTGRES_USER: peristeri
+      POSTGRES_PASSWORD: peristeri_password
+    volumes:
+      - "postgres-data:/var/lib/postgresql/data"
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "peristeri" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  caddy:
+    container_name: caddy
+    image: caddy:latest
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+      - caddy-config:/config
+    environment:
+      <<: *common-vars
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
+  caddy-data:
+    driver: local
+  caddy-config:
+    driver: local
