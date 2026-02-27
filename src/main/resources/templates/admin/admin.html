@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Admin</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <!-- Erstatter diven under med navbar fra fragments/navbar.html -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section>
+        <h1>Admin panel</h1>
+    </section>
+    <th:block th:if="${fragment}">
+        <th:block th:replace="~{admin/admin_fragments :: ${fragment}}"></th:block>
+    </th:block>
+    <th:block th:unless="${fragment}">
+        <section id="main-content">
+            <p>Velg en utstilling du vil jobbe med</p>
+            <th:block th:replace="~{admin/admin_fragments :: adminUtstillingListe}"></th:block>
+        </section>
+    </th:block>
+</main>
+<footer class="container">
+    <!-- Erstatter diven under med footer fra fragments/footer.html -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<!-- Minimal theme switcher -->
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+<script>
+    // Dommer rasefordeling seksjon
+    function moveItems(sourceId, targetId) {
+        const source = document.getElementById(sourceId);
+        const target = document.getElementById(targetId);
+        const selectedItems = Array.from(source.querySelectorAll('li.selected'));
+
+        selectedItems.forEach(item => {
+            item.classList.remove('selected');
+            target.appendChild(item);
+        });
+
+        updateHiddenInput(sourceId, targetId);
+    }
+
+    function updateHiddenInput(sourceId, targetId) {
+        const formId = sourceId.split('_')[1]; // Extract the dynamic ID part
+        const selectedRaser = Array.from(document.getElementById(`selectedRaser_${formId}`).children)
+            .map(item => item.getAttribute('data-value'));
+        document.getElementById(`selectedRaserInput_${formId}`).value = selectedRaser.join(',');
+    }
+
+    document.addEventListener('click', function (event) {
+        if (event.target.tagName === 'LI') {
+            event.target.classList.toggle('selected');
+        }
+    });
+
+    // Rasesortering seksjon
+    htmx.onLoad(function (content) {
+        const sortableList = content.querySelector('#sortable-list');
+        const sortedRaseIdsInput = content.querySelector('#sorterteRaser');
+
+        if (sortableList && sortedRaseIdsInput) {
+            let draggedItem = null;
+
+            sortableList.addEventListener('dragstart', (e) => {
+                draggedItem = e.target;
+                e.target.style.opacity = '0.5';
+            });
+
+            sortableList.addEventListener('dragend', (e) => {
+                e.target.style.opacity = '';
+                draggedItem = null;
+            });
+
+            sortableList.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(sortableList, e.clientY);
+                if (afterElement == null) {
+                    sortableList.appendChild(draggedItem);
+                } else {
+                    sortableList.insertBefore(draggedItem, afterElement);
+                }
+            });
+
+            sortableList.addEventListener('drop', () => {
+                const sortedIds = Array.from(sortableList.children).map(item => item.dataset.id);
+                sortedRaseIdsInput.value = sortedIds.join('|');
+            });
+
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.sortable-item:not(.dragging)')];
+
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return {offset: offset, element: child};
+                    } else {
+                        return closest;
+                    }
+                }, {offset: Number.NEGATIVE_INFINITY}).element;
+            }
+        }
+    });
+</script>
+</body>
+</html>

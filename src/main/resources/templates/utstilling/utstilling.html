@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" xmlns:hx-on="http://www.w3.org/1999/xhtml" lang="no">
+<head>
+    <title>Utstillinger</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <!-- Erstatter diven under med navbar fra fragments/navbar.html -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section>
+        <h1>Utstillinger</h1>
+        <div th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+            <button id="visRegistrerBtn"
+                    hx-get="/utstilling/registrer"
+                    hx-trigger="click"
+                    hx-target="#content"
+                    hx-on:click="document.getElementById('visRegistrerBtn')?.classList.add('hidden');"
+                    th:classappend="${fragment == 'liste'} ? '' : 'hidden'"
+            >Registrer ny utstilling
+            </button>
+        </div>
+        <div id="content">
+            <div th:replace="~{utstilling/utstilling_fragments :: ${fragment}}"></div>
+        </div>
+    </section>
+</main>
+<footer class="container">
+    <!-- Erstatter diven under med footer fra fragments/footer.html -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<!-- Minimal theme switcher -->
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

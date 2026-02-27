@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Feil - Peristeri</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+</head>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <article>
+        <header>
+            <h1>Feil</h1>
+        </header>
+        <div class="grid">
+            <div>
+                <h2 th:text="${status} ?: 'Feil'">500</h2>
+                <h3 th:text="${error} ?: 'Ukjent feil'">Internal Server Error</h3>
+                <p th:text="${message} ?: 'Det oppstod en feil under behandling av forespørselen.'">Feilmelding</p>
+                <p th:if="${timestamp}" th:text="'Tidspunkt: ' + ${#temporals.format(timestamp, 'dd-MM-yyyy HH:mm:ss')}">Tidspunkt</p>
+                <p th:if="${path}" th:text="'Sti: ' + ${path}">Sti</p>
+            </div>
+        </div>
+        <footer>
+            <a role="button" href="/" class="primary">Gå til forsiden</a>
+            <a role="button" href="javascript:history.back()" class="secondary">Gå tilbake</a>
+        </footer>
+    </article>
+</main>
+<footer class="container">
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<!-- Minimal theme switcher -->
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

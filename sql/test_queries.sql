@@ -1,0 +1,3 @@
+-- Queries for å verifiserer burnummer generering er likt som sortering
+SELECT d.ID, d.BURNUMMER, d.RASE FROM DUE d WHERE d.BURNUMMER IS NOT NULL ORDER BY d.BURNUMMER;
+SELECT u.ID, u.RASE_SORTERING FROM UTSTILLING u WHERE u.RASE_SORTERING IS NOT NULL;

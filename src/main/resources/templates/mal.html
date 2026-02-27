@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Mal</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <!-- Erstatter diven under med navbar fra fragments/navbar.html -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section>
+        <!-- Putt content i section tags for å få en sleek looking mellomrom mellom seksjoner -->
+    </section>
+</main>
+<footer class="container">
+    <!-- Erstatter diven under med footer fra fragments/footer.html -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<!-- Minimal theme switcher -->
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

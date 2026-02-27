@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Peristeri</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section th:if="${errorMessage}">
+        <h1>Feil</h1>
+        <!--/*@thymesVar id="errorMessage" type="java.lang.String"*/-->
+        <p th:text="${errorMessage}" class="feilmelding">Feilmelding</p>
+    </section>
+    <section>
+        <th:block th:if="${aktivUtstilling}">
+            <article th:object="${aktivUtstilling}" th:fragment="aktivUtstilling">
+                <header>
+                    <h1>Pågående Utstilling</h1>
+                </header>
+                <h2 th:text="*{tittel}"></h2>
+                <p th:text="*{arrangoer}"></p>
+                <p th:text="*{adresse}"></p>
+                <p>
+                    <span th:text="*{datoRange.startDate}"></span> - <span th:text="*{datoRange.endDate}"></span>
+                </p>
+                <p>
+                    <span th:text="*{beskrivelse}"></span>
+                </p>
+                <footer>
+                    <a th:href="@{/utstilling/{id}(id=*{id})}">Trykk her for å se mer info</a><br/>
+                    <a role="button" th:if="${#authorization.expression('hasRole(''ADMIN'')')}" th:href="@{/admin/{id}(id=*{id})}" class="secondary">Admin Panel</a>
+                </footer>
+            </article>
+        </th:block>
+        <th:block th:unless="${aktivUtstilling}">
+            <article>
+                <header>
+                    <h1>Ingen pågående utstilling</h1>
+                </header>
+                <p>Det er ingen pågående utstillinger som er registrert for øyeblikket.</p>
+            </article>
+        </th:block>
+    </section>
+    <section th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+        <a role="button" class="secondary" href="/utstilling/registrer">Registrer ny utstilling</a>
+    </section>
+    <section>
+        <th:block th:replace="~{utstilling/utstilling_fragments :: kommendeListe}"></th:block>
+    </section>
+    <section>
+        <th:block th:replace="~{utstilling/utstilling_fragments :: tidligereListe}"></th:block>
+    </section>
+</main>
+<footer class="container">
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<!-- Minimal theme switcher -->
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ExternalDependencies">
+    <plugin id="com.github.hugohomesquita.htmxjetbrains" />
+    <plugin id="com.haulmont.jpab" />
+    <plugin id="com.intellij.spring" />
+    <plugin id="com.intellij.spring.boot" />
+    <plugin id="com.intellij.spring.data" />
+    <plugin id="com.intellij.spring.mvc" />
+    <plugin id="com.intellij.spring.security" />
+    <plugin id="com.intellij.thymeleaf" />
+  </component>
+</project>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Din Påmelding</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <!-- Erstatter diven under med navbar fra fragments/navbar.html -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section>
+        <div id="content">
+            <article th:fragment="paameldingInfo">
+                <header>
+                    <h1 class="center-text">Din Påmelding</h1>
+                </header>
+                <div th:object="${paamelding}">
+                    <div id="utstilling-info">
+                        <p>Utstilling: <span id="utstilling-tittel" th:text="*{utstilling.tittel}">Utstilling</span></p>
+                        <p>Startdato: <span id="utstilling-startdato"
+                                            th:text="*{utstilling.datoRange.startDate}">Startdato</span></p>
+                        <p>Sluttdato: <span id="utstilling-sluttdato"
+                                            th:text="*{utstilling.datoRange.endDate}">Sluttdato</span></p>
+                        <p>Arrangør: <span id="utstilling-arrangoer" th:text="*{utstilling.arrangoer}">Arrangør</span>
+                        </p>
+                        <p>Adresse: <span id="utstilling-adresse" th:text="*{utstilling.adresse}">Adresse</span></p>
+                        <p>Beskrivelse: <span id="utstilling-beskrivelse"
+                                              th:text="*{utstilling.beskrivelse}">Beskrivelse</span></p>
+                    </div>
+                    <div id="due-liste">
+                        <h2>Påmeldte Duer</h2>
+                        <button th:hx-get="@{/bruker/paamelding/{id}/resultater(id=${paamelding.id})}"
+                                hx-target="#due-liste" hx-swap="outerHTML">
+                            Se Resultater
+                        </button>
+                        <table class="striped">
+                            <thead>
+                            <tr>
+                                <th>Ringnummer</th>
+                                <th>Rase</th>
+                                <th>Farge</th>
+                                <th>Variant</th>
+                                <th>Kjønn</th>
+                                <th>Alder</th>
+                                <th>Eget Avl</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="d : ${paamelding.duer}">
+                                <td th:text="${d.ringnummer}">Ringnummer</td>
+                                <td th:text="${d.rase}">Rase</td>
+                                <td th:text="${d.farge}">Farge</td>
+                                <td th:text="${d.variant}">Variant</td>
+                                <td th:text="${d.kjonn} ? '1,0' : '0,1'">Kjønn</td>
+                                <td th:text="${d.alder} ? 'Eldre' : 'Ung'">Alder</td>
+                                <td th:text="${d.ikkeEget} ? 'Ikke eget avl' : 'Eget avl'">Ikke Eget</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <button id="endre-ringnr" class=""
+                                th:hx-get="@{/bruker/paamelding/{id}/ringnumre(id=${paamelding.id})}"
+                                hx-target="#due-liste" hx-swap="outerHTML">
+                            Legg til eller Endre Ringnumre
+                        </button>
+                    </div>
+                </div>
+                <footer>
+                    <div class="grid">
+                        <a href="/bruker" role="button" class="secondary">Tilbake</a>
+                        <a th:href="@{/bruker/paamelding/endre/{id}(id=${paamelding.id})}"
+                           role="button" class="secondary">
+                            Endre påmelding</a>
+                    </div>
+                </footer>
+            </article>
+        </div>
+    </section>
+</main>
+<section id="modal-container"></section>
+<footer class="container">
+    <!-- Erstatter diven under med footer fra fragments/footer.html -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<!-- Minimal theme switcher -->
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+<script th:src="@{/js/modal.js}"></script>
+</body>
+</html>

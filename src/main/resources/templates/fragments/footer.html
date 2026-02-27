@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Footer</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<footer class="container">
+    <div th:fragment="footer" id="footer">
+        <hr/>
+        <p>Dette e footeren</p>
+        <div th:if="${@environment.acceptsProfiles('dev')}">
+            <p>Development Mode</p>
+            <p>Åpne <a href="http://localhost:8080/h2-console?jdbcUrl=jdbc:h2:mem:testdb&user=sa&password="
+                       target="_blank" rel="noopener noreferrer">H2-console</a> for å inspisere database</p>
+            <script src="http://localhost:35729/livereload.js"></script>
+        </div>
+        <div th:if="${@environment.acceptsProfiles('demo')}">
+            <p>Demo Mode</p>
+        </div>
+        <div>
+            <details class="dropdown">
+                <summary role="button" class="secondary outline">Farge Tema</summary>
+                <ul>
+                    <li><a href="#" data-theme-switcher="auto">Auto</a></li>
+                    <li><a href="#" data-theme-switcher="light">Lys</a></li>
+                    <li><a href="#" data-theme-switcher="dark">Mørk</a></li>
+                </ul>
+            </details>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

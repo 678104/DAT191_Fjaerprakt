@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Påmelding</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+    <script src="/js/paamelding.js"></script>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+</header>
+<main class="container">
+    <th:block th:fragment="kvittering">
+        <section>
+            <h3>Påmelding pågar</h3>
+            <p>Fullfør påmeldingen ved å fylle ut informasjonen nedenfor</p>
+            <article>
+                <header><b th:text="${session.utstilling.tittel}"></b></header>
+                <p><strong>Arrangør:</strong> <span th:text="${session.utstilling.arrangoer}"></span></p>
+                <p><strong>Sted:</strong> <span th:text="${session.utstilling.adresse}"></span></p>
+                <p><strong>Startdato:</strong> <span th:text="${session.utstilling.datoRange.startDate}"></span></p>
+                <p><strong>Sluttdato:</strong> <span th:text="${session.utstilling.datoRange.endDate}"></span></p>
+            </article>
+
+            <!--/*@thymesVar id="utstiller" type="no.hvl.peristeri.feature.bruker.Bruker"*/-->
+            <div id="person-info" th:fragment="personinfo" th:object="${utstiller}">
+                <article class="grid">
+                    <div>
+                        <div>
+                            <strong>Fornavn:</strong> <span th:text="*{fornavn}"></span>
+                        </div>
+                        <div>
+                            <strong>Adresse:</strong> <span th:text="*{adresse}"></span>
+                        </div>
+                        <div>
+                            <strong>E-post:</strong> <span th:text="*{epost}"></span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div>
+                            <strong>Etternavn:</strong> <span th:text="*{etternavn}"></span>
+                        </div>
+                        <div>
+                            <strong>Telefon:</strong> <span th:text="*{telefon}"></span>
+                        </div>
+                        <div>
+                            <strong>Forening:</strong> <span th:text="*{forening}"></span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+        <section>
+            <form id="duepaamelding" method="post" hx-post="/paamelding/duekvittering" hx-trigger="submit"
+                  hx-target="#duetabell" hx-swap="outerHTML:beforeend"
+                  hx-on:htmx:afterRequest="if(validateForm(event)) { let elm = document.getElementById('radId'); let id = parseInt(elm.value); this.reset(); elm.value = ++id; }">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Rase</th>
+                        <th>Farge</th>
+                        <th>Variant</th>
+                        <th>Hanner (Ung)</th>
+                        <th>Hanner (Eldre)</th>
+                        <th>Hunner (Ung)</th>
+                        <th>Hunner (Eldre)</th>
+                        <th>Ikke eget</th>
+                    </tr>
+                    </thead>
+                    <tbody id="rase-tabell">
+                    <tr>
+                        <td><input type="text" name="rase" placeholder="Rase" required></td>
+                        <td><input type="text" name="farge" placeholder="Farge" required></td>
+                        <td><input type="text" name="variant" placeholder="Variant" required></td>
+                        <td><input type="number" name="hannerUng" value="0" min="0" oninput="sjekkNegativ(this)"></td>
+                        <td><input type="number" name="hannerEldre" value="0" min="0" oninput="sjekkNegativ(this)"></td>
+                        <td><input type="number" name="hunnerUng" value="0" min="0" oninput="sjekkNegativ(this)"></td>
+                        <td><input type="number" name="hunnerEldre" value="0" min="0" oninput="sjekkNegativ(this)"></td>
+                        <td><input type="checkbox" name="ikkeEget"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div id="error-message" style="display: none; color: red;">Vennligst legg til minst en due</div>
+                <button type="submit">Legg til due</button>
+                <input type="hidden" id="radId" name="radId" th:value="${radId}">
+            </form>
+        </section>
+
+        <section>
+            <div id="duetabell">
+            </div>
+        </section>
+    </th:block>
+
+</main>
+<footer class="container">
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

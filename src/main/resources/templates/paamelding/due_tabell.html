@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Påmelding</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+    <script src="/js/paamelding.js"></script>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+</header>
+<main class="container">
+    <section>
+        <h4>Dine duer</h4>
+        <div th:fragment="due-tabell" class="container-fluid" id="duetabell">
+            <table>
+                <thead>
+                <tr>
+                    <th>Rase</th>
+                    <th>Farge</th>
+                    <th>Variant</th>
+                    <th>Hanner ung</th>
+                    <th>Hanner eldre</th>
+                    <th>Hunner ung</th>
+                    <th>Hunner eldre</th>
+                    <th>Ikke eget</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tr th:each="due : ${session.dueDTOListe?.liste}">
+                    <td><span th:text="${due.rase}">Rase</span></td>
+                    <td><span th:text="${due.farge}">Farge</span></td>
+                    <td><span th:text="${due.variant}">Variant</span></td>
+                    <td><span th:text="${due.hannerUng}">Hanner ung</span></td>
+                    <td><span th:text="${due.hannerEldre}">Hanner eldre</span></td>
+                    <td><span th:text="${due.hunnerUng}">Hunner ung</span></td>
+                    <td><span th:text="${due.hunnerEldre}">Hunner eldre</span></td>
+                    <td><span th:text="${due.ikkeEget} ? 'Ikke eget' : 'Egen'">0</span></td>
+                    <td>
+                        <button th:hx-get="@{/paamelding/redigerDue/{id}(id=${due.radId})}" hx-target="closest tr"
+                                hx-swap="outerHTML">
+                            <span th:text="'Rediger'"></span>
+                        </button>
+                    </td>
+                </tr>
+            </table>
+
+            <button hx-post="/paamelding/submitPaamelding" hx-target="main" hx-swap="outerHTML">Meld deg på!</button>
+        </div>
+    </section>
+
+    <div>
+        <table>
+            <tbody>
+            <tr th:fragment="redigerDueRad">
+                <td><input type="text" th:value="${dueDTO.rase}" name="rase"></td>
+                <td><input type="text" th:value="${dueDTO.farge}" name="farge"></td>
+                <td><input type="text" th:value="${dueDTO.variant}" name="variant"></td>
+                <td><input type="number" th:value="${dueDTO.hannerUng}" name="hannerUng" oninput="sjekkNegativ(this)">
+                </td>
+                <td><input type="number"
+                           th:value="${dueDTO.hannerEldre}"
+                           name="hannerEldre"
+                           oninput="sjekkNegativ(this)"></td>
+                <td><input type="number" th:value="${dueDTO.hunnerUng}" name="hunnerUng" oninput="sjekkNegativ(this)">
+                </td>
+                <td><input type="number"
+                           th:value="${dueDTO.hunnerEldre}"
+                           name="hunnerEldre"
+                           oninput="sjekkNegativ(this)"></td>
+                <td><input type="checkbox" th:checked="${dueDTO.ikkeEget}" name="ikkeEget"></td>
+                <td>
+                    <button th:hx-post="@{/paamelding/oppdaterDue/{id}(id=${dueDTO.radId})}" hx-target="closest tr"
+                            hx-swap="outerHTML" hx-include="closest tr">Lagre
+                    </button>
+                    <input type="hidden" id="radId" name="radId" th:value="${dueDTO.radId}">
+                </td>
+            </tr>
+            <tr th:fragment="oppdatertDueRad">
+                <td><span th:text="${due.rase}">Rase</span></td>
+                <td><span th:text="${due.farge}">Farge</span></td>
+                <td><span th:text="${due.variant}">Variant</span></td>
+                <td><span th:text="${due.hannerUng}">Hanner ung</span></td>
+                <td><span th:text="${due.hannerEldre}">Hanner eldre</span></td>
+                <td><span th:text="${due.hunnerUng}">Hunner ung</span></td>
+                <td><span th:text="${due.hunnerEldre}">Hunner eldre</span></td>
+                <td><span th:text="${due.ikkeEget} ? 'Ikke eget' : 'Egen'">0</span></td>
+                <td>
+                    <button th:hx-get="@{/paamelding/redigerDue/{id}(id=${due.radId})}" hx-target="closest tr"
+                            hx-swap="outerHTML">
+                        <span th:text="'Rediger'"></span>
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+</main>
+<footer class="container">
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

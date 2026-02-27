@@ -1,0 +1,47 @@
+<dialog id="modal" th:object="${due}">
+    <article>
+        <header>
+            <button
+                    aria-label="Close"
+                    rel="prev"
+                    data-target="modal"
+                    onclick="toggleModal(event)"
+            ></button>
+            <h3>Resultat</h3>
+        </header>
+        <div class="grid">
+            <div>
+                <p>Ringnummer: <span th:text="*{ringnummer}"></span></p>
+                <p>Rase: <span th:text="*{rase}"></span></p>
+                <p>Variant: <span th:text="*{variant}"></span></p>
+                <p>Eget Avl: <span th:text="*{ikkeEget} ? 'Ikke eget avl' : 'Eget avl'"></span></p>
+            </div>
+            <div>
+                <p>Burnummer: <span th:text="*{burnummer}"></span></p>
+                <p>Farge: <span th:text="*{farge}"></span></p>
+                <p>Kjønn: <span th:text="*{kjonn} ? '1,0' : '0,1'"></span></p>
+                <p>Alder: <span th:text="*{alder} ? 'Eldre' : 'Ung'"></span></p>
+            </div>
+        </div>
+        <div>
+            <hr/>
+            <label>Poeng:
+                <input th:value="*{bedommelse.poeng}" readonly/>
+            </label>
+            <label>Fordeler:
+                <textarea th:text="*{bedommelse.fordeler}" readonly></textarea>
+            </label>
+            <label>Ønsker:
+                <textarea th:text="*{bedommelse.onsker}" readonly></textarea>
+            </label>
+            <label>Feil:
+                <textarea th:text="*{bedommelse.feil}" readonly></textarea>
+            </label>
+        </div>
+        <footer>
+            <button autofocus data-target="modal" onclick="toggleModal(event)">
+                Lukk
+            </button>
+        </footer>
+    </article>
+</dialog>

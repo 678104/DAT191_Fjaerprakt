@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Mal</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<main class="container">
+    <section th:object="${paamelding}">
+        <div class="grid" style="grid-template-columns: auto 1fr; gap: 0.5rem;">
+            <strong>Navn:</strong>
+            <span th:text="*{utstiller.fornavn + ' ' + utstiller.etternavn}"></span>
+            <strong>Adresse:</strong> <span th:text="*{utstiller.adresse}"></span>
+            <strong>E-post:</strong> <span th:text="*{utstiller.epost}"></span>
+            <strong>Telefon:</strong> <span th:text="*{utstiller.telefon}"></span>
+            <strong>Forening:</strong> <span th:text="*{utstiller.forening}"></span>
+        </div>
+    </section>
+    <section>
+        <table>
+            <thead>
+            <tr>
+                <td>Rase</td>
+                <td>Farge</td>
+                <td>Variant</td>
+                <td>Hanner (Ung)</td>
+                <td>Hanner (Eldre)</td>
+                <td>Hunner (Ung)</td>
+                <td>Hunner (Eldre)</td>
+                <td>Ikke eget</td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="due : ${paamelding.dueDTOListe?.liste}">
+                <td><span th:text="${due.rase}">Rase</span></td>
+                <td><span th:text="${due.farge}">Farge</span></td>
+                <td><span th:text="${due.variant}">Variant</span></td>
+                <td><span th:text="${due.hannerUng}">Hanner ung</span></td>
+                <td><span th:text="${due.hannerEldre}">Hanner eldre</span></td>
+                <td><span th:text="${due.hunnerUng}">Hunner ung</span></td>
+                <td><span th:text="${due.hunnerEldre}">Hunner eldre</span></td>
+                <td><span th:text="${due.ikkeEget ? 'Ikke eget' : 'Egen'}"></span></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <article>
+            <header><b th:text="*{utstilling.tittel}"></b></header>
+            <p><strong>Arrangør:</strong> <span th:text="*{utstilling.arrangoer}"></span></p>
+            <p><strong>Sted:</strong> <span th:text="*{utstilling.adresse}"></span></p>
+            <p><strong>Startdato:</strong> <span th:text="*{utstilling.datoRange.startDate}"></span></p>
+            <p><strong>Sluttdato:</strong> <span th:text="*{utstilling.datoRange.endDate}"></span></p>
+        </article>
+    </section>
+</main>
+</body>
+</html>

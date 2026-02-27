@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Forretningsregel brutt - Peristeri</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+</head>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <article>
+        <header>
+            <h1>Forretningsregel brutt</h1>
+        </header>
+        <div class="grid">
+            <div>
+                <h2>422</h2>
+                <h3>Kan ikke behandle forespørselen</h3>
+                <p>Beklager, men forespørselen din bryter med en forretningsregel i systemet.</p>
+                <p>Vennligst kontroller informasjonen du har oppgitt og prøv igjen.</p>
+                <p th:if="${message}" th:text="'Feilmelding: ' + ${message}">Feilmelding</p>
+                <p th:if="${path}" th:text="'Sti: ' + ${path}">Sti</p>
+            </div>
+        </div>
+        <footer>
+            <a role="button" href="/" class="primary">Gå til forsiden</a>
+            <a role="button" href="javascript:history.back()" class="secondary">Gå tilbake</a>
+        </footer>
+    </article>
+</main>
+<footer class="container">
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<!-- Minimal theme switcher -->
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Mal</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<main class="container">
+    <h1>Utstilling Registreringsskjema</h1>
+    <div id="registreringsSkjema" th:fragment="registreringsSkjema">
+        <article>
+            <header>
+                <h2>Registrer Utstilling</h2>
+            </header>
+            <form id="registrer"
+                  hx-target="#content"
+                  hx-post="/utstilling/registrer"
+                  hx-trigger="submit"
+                  hx-push-url="/utstilling"
+                  hx-on:submit="document.getElementById('visRegistrerBtn').classList.remove('hidden');">
+                <fieldset>
+                    <label for="tittel"><b>Tittel</b>
+                        <input type="text" id="tittel" name="tittel" placeholder="Tittel på utstilling" required>
+                    </label>
+                    <label for="arrangoer"><b>Arrangør</b>
+                        <input type="text" id="arrangoer" name="arrangoer" placeholder="Utstillingens arrangør"
+                               required>
+                    </label>
+                    <label for="adresse"><b>Adresse / Sted</b>
+                        <input type="text" id="adresse" name="adresse"
+                               placeholder="Adressen hvor utstillingen befinner seg" required>
+                    </label>
+                    <label for="beskrivelse"><b>Beskrivelse</b>
+                        <textarea type="text" id="beskrivelse" name="beskrivelse"
+                                  placeholder="En tekstbeskrivelse med annen info etc. dere ønsker å vise"
+                                  required></textarea>
+                    </label>
+                    <label for="duePris"><b>Pris per due</b>
+                        <input type="number" id="duePris" name="duePris" placeholder="Pris per due" step="any" required>
+                    </label>
+                    <fieldset class="grid">
+                        <label for="startDato"><b>Startdato</b>
+                            <input type="date" id="startDato" name="datoRange.startDate"
+                                   placeholder="Datoen utstillingen begynner" required>
+                        </label>
+                        <label for="sluttDato"><b>Sluttdato</b>
+                            <input type="date" id="sluttDato" name="datoRange.endDate"
+                                   placeholder="Datoen utstillingen avsluttes" required>
+                        </label>
+                    </fieldset>
+                    <fieldset class="grid">
+                        <label for="paameldingsFrist"><b>Påmeldingsfrist</b>
+                            <input type="date" id="paameldingsFrist" name="paameldingsFrist" required>
+                        </label>
+                    </fieldset>
+                    <button type="submit">Registrer</button>
+                    <button hx-target="#content"
+                            class="secondary"
+                            hx-get="/utstilling/liste"
+                            hx-on:click="document.getElementById('visRegistrerBtn').classList.remove('hidden');"
+                            hx-push-url="/utstilling"
+                    >Avbryt Registrering
+                    </button>
+                </fieldset>
+            </form>
+        </article>
+    </div>
+    <h1>Utstilling Liste</h1>
+    <!--/*@thymesVar id="utstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
+    <div id="liste" th:fragment="liste" class="overflow-auto">
+        <th:block th:replace="~{utstilling/utstilling_fragments :: kommendeListe}"></th:block>
+        <th:block th:replace="~{utstilling/utstilling_fragments :: tidligereListe}"></th:block>
+    </div>
+    <div th:fragment="kommendeListe">
+        <!--/*@thymesVar id="kommendeUtstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
+        <h2>Kommende utstillinger</h2>
+        <div id="kommende-liste" class="overflow-auto">
+            <table class="striped">
+                <thead>
+                <tr>
+                    <th scope="col">Tittel</th>
+                    <th scope="col">Arrangør</th>
+                    <th scope="col">Sted</th>
+                    <th scope="col">Start Dato</th>
+                    <th scope="col">Påmeldingsfrist</th>
+                    <th scope="col">Link</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${kommendeUtstillinger}">
+                    <td th:text="${u.tittel}">tittel</td>
+                    <td th:text="${u.arrangoer}">arrangør</td>
+                    <td th:text="${u.adresse}">adresse</td>
+                    <td th:text="${u.datoRange.startDate}">dato</td>
+                    <td><span th:classappend="${u.paameldingAApnet} ? 'aapen-paamelding' : 'lukket-paamelding'"
+                              th:text="${u.paameldingsFrist}"></span></td>
+                    <td>
+                        <a th:href="@{/utstilling/{id}(id=${u.id})}"
+                           role="button"
+                           class="secondary"
+                        >Se detaljer
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div th:fragment="tidligereListe">
+        <!--/*@thymesVar id="tidligereUtstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
+        <h2>Tidligere utstillinger</h2>
+        <div id="tidligere-liste" class="overflow-auto">
+            <table class="striped">
+                <thead>
+                <tr>
+                    <th scope="col">Tittel</th>
+                    <th scope="col">Arrangør</th>
+                    <th scope="col">Sted</th>
+                    <th scope="col">Start Dato</th>
+                    <th scope="col">Sluttdato</th>
+                    <th scope="col">Link</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${tidligereUtstillinger}">
+                    <td th:text="${u.tittel}">Peristeri tittel test</td>
+                    <td th:text="${u.arrangoer}">Peristeri</td>
+                    <td th:text="${u.adresse}">Bergen</td>
+                    <td th:text="${u.datoRange.startDate}">12/12/2024</td>
+                    <td th:text="${u.datoRange.endDate}">13/12/2024</td>
+                    <td>
+                        <a th:href="@{/utstilling/{id}(id=${u.id})}"
+                           role="button"
+                           class="secondary"
+                        >Se detaljer
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <h1>Utstilling Detaljer</h1>
+    <div id="detaljer" th:fragment="detaljer">
+        <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
+        <article th:object="${utstilling}">
+            <header>
+                <h2 th:text="*{tittel}">Utstilling Detaljer</h2>
+            </header>
+            <div class="grid">
+                <div>
+                    <div>
+                        <b>Arangør</b>
+                        <div th:text="*{arrangoer}">Peristeri Test</div>
+                    </div>
+                    <hr/>
+                    <div>
+                        <b>Start Dato</b>
+                        <div th:text="*{datoRange.startDate}">12/12/2024</div>
+                    </div>
+                    <hr/>
+                    <div>
+                        <b>Påmeldingsfrist</b>
+                        <div th:text="*{paameldingsFrist}">10/11/2024</div>
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        <b>Sted / Adresse</b>
+                        <div th:text="*{adresse}">Bergen</div>
+                    </div>
+                    <hr/>
+                    <div>
+                        <b>Sluttdato</b>
+                        <div th:text="*{datoRange.endDate}">13/12/2024</div>
+                    </div>
+                    <hr/>
+                    <div>
+                        <b>Påmelding Mulig</b>
+                        <div th:classappend="*{paameldingAApnet} ? 'aapen-paamelding' : 'lukket-paamelding'"
+                             th:text="*{paameldingAApnet}? 'Ja' : 'Nei'">
+                        </div>
+                        <button th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                                hx-target="#content"
+                                class="outline"
+                                th:hx-post="@{/utstilling/{id}/{method}(id=*{id},method=*{paameldingAApnet}?'lukkPaamelding':'aapnePaamelding')}"
+                                th:text="*{paameldingAApnet}? 'Lukk påmeldingsmulighet' : 'Åpne for påmelding'"></button>
+                    </div>
+                </div>
+            </div>
+            <hr/>
+            <fieldset>
+                <legend><b>Beskrivelse</b></legend>
+                <p th:text="*{beskrivelse}">Beskrivelse for utstillingen</p>
+            </fieldset>
+            <div>
+                <b>Påmeldingskostnad per due</b>
+                <div th:text="|*{duePris.doubleValue()} kroner|"></div>
+            </div>
+            <!--/*@thymesVar id="status" type="java.util.List<java.lang.Long>"*/-->
+            <div th:if="${#authorization.expression('hasRole(''ADMIN'')') and status != null}">
+                <hr/>
+                <h3>Utstillingsstatus</h3>
+                <div class="grid">
+                    <div>
+                        <b>Antall påmeldte</b>
+                        <div th:text="*{paameldinger.size()}">0</div>
+                    </div>
+                    <div>
+                        <b>Antall registrerte duer</b>
+                        <div th:text="${status[0]}">0</div>
+                    </div>
+                    <div>
+                        <b>Antall bedømte duer</b>
+                        <div th:text="${status[1]}">0</div>
+                    </div>
+                </div>
+            </div>
+            <footer>
+                <th:block th:if="*{paameldingAApnet}">
+                    <a th:href="@{/paamelding/{id}(id=*{id})}"
+                       role="button"
+                       class="fill-parent">
+                        Meld deg på denne utstillingen
+                    </a>
+                    <hr/>
+                </th:block>
+                <!--/*@thymesVar id="paamelding" type="no.hvl.peristeri.feature.paamelding.Paamelding"*/-->
+                <th:block th:if="${paamelding}">
+                    <a th:href="@{/bruker/paamelding/{id}(id=${paamelding.id})}"
+                       role="button"
+                       class="fill-parent">
+                        Se din påmelding
+                    </a>
+                    <hr/>
+                </th:block>
+<!--                <th:block th:if="${#temporals.createToday().isAfter(utstilling.datoRange.startDate) && #temporals.createToday().isBefore(utstilling.datoRange.endDate)}">-->
+                <th:block th:if="${utstilling.aktiv}">
+                    <a th:href="@{/utstilling/livescore/{id}(id=*{id})}"
+                       role="button"
+                       class="fill-parent">
+                        Se livescore
+                    </a>
+                    <hr/>
+                </th:block>
+                <th:block th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                    <a role="button"
+                       th:href="@{/admin/{id}(id=*{id})}"
+                       class="primary fill-parent">
+                        Admin Panel
+                    </a>
+                    <hr/>
+                </th:block>
+                <div class="grid">
+                    <button hx-target="#content"
+                            class="secondary"
+                            hx-get="/utstilling/liste"
+                            hx-on:click="document.getElementById('visRegistrerBtn')?.classList.remove('hidden');"
+                            hx-push-url="/utstilling">
+                        Tilbake
+                    </button>
+                    <button hx-target="#content"
+                            class="secondary"
+                            th:hx-get="@{/utstilling/rediger/{id}(id=*{id})}"
+                            th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                        Rediger
+                    </button>
+                </div>
+            </footer>
+        </article>
+    </div>
+    <div id="redigerDetaljer" th:fragment="redigerDetaljer">
+        <article th:object="${utstilling}">
+            <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
+            <form id="oppdater"
+                  hx-target="#content"
+                  th:hx-post="@{/utstilling/rediger/{id}(id=*{id})}"
+                  hx-trigger="submit">
+                <header>
+                    <label><b>Tittel</b>
+                        <input th:value="*{tittel}" name="tittel">
+                    </label>
+                </header>
+                <div class="grid">
+                    <div>
+                        <div>
+                            <label><b>Arangør</b>
+                                <input type="text" th:value="*{arrangoer}" name="arrangoer">
+                            </label>
+                        </div>
+                        <hr/>
+                        <div>
+                            <label><b>Start Dato</b>
+                                <input type="date" th:value="*{datoRange.startDate}" name="datoRange.startDate">
+                            </label>
+                        </div>
+                        <hr/>
+                        <div>
+                            <label><b>Påmeldingsfrist</b>
+                                <input type="date" th:value="*{paameldingsFrist}" name="paameldingsFrist">
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <label><b>Sted / Adresse</b>
+                                <input type="text" th:value="*{adresse}" name="adresse">
+                            </label>
+                        </div>
+                        <hr/>
+                        <div>
+                            <label><b>Sluttdato</b>
+                                <input type="date" th:value="*{datoRange.endDate}" name="datoRange.endDate">
+                            </label>
+                        </div>
+                        <hr/>
+                        <div>
+                            <label><b>Påmelding mulig</b><br>
+                                <input type="checkbox" name="paameldingAApnet" role="switch"
+                                       th:value="*{paameldingAApnet} ? 'false' : 'true'"
+                                       th:checked="*{paameldingAApnet}">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label><b>Beskrivelse</b>
+                        <textarea th:text="*{beskrivelse}" name="beskrivelse"></textarea>
+                    </label>
+                </div>
+                <button type="submit">Oppdater</button>
+            </form>
+            <footer class="grid">
+                <button hx-target="#content"
+                        class="secondary"
+                        th:hx-get="@{/utstilling/{id}(id=*{id})}"
+                        hx-push-url="true"
+                >Avbryt
+                </button>
+            </footer>
+        </article>
+    </div>
+</main>
+<!-- Minimal theme switcher -->
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

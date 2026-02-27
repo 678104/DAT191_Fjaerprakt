@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Dommer Fragmenter</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+
+<!-- ✅ Due List Fragment -->
+<div id="dueliste" th:fragment="dueliste">
+    <!--/*@thymesVar id="duer" type="java.util.List<no.hvl.peristeri.feature.due.Due>"*/-->
+    <div th:if="${#lists.isEmpty(duer)}">
+        <p>Ingen duer å vise.</p>
+    </div>
+    <th:block th:unless="${#lists.isEmpty(duer)}">
+        <form hx-get="/dommer/liste"
+              hx-target="#dueliste"
+              hx-swap="outerHTML">
+            <fieldset role="group">
+                <input type="search"
+                       name="filter"
+                       pattern="\d*"
+                       placeholder="Søk etter burnummer..."
+                       autocomplete="off">
+                <input type="submit" class="outline-small" value="Søk">
+                <input type="button"
+                       hx-get="/dommer/liste"
+                       hx-target="#dueliste"
+                       hx-swap="outerHTML"
+                       class="secondary outline-small"
+                       value="Vis alle">
+            </fieldset>
+        </form>
+        <table>
+            <thead>
+            <tr>
+                <th>Burnummer</th>
+                <th>Rase</th>
+                <th>Farge</th>
+                <th>Poeng</th>
+                <th>Bedøm</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="due: ${duer}">
+                <td th:text="${due.burnummer}"></td>
+                <td th:text="${due.rase}"></td>
+                <td th:text="${due.farge}"></td>
+                <td th:text="${due.bedommelse != null ? due.bedommelse?.poeng : 'Ikke dømt'}"></td>
+                <td>
+                    <button
+                            th:attr="hx-get='/dommer/bedom?dueId=' + ${due.id}"
+                            th:class="${due.bedommelse == null} ? 'primary' : 'secondary'"
+                            hx-target="#content"
+                            hx-push-url="/dommer"
+                            th:text="${due.bedommelse == null ? 'Bedøm' : 'Rediger'}">
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </th:block>
+</div>
+
+<!-- ✅ Dommer Bedømmelse Fragment -->
+<div id="dommerBedommelse" th:fragment="dommerBedommelse">
+    <article>
+        <header>
+            <h2>Bedømmelse av due</h2>
+        </header>
+        <form id="bedomDue"
+              hx-post="/dommer/bedom"
+              hx-target="#content"
+              hx-swap="innerHTML">
+            <!--/*@thymesVar id="bedommelse" type="no.hvl.peristeri.feature.dommer.Bedommelse"*/-->
+            <!--/*@thymesVar id="due" type="no.hvl.peristeri.feature.due.Due"*/-->
+            <input type="hidden" name="dueId" th:value="${due.id}"/>
+            <input type="hidden" name="id" th:value="${bedommelse.id}"/>
+            <div class="grid">
+                <div>
+                    <p><strong>Ringnummer:</strong> <span th:text="${due.ringnummer}"></span></p>
+                    <p><strong>Rase:</strong> <span th:text="${due.rase}"></span></p>
+                    <p><strong>Farge:</strong> <span th:text="${due.farge}"></span></p>
+                </div>
+                <div>
+                    <p><strong>Variant:</strong> <span th:text="${due.variant}"></span></p>
+                    <p><strong>Kjønn:</strong> <span th:text="${due.kjonn} ? '1,0' : '0,1'"></span></p>
+                    <p><strong>Alder:</strong> <span th:text="${due.alder} ? 'Eldre' : 'Ung'"></span></p>
+                </div>
+            </div>
+            <label for="poeng">Poeng:</label>
+            <input type="number" id="poeng" name="poeng" min="90" max="100" th:value="${bedommelse.poeng}" required>
+
+            <label for="fordeler">Fordeler:</label>
+            <textarea id="fordeler" name="fordeler" th:text="${bedommelse.fordeler}"></textarea>
+
+            <label for="onsker">Ønsker:</label>
+            <textarea id="onsker" name="onsker" th:text="${bedommelse.onsker}"></textarea>
+
+            <label for="feil">Feil:</label>
+            <textarea id="feil" name="feil" th:text="${bedommelse.feil}"></textarea>
+
+            <div class="grid">
+                <input type="submit" value="Lagre bedømming">
+                <button hx-get="/dommer/liste"
+                        hx-target="#content"
+                        hx-swap="innerHTML"
+                        class="secondary fix-button-spacing">
+                    Tilbake til listen
+                </button>
+            </div>
+        </form>
+    </article>
+</div>
+</body>
+</html>

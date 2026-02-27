@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="no">
+<head>
+    <title>Navbar</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <nav th:fragment="navbar" id="navbar">
+        <ul>
+            <li><img src="/favicon.ico" alt="icon" class="nav-icon"> <strong>Peristeri</strong></li>
+        </ul>
+        <ul>
+            <!--/*@thymesVar id="navLocation" type="String"*/-->
+            <li th:unless="${#authorization.expression('hasRole(''DOMMER'')')}">
+                <a href="/" class=""
+                   th:classappend="${navLocation == 'home'} ? 'navCurrent' : ''">Hjem</a>
+            </li>
+            <li th:unless="${#authorization.expression('hasRole(''DOMMER'')')}">
+                <a href="/utstilling" class=""
+                   th:classappend="${navLocation == 'utstilling'} ? 'navCurrent' : ''">Utstillinger</a>
+            </li>
+            <li th:unless="${#authorization.expression('hasRole(''DOMMER'')')}">
+                <a href="/paamelding" class=""
+                   th:classappend="${navLocation == 'paamelding'} ? 'navCurrent' : ''">Påmelding</a>
+            </li>
+            <li th:if="${#authorization.expression('hasRole(''DOMMER'')')}">
+                <a href="/dommer" class=""
+                   th:classappend="${navLocation == 'dommer'} ? 'navCurrent' : ''">Dommer</a>
+            </li>
+            <li th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                <a href="/admin" class=""
+                   th:classappend="${navLocation == 'admin'} ? 'navCurrent' : ''">Admin</a>
+            </li>
+            <li sec:authorize="!isAuthenticated()">
+                <a href="/login" role="button"
+                   th:classappend="${navLocation == 'login'} ? 'contrast' : ''">Logg inn</a>
+            </li>
+            <li sec:authorize="isAuthenticated()">
+                <a href="/bruker" role="button"
+                   th:classappend="${navLocation == 'bruker'} ? 'contrast' : ''">Din Bruker</a>
+            </li>
+
+        </ul>
+    </nav>
+</header>
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

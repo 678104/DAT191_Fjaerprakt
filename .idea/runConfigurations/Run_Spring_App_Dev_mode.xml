@@ -1,0 +1,23 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Spring App Dev mode" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="dev" />
+    <additionalParameters>
+      <param>
+        <option name="enabled" value="true" />
+        <option name="name" value="management.endpoint.env.show-values" />
+        <option name="value" value="when_authorized" />
+      </param>
+    </additionalParameters>
+    <envs>
+      <env name="APP_ADMIN_EMAIL" value="admin@test.no" />
+      <env name="APP_ADMIN_NAME" value="admintest" />
+      <env name="APP_ADMIN_PASSWORD" value="1234" />
+    </envs>
+    <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+    <module name="peristeri" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="no.hvl.peristeri.PeristeriApplication" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

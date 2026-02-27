@@ -1,0 +1,36 @@
+<div id="resultat-liste">
+    <h2>Påmeldte Duer</h2>
+    <button th:hx-get="@{/bruker/paamelding/{id}/dueliste(id=${paamelding.id})}"
+            hx-target="#resultat-liste" hx-swap="outerHTML">
+        Se Due Liste
+    </button>
+    <table class="striped">
+        <thead>
+        <tr>
+            <th>Ringnummer</th>
+            <th>Burnummer</th>
+            <th>Poeng</th>
+            <th>Detaljer</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="d : ${paamelding.duer}">
+            <td th:text="${d.ringnummer}">Ringnummer</td>
+            <td th:text="${d.burnummer}">Burnummer</td>
+            <td th:text="${d.bedommelse?.poeng} ?: 'Ikke bedømt'">Poeng</td>
+            <td>
+                <button th:if="${d.bedommelse}"
+                        th:hx-get="@{/due/{id}/bedommelse(id=${d.id})}"
+                        hx-target="#modal-container" hx-swap="innerHTML">
+                    Detaljer
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <button id="endre-ringnr" class=""
+            th:hx-get="@{/bruker/paamelding/{id}/ringnumre(id=${paamelding.id})}"
+            hx-target="#due-liste" hx-swap="outerHTML">
+        Legg til eller Endre Ringnumre
+    </button>
+</div>

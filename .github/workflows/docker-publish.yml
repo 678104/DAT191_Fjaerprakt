@@ -1,0 +1,49 @@
+name: Build & Push to GHCR
+
+on:
+  workflow_run:
+    workflows: ["Run Tests"]
+    types: [completed]
+
+jobs:
+  docker:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image (demo)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/peristeri-app:demo
+          build-args: |
+            ENVIRONMENT=demo
+
+      - name: Build and push Docker image (prod)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: | 
+            ghcr.io/${{ github.repository_owner }}/peristeri-app:prod
+            ghcr.io/${{ github.repository_owner }}/peristeri-app:latest
+          build-args: |
+            ENVIRONMENT=prod

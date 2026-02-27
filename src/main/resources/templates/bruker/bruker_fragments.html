@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Bruker fragments</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <!-- Erstatter diven under med navbar fra fragments/navbar.html -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section>
+        <article th:fragment="endrePassord">
+            <header>
+                <h1 class="center-text">Din Bruker</h1>
+            </header>
+            <!--/*@thymesVar id="bruker" type="no.hvl.peristeri.feature.bruker.Bruker"*/-->
+            <div id="user-info" th:object="${bruker}">
+                <table class="bruker-info-table">
+                    <tr>
+                        <th>Fornavn</th>
+                        <td th:text="*{fornavn}">Fornavn</td>
+                    </tr>
+                    <tr>
+                        <th>Etternavn</th>
+                        <td th:text="*{etternavn}">Etternavn</td>
+                    </tr>
+                    <tr>
+                        <th>E-post</th>
+                        <td th:text="*{epost}">E-post</td>
+                    </tr>
+                    <tr>
+                        <th>Telefonnummer</th>
+                        <td th:text="*{telefon}">Telefonnummer</td>
+                    </tr>
+                    <tr>
+                        <th>Adresse</th>
+                        <td th:text="*{adresse}">Adresse</td>
+                    </tr>
+                    <tr>
+                        <th>Postnummer</th>
+                        <td th:text="*{postnummer}">Postnummer</td>
+                    </tr>
+                    <tr>
+                        <th>Poststed</th>
+                        <td th:text="*{poststed}">Poststed</td>
+                    </tr>
+                    <tr>
+                        <th>Forening</th>
+                        <td th:text="*{forening}">Forening</td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <form id="endrePassordForm"
+                      hx-post="/bruker/endrePassord"
+                      hx-target="closest article"
+                      hx-swap="outerHTML"
+                      hx-on:htmx:validation:validate="sjekkPassord()">
+                    <label for="passord">Nåværende passord:</label>
+                    <input id="passord" type="password" name="passord" minlength="4" required>
+                    <label for="nyttPassord">Nytt passord:</label>
+                    <input id="nyttPassord" type="password" name="nyttPassord" minlength="4" required>
+                    <label for="gjentaPassord">Bekreft nytt passord:</label>
+                    <input id="gjentaPassord" type="password" minlength="4" required>
+                </form>
+                <script>
+                    function setAriaInvalid(event) {
+                        const el = event.target;
+                        el.setAttribute("aria-invalid", !el.checkValidity());
+                    }
+                    document.querySelectorAll("input").forEach(el => {
+                        if (el.type === "submit" || el.type === "button") {
+                            return;
+                        }
+                        el.addEventListener("input", setAriaInvalid);
+                    });
+                    const np = document.getElementById('nyttPassord');
+                    const gp = document.getElementById('gjentaPassord');
+                    function sjekkPassord() {
+                        if (np.value !== gp.value) {
+                            gp.setCustomValidity('Passordene må være like');
+                            gp.setAttribute("aria-invalid", "true");
+                        } else {
+                            gp.setCustomValidity('');
+                            gp.setAttribute("aria-invalid", "false");
+                        }
+                        gp.reportValidity();
+                    }
+                    gp.addEventListener('input', sjekkPassord);
+                </script>
+            </div>
+            <footer>
+                <div role="group">
+                    <button class="secondary"
+                            hx-get="/bruker"
+                            hx-target="closest article"
+                            hx-swap="outerHTML">
+                        Avbryt
+                    </button>
+                    <input form="endrePassordForm"
+                           type="submit"
+                           value="Endre passord"
+                           class="primary">
+                </div>
+            </footer>
+        </article>
+    </section>
+    <section>
+        <article th:fragment="redigerBrukerInfo">
+            <header>
+                <h1 class="center-text">Din Bruker</h1>
+            </header>
+            <!--/*@thymesVar id="bruker" type="no.hvl.peristeri.feature.bruker.Bruker"*/-->
+            <div id="user-info" th:object="${bruker}">
+                <form id="redigerBrukerInfoForm"
+                      hx-post="/bruker/redigerBrukerInfo"
+                      hx-target="closest article"
+                      hx-swap="outerHTML">
+                    <table class="bruker-info-table">
+                        <tr>
+                            <th>Fornavn</th>
+                            <td><input id="fornavn" th:value="*{fornavn}" name="fornavn" required></td>
+                        </tr>
+                        <tr>
+                            <th>Etternavn</th>
+                            <td><input id="etternavn" th:value="*{etternavn}" name="etternavn" required></td>
+                        </tr>
+                        <tr>
+                            <th>E-post</th>
+                            <td><input id="epost" th:value="*{epost}" name="epost" type="email" required></td>
+                        </tr>
+                        <tr>
+                            <th>Telefonnummer</th>
+                            <td><input id="telefon" th:value="*{telefon}" name="telefon" type="tel" required></td>
+                        </tr>
+                        <tr>
+                            <th>Adresse</th>
+                            <td><input id="adresse" th:value="*{adresse}" name="adresse" required></td>
+                        </tr>
+                        <tr>
+                            <th>Postnummer</th>
+                            <td><input id="postnummer" th:value="*{postnummer}" name="postnummer" required></td>
+                        </tr>
+                        <tr>
+                            <th>Poststed</th>
+                            <td><input id="poststed" th:value="*{poststed}" name="poststed"></td>
+                        </tr>
+                        <tr>
+                            <th>Forening</th>
+                            <td><input id="forening" th:value="*{forening}" name="forening" required></td>
+                        </tr>
+                    </table>
+                </form>
+                <script>
+                    function setAriaInvalid(event) {
+                        const el = event.target;
+                        el.setAttribute("aria-invalid", !el.checkValidity());
+                    }
+
+                    document.querySelectorAll("input").forEach(el => {
+                        if (el.type === "submit" || el.type === "button") {
+                            return;
+                        }
+                        el.addEventListener("input", setAriaInvalid);
+                    });
+                </script>
+            </div>
+            <footer>
+                <div role="group">
+                    <button class="secondary"
+                            hx-get="/bruker"
+                            hx-target="closest article"
+                            hx-swap="outerHTML">
+                        Avbryt
+                    </button>
+                    <input type="submit"
+                           form="redigerBrukerInfoForm"
+                           class="primary"
+                           value="Lagre informasjon">
+                </div>
+            </footer>
+        </article>
+    </section>
+    <section>
+        <!--/*@thymesVar id="liste" type="java.util.List<no.hvl.peristeri.feature.paamelding.Paamelding>"*/-->
+        <div th:fragment="paameldingListe (liste)">
+            <div th:if="${#lists.isEmpty(liste)}">
+                <p>Ingen påmeldinger funnet.</p>
+            </div>
+            <table th:unless="${#lists.isEmpty(liste)}" class="striped">
+                <thead>
+                <tr>
+                    <th>Utstilling</th>
+                    <th>Startdato</th>
+                    <th>Sluttdato</th>
+                    <th>Arrangør</th>
+                    <th>Adresse</th>
+                    <th>Link</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${liste}">
+                    <td th:text="${p.utstilling.tittel}"></td>
+                    <td th:text="${p.utstilling.datoRange.startDate}"></td>
+                    <td th:text="${p.utstilling.datoRange.endDate}"></td>
+                    <td th:text="${p.utstilling.arrangoer}"></td>
+                    <td th:text="${p.utstilling.adresse}"></td>
+                    <td>
+                        <a th:href="@{/bruker/paamelding/{id}(id=${p.id})}">Se mer</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <!--/*@thymesVar id="paamelding" type="no.hvl.peristeri.feature.paamelding.Paamelding"*/-->
+        <div th:fragment="redigerRingnumre" th:object="${paamelding}" id="endre-due-liste">
+            <h1>Rediger Ringnumre</h1>
+            <table class="striped">
+                <thead>
+                <tr>
+                    <th>Løpenummer</th>
+                    <th>Årstall</th>
+                    <th>Rase</th>
+                    <th>Farge</th>
+                    <th>Variant</th>
+                    <th>Kjønn</th>
+                    <th>Alder</th>
+                    <th>Ikke Eget</th>
+                    <th>Lagre</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="d : *{duer}">
+                    <td><input th:value="${d.lopenummer}" name="lopenr"></td>
+                    <td><input th:value="${d.aarstall}" name="aarstall"></td>
+                    <td th:text="${d.rase}">Rase</td>
+                    <td th:text="${d.farge}">Farge</td>
+                    <td th:text="${d.variant}">Variant</td>
+                    <td th:text="${d.kjonn} ? '1,0' : '0,1'">Kjønn</td>
+                    <td th:text="${d.alder} ? 'Eldre' : 'Ung'">Alder</td>
+                    <td th:text="${d.ikkeEget} ? 'Ikke eget avl' : 'Eget avl'">Ikke Eget</td>
+                    <td>
+                        <button th:hx-post="@{/due/endreRingnummer/{id}/rad(id=${d.id})}"
+                                hx-target="closest tr"
+                                hx-swap="outerHTML"
+                                hx-include="closest tr">
+                            Lagre
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="grid">
+                <button class=""
+                        th:hx-get="@{/bruker/paamelding/{id}/dueliste(id=${paamelding.id})}"
+                        hx-target="#endre-due-liste" hx-swap="outerHTML">
+                    Ferdig
+                </button>
+            </div>
+
+        </div>
+        <table>
+            <!--/*@thymesVar id="due" type="no.hvl.peristeri.feature.due.Due"*/-->
+            <tr th:object="${due}" th:fragment="lagretRad">
+                <td th:text="*{ringnummer}">Ringnummer</td>
+                <td th:text="*{rase}">Rase</td>
+                <td th:text="*{farge}">Farge</td>
+                <td th:text="*{variant}">Variant</td>
+                <td th:text="*{kjonn} ? '1,0' : '0,1'">Kjønn</td>
+                <td th:text="*{alder} ? 'Eldre' : 'Ung'">Alder</td>
+                <td th:text="*{ikkeEget} ? 'Ikke eget avl' : 'Eget avl'">Ikke Eget</td>
+                <td></td>
+            </tr>
+        </table>
+    </section>
+</main>
+<footer class="container">
+    <!-- Erstatter diven under med footer fra fragments/footer.html -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<!-- Minimal theme switcher -->
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

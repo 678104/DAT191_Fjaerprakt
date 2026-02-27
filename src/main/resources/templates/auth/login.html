@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Login</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <!-- Erstatter diven under med navbar fra fragments/navbar.html -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section th:if="${melding}">
+        <h2 th:text="${melding}" class="melding">Melding</h2>
+    </section>
+    <section th:if="${error}">
+        <h2>Feil</h2>
+        <p th:text="${error}" class="feilmelding">Feilmelding</p>
+    </section>
+    <section class="flex-grid">
+        <article style="max-width: 700px" th:if="${@environment.acceptsProfiles('dev')}">
+            <header>
+                <h1 class="center-text">Dev Login</h1>
+            </header>
+            <div>
+                <p>Bruk denne menyen for å velge hvilken bruker du vil logge inn som</p>
+                <form id="devLoginForm" th:action="@{/login}" method="post">
+                    <label for="brukerValg">
+                        Viser en liste av registrerte brukere (epost) for å enklere logge inn
+                        <select id="brukerValg" name="username">
+                            <option th:each="bruker : ${brukere}"
+                                    th:text="${bruker.navn}"
+                                    th:value="${bruker.username}"></option>
+                        </select>
+                    </label>
+                    <p>Passord for test-data er vanligvis noe enkelt som f.eks. kun fornavnet med små bokstaver</p>
+                    <label for="passwordDev">Passord</label>
+                    <input type="password" id="passwordDev" name="password" required>
+                </form>
+            </div>
+            <footer>
+                <input form="devLoginForm" type="submit" value="Logg inn" class="primary">
+            </footer>
+        </article>
+        <article style="max-width: 700px">
+            <header>
+                <h1 class="center-text">Login</h1>
+            </header>
+            <div>
+                <form id="loginForm" th:action="@{/login}" method="post">
+                    <label for="username">Brukernavn</label>
+                    <input type="email"
+                           id="username"
+                           name="username"
+                           autocomplete="username email"
+                           th:value="${epost}"
+                           required>
+                    <label for="password">Passord</label>
+                    <input type="password" id="password" name="password" autocomplete="current-password" required>
+                </form>
+            </div>
+            <footer>
+                <input form="loginForm" type="submit" value="Logg inn" class="primary">
+            </footer>
+        </article>
+        <article style="max-width: 700px">
+            <header>
+                <h2 class="center-text">Ny bruker?</h2>
+            </header>
+            <div>
+                <p>Registrer deg for å kunne melde deg på utstillinger</p>
+            </div>
+            <footer>
+                <a role="button" class="primary fix-button-spacing fill-parent-width" th:href="@{/registrer}">
+                    Registrer ny bruker
+                </a>
+            </footer>
+        </article>
+    </section>
+</main>
+<footer class="container">
+    <!-- Erstatter diven under med footer fra fragments/footer.html -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<!-- Minimal theme switcher -->
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

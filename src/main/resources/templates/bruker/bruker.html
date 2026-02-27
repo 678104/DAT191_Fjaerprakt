@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Din Bruker</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section class="section-spacer">
+        <article th:fragment="brukerInfo">
+            <header>
+                <h1 class="center-text">Din Bruker</h1>
+            </header>
+            <div id="user-info" th:object="${bruker}">
+                <table class="bruker-info-table">
+                    <tr>
+                        <th>Fornavn</th>
+                        <td th:text="*{fornavn}">Fornavn</td>
+                    </tr>
+                    <tr>
+                        <th>Etternavn</th>
+                        <td th:text="*{etternavn}">Etternavn</td>
+                    </tr>
+                    <tr>
+                        <th>E-post</th>
+                        <td th:text="*{epost}">E-post</td>
+                    </tr>
+                    <tr>
+                        <th>Telefonnummer</th>
+                        <td th:text="*{telefon}">Telefonnummer</td>
+                    </tr>
+                    <tr>
+                        <th>Adresse</th>
+                        <td th:text="*{adresse}">Adresse</td>
+                    </tr>
+                    <tr>
+                        <th>Postnummer</th>
+                        <td th:text="*{postnummer}">Postnummer</td>
+                    </tr>
+                    <tr>
+                        <th>Poststed</th>
+                        <td th:text="*{poststed}">Poststed</td>
+                    </tr>
+                    <tr>
+                        <th>Forening</th>
+                        <td th:text="*{forening}">Forening</td>
+                    </tr>
+                </table>
+            </div>
+            <div role="group">
+                <button class="secondary"
+                        hx-get="/bruker/redigerBrukerInfo"
+                        hx-target="closest article"
+                        hx-swap="outerHTML">
+                    Rediger informasjon
+                </button>
+                <button class="secondary"
+                        hx-get="/bruker/endrePassord"
+                        hx-target="closest article"
+                        hx-swap="outerHTML">
+                    Endre passord
+                </button>
+            </div>
+            <footer>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit">Logg ut</button>
+                </form>
+            </footer>
+        </article>
+    </section>
+    <div class="spacer"></div>
+    <section>
+        <div id="kommende_utstillinger">
+            <h3>Kommende Utstillinger</h3>
+            <th:block th:replace="~{bruker/bruker_fragments :: paameldingListe(liste=${kommendePaameldinger})}"></th:block>
+        </div>
+    </section>
+    <div class="spacer"></div>
+    <section>
+        <div id="tidligere_utstillinger">
+            <h3>Tidligere Utstillinger</h3>
+            <th:block th:replace="~{bruker/bruker_fragments :: paameldingListe(liste=${tidligerePaameldinger})}"></th:block>
+        </div>
+    </section>
+</main>
+<footer class="container">
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

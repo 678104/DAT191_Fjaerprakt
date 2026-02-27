@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Påmelding</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+    <link rel="stylesheet" href="/css/paamelding.css">
+    <script src="/js/paamelding.js"></script>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+</header>
+<main class="container">
+    <section class="content">
+        <h3>Velg utstilling</h3>
+        <div class="grid" id="utstillinger">
+            <div class="card radio-card"
+                 th:each="u : ${utstillinger}"
+                 th:data-id="${u.id}"
+                 onclick="valgtUtstilling(this)"
+                 th:classappend="${u.id == forhandsvalgtUtstillingId} ? 'selected' : ''">
+                <div>
+                    <h4 th:text="${u.tittel}"></h4>
+                    <p><b>Arrangør:</b> <span th:text="${u.arrangoer}"></span></p>
+                    <p><b>Sted:</b> <span th:text="${u.adresse}"></span></p>
+                    <p><b>Startdato:</b> <span th:text="${u.datoRange.startDate}"></span></p>
+                    <p><b>Sluttdato:</b> <span th:text="${u.datoRange.endDate}"></span></p>
+                    <p><b>Påmeldingsfrist:</b> <span th:text="${u.paameldingsFrist}"></span></p>
+                </div>
+            </div>
+        </div>
+        <div th:if="${ingenUtstilling}">
+            <p th:text="${ingenUtstilling}" style="color: red; font-weight: bold;"></p>
+        </div>
+        <div class="spacer-lg"></div>
+        <div>
+            <form id="paamelding"
+                  method="post"
+                  hx-post="/paamelding/paameldingskvittering"
+                  hx-target=".content"
+                  hx-trigger="submit">
+                <button type="submit">Meld deg på!</button>
+                <input type="hidden"
+                       name="utstillingId"
+                       id="valgtUtstilling"
+                       th:value="${forhandsvalgtUtstillingId}"
+                       required>
+            </form>
+        </div>
+
+        <div th:if="${#lists.isEmpty(utstillinger)}">
+            <h3>Ingen tilgjengelige utstillinger</h3>
+            <p>For øyeblikket er det ingen utstillinger åpen for påmelding.</p>
+            <p>Du kan se kommende utstillinger
+                <a href="/utstilling" role="button" class="secondary liten-knapp">her</a>.
+            </p>
+        </div>
+    </section>
+</main>
+<footer class="container">
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

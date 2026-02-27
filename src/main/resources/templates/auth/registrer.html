@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Registrer</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <!-- Erstatter diven under med navbar fra fragments/navbar.html -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section th:if="${feilmelding}">
+        <h2>Feil</h2>
+        <p th:text="${feilmelding}" class="feilmelding">Feilmelding</p>
+    </section>
+    <section id="content">
+        <h1>Registrer deg</h1>
+        <div th:fragment="registrerSkjema">
+            <form id="registrerForm"
+                  th:action="@{/registrer}"
+                  method="post"
+                  th:object="${nyBruker}">
+                <div>
+                    <h3>Personinformasjon</h3>
+                    <div class="grid">
+                        <div>
+                            <label for="fornavn">Fornavn:</label>
+                            <input id="fornavn"
+                                   type="text"
+                                   th:field="*{fornavn}"
+                                   autocomplete="given-name"
+                                   placeholder="Fornavn..."
+                                   required>
+                        </div>
+                        <div>
+                            <label for="etternavn">Etternavn:</label>
+                            <input id="etternavn" type="text" th:field="*{etternavn}"
+                                   autocomplete="family-name" placeholder="Etternavn..." required>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="tlf">Telefonnummer:</label>
+                            <input id="tlf" type="tel"
+                                   th:field="*{telefon}"
+                                   placeholder="Telefonnummer..."
+                                   autocomplete="tel"
+                                   required>
+                            <small>Landskode er ikke nødvendig</small>
+                        </div>
+                        <div>
+                            <label for="forening">Forening:</label>
+                            <input id="forening"
+                                   type="text"
+                                   th:field="*{forening}"
+                                   autocomplete="organization"
+                                   placeholder="Forening..."
+                                   required>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="adresse">Adresse:</label>
+                            <input id="adresse"
+                                   type="text"
+                                   th:field="*{adresse}"
+                                   autocomplete="street-address"
+                                   placeholder="Adresse..."
+                                   required>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="postnummer">Postnummer:</label>
+                            <input id="postnummer"
+                                   type="number"
+                                   th:field="*{postnummer}"
+                                   pattern="\d{2,5}"
+                                   autocomplete="postal-code"
+                                   placeholder="Postnummer..."
+                                   required>
+                        </div>
+                        <div>
+                            <label for="poststed">Poststed:</label>
+                            <input id="poststed"
+                                   type="text"
+                                   th:field="*{poststed}"
+                                   autocomplete="address-level2"
+                                   placeholder="Poststed..."
+                                   required>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3>Brukerinformasjon</h3>
+                    <p>Epost blir brukt til pålogging</p>
+                    <div class="grid">
+                        <div>
+                            <label for="epost">E-post:</label>
+                            <input id="epost"
+                                   type="email"
+                                   th:field="*{epost}"
+                                   autocomplete="email"
+                                   placeholder="E-post..."
+                                   required>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <label for="passord">Passord:</label>
+                            <input id="passord"
+                                   type="password"
+                                   name="passord"
+                                   autocomplete="new-password"
+                                   placeholder="Passord..."
+                                   minlength="4"
+                                   required>
+                        </div>
+                        <div>
+                            <label for="gjentapassord">Bekreft passord:</label>
+                            <input id="gjentapassord"
+                                   type="password"
+                                   name="gjentapassord"
+                                   autocomplete="new-password"
+                                   placeholder="Gjenta passord..."
+                                   minlength="4"
+                                   required>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit">Registrer!</button>
+            </form>
+            <script>
+                function setAriaInvalid(event) {
+                    const el = event.target;
+                    el.setAttribute("aria-invalid", !el.checkValidity());
+                }
+
+                document.querySelectorAll("input").forEach(el => {
+                    if (el.type === "submit" || el.type === "button") {
+                        return;
+                    }
+                    el.addEventListener("input", setAriaInvalid);
+                });
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    const form = document.getElementById('registrerForm');
+                    const passord = document.getElementById('passord');
+                    const gjentapassord = document.getElementById('gjentapassord');
+                    const tlf = document.getElementById('tlf');
+
+                    function checkPasswordsMatch() {
+                        if (passord.value !== gjentapassord.value) {
+                            gjentapassord.setCustomValidity('Passordene er ikke like');
+                            gjentapassord.setAttribute('aria-invalid', 'true');
+                        } else {
+                            gjentapassord.setCustomValidity('');
+                            gjentapassord.setAttribute('aria-invalid', 'false');
+                        }
+                        gjentapassord.reportValidity();
+                    }
+
+                    function checkPhoneNumber() {
+                        let telefon = tlf.value.replace(/[^\d+]/g, '');
+                        const isValid = /^(\+\d{1,5})?\d{5,30}/.test(telefon);
+
+                        if (!isValid) {
+                            tlf.setCustomValidity('Telefonnummeret er ikke gyldig');
+                            tlf.setAttribute('aria-invalid', 'true');
+                        } else {
+                            tlf.setCustomValidity('');
+                            tlf.setAttribute('aria-invalid', 'false');
+                        }
+                        tlf.reportValidity();
+                    }
+                    gjentapassord.addEventListener('input', checkPasswordsMatch);
+                    form.addEventListener('submit', function (event) {
+                        checkPasswordsMatch();
+                        checkPhoneNumber();
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                        }
+                    });
+                });
+            </script>
+        </div>
+    </section>
+</main>
+<footer class="container">
+    <!-- Erstatter diven under med footer fra fragments/footer.html -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<!-- Minimal theme switcher -->
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>

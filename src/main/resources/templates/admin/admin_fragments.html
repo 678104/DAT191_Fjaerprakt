@@ -1,0 +1,725 @@
+<html lang="no">
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<main class="container" id="main">
+    <section th:fragment="bulkDueEndring" id="main-content" th:object="${utstilling}">
+        <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
+        <!--/*@thymesVar id="paameldteDuer" type="java.util.List<no.hvl.peristeri.feature.due.Due>"*/-->
+        <h2>Se og Endre på alle duer registrert på denne utstillingen</h2>
+        <p>Her kan du se og endre på alle duer som er påmeldt denne utstillingen.</p>
+        <div>
+            <button th:hx-get="@{/admin/{id}/bulkendre/rase(id=*{id})}"
+                    hx-target="#dueListe"
+                    hx-swap="outerHTML">
+                Flervalg Endre Rase
+            </button>
+            <button th:hx-get="@{/admin/{id}/bulkendre/farge(id=*{id})}"
+                    hx-target="#dueListe"
+                    hx-swap="outerHTML">
+                Flervalg Endre Farge
+            </button>
+            <button th:hx-get="@{/admin/{id}/bulkendre/variant(id=*{id})}"
+                    hx-target="#dueListe"
+                    hx-swap="outerHTML">
+                Flervalg Endre Variant
+            </button>
+        </div>
+        <div id="dueListe">
+            <table>
+                <thead>
+                <tr>
+                    <th>Burnummer</th>
+                    <th>Utstiller</th>
+                    <th>Ringnummer</th>
+                    <th>Rase</th>
+                    <th>Farge</th>
+                    <th>Variant</th>
+                    <th>Kjønn</th>
+                    <th>Alder</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="bulkEditBody">
+                <th:block th:each="due :${paameldteDuer}">
+                    <tr th:fragment="bulkEditRad">
+                        <td th:text="${due.burnummer ?: 'Ingen'}">Burnummer</td>
+                        <td th:text="${due.paamelding.utstiller.navn}">Utstiller</td>
+                        <td th:text="${due.ringnummer}">Ringnummer</td>
+                        <td><input type="text" th:value="${due.rase}" name="rase" placeholder="Rase" required></td>
+                        <td><input type="text" th:value="${due.farge}" name="farge" placeholder="Farge"></td>
+                        <td><input type="text" th:value="${due.variant}" name="variant" placeholder="Variant"></td>
+                        <td th:text="${due.kjonn} ? '1,0' : '0,1'">Kjønn</td>
+                        <td th:text="${due.alder} ? 'Eldre' : 'Ung'">Alder</td>
+
+                        <td>
+                            <input type="hidden" name="id" th:value="${due.id}"/>
+                            <button th:hx-post="@{/due/adminEndreDue}"
+                                    hx-target="closest tr"
+                                    hx-swap="outerHTML"
+                                    hx-include="closest tr">
+                                Lagre
+                            </button>
+                        </td>
+                    </tr>
+                </th:block>
+                </tbody>
+            </table>
+        </div>
+        <button th:hx-get="@{/admin/{id}(id=${utstilling.id})}"
+                hx-target="#main-content"
+                hx-swap="outerHTML"
+                class="secondary">
+            Tilbake til handlingsoversikt
+        </button>
+    </section>
+    <div th:fragment="bulkEditSelection" id="dueListe">
+        <!--/*@thymesVar id="paameldteDuer" type="java.util.List<no.hvl.peristeri.feature.due.Due>"*/-->
+        <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
+        <!--/*@thymesVar id="felt" type="java.lang.String"*/-->
+        <div>
+            <h2>Flervalg Endre <span th:text="${felt}"></span></h2>
+            <input id="filterInput"
+                   type="text"
+                   th:attr="data-field=${felt}"
+                   th:placeholder="|Filtrer ${felt}...|"
+                   onkeyup="filterTable()"/>
+        </div>
+        <div th:object="${utstilling}">
+            <form id="bulkEndreRaseForm"
+                  th:hx-post="@{/admin/{id}/bulkendre/{felt}(id=*{id},felt=${felt})}"
+                  hx-target="#main-content"
+                  hx-swap="outerHTML"
+                  hx-include="#bulkEditSelectionBody">
+                <fieldset role="group">
+                    <legend th:text="|Skriv inn ${felt} de markerte duene skal endres til|"></legend>
+                    <input id="bulkRaseInput" type="text" name="nyVerdi" th:placeholder="|Ny ${felt}|">
+                    <input type="submit" value="Endre">
+                </fieldset>
+            </form>
+        </div>
+        <table>
+            <thead>
+            <tr>
+                <th></th>
+                <!--                <th>Burnummer</th>-->
+                <!--                <th>Utstiller</th>-->
+                <!--                <th>Ringnummer</th>-->
+                <th>Rase</th>
+                <th>Farge</th>
+                <th>Variant</th>
+                <!--                <th>Kjønn</th>-->
+                <!--                <th>Alder</th>-->
+            </tr>
+            </thead>
+            <tbody id="bulkEditSelectionBody">
+            <tr th:each="due :${paameldteDuer}">
+                <td><input name="dueId" th:value="${due.id}" type="checkbox"></td>
+                <!--                <td th:text="${due.burnummer ?: 'Ingen'}">Burnummer</td>-->
+                <!--                <td th:text="${due.paamelding.utstiller.navn}">Utstiller</td>-->
+                <!--                <td th:text="${due.ringnummer}">Ringnummer</td>-->
+                <td th:text="${due.rase}">Rase</td>
+                <td th:text="${due.farge}">Farge</td>
+                <td th:text="${due.variant}">Variant</td>
+                <!--                <td th:text="${due.kjonn} ? '1,0' : '0,1'">Kjønn</td>-->
+                <!--                <td th:text="${due.alder} ? 'Eldre' : 'Ung'">Alder</td>-->
+            </tr>
+            </tbody>
+        </table>
+        <script>
+            function filterTable() {
+                const input = document.getElementById('filterInput');
+                const filter = input.value.toLowerCase();
+                const field = input.getAttribute('data-field');
+                let colIndex;
+                if (field === 'rase') colIndex = 1;
+                else if (field === 'farge') colIndex = 2;
+                else if (field === 'variant') colIndex = 3;
+                else return;
+
+                document.querySelectorAll('#bulkEditSelectionBody tr').forEach(row => {
+                    const cell = row.cells[colIndex];
+                    if (!cell) return;
+                    const text = cell.textContent.toLowerCase();
+                    // hide rows that match the input
+                    row.style.display = text.includes(filter) ? '' : 'none';
+                });
+            }
+
+            function selectBulkEditRow(event) {
+                const row = event.target?.closest('tr');
+                row.classList.toggle('table-selected');
+                row.querySelector('input[type="checkbox"]')
+                    ?.toggleAttribute('checked', row.classList.contains('table-selected'));
+            }
+
+            document.querySelectorAll('#bulkEditSelectionBody tr')
+                .forEach(row => {
+                    row.addEventListener('click', function (event) {
+                        selectBulkEditRow(event);
+                    });
+                });
+        </script>
+    </div>
+    <section th:fragment="genererBurnumre" id="main-content">
+        <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
+        <!--/*@thymesVar id="paameldteDuer" type="java.util.List<no.hvl.peristeri.feature.due.Due>"*/-->
+        <h2>Generer burnumre</h2>
+        <p>Her kan du se og generere burnumre for alle registrerte duer. Denne krever at påmelding er lukket. Hvis
+            påmelding åpnes igjen, må dette gjøres på nytt.</p>
+        <div th:object="${utstilling}">
+            <div>
+                <p>Har denne utstillingen fått generert burnumre? <span th:text="*{harBurnumre} ? 'Ja' : 'Nei'"></span>
+                </p>
+            </div>
+            <button th:hx-post="@{/admin/genererBurnumre/{id}(id=${utstilling.id})}"
+                    hx-target="#main-content"
+                    hx-swap="outerHTML"
+                    class="secondary">
+                Generer burnumre
+            </button>
+        </div>
+        <div th:object="${utstilling}">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Burnummer</th>
+                    <th scope="col">Rase</th>
+                    <th scope="col">Kjønn</th>
+                    <th scope="col">Alder</th>
+                    <th scope="col">Eier</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="d :${paameldteDuer}">
+                    <td th:text="${d.burnummer ?: 'Ingen'}">Burnummer</td>
+                    <td th:text="${d.rase}">Rase</td>
+                    <td th:text="${d.kjonn} ? '1,0' : '0,1'">Kjønn</td>
+                    <td th:text="${d.alder} ? 'Eldre' : 'Ung'">Alder</td>
+                    <td th:text="${d.paamelding.utstiller.navn}">Eier</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <button th:hx-get="@{/admin/{id}(id=${utstilling.id})}"
+                    hx-target="#main-content"
+                    hx-swap="outerHTML"
+                    class="secondary">
+                Tilbake til handlingsoversikt
+            </button>
+        </div>
+    </section>
+    <section th:fragment="raseSortering" id="main-content">
+        <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
+        <!--/*@thymesVar id="paameldteRaser" type="java.util.List<java.lang.String>"*/-->
+        <h2>Sorter raser</h2>
+        <p>Her kan du sette opp sortering av påmeldte raser. Rekkefølgen på rasene bestemmer hvordan burnumre genereres.
+            Dette må gjøres før burnumre kan opprettes.
+            Denne krever at påmelding er lukket. Hvis påmelding åpnes igjen, må dette gjøres på nytt.</p>
+        <div th:object="${utstilling}">
+            <p>For å endre rekkefølgen på raser, dra og slipp dem i ønsket rekkefølge. Tallene viser hvilken rekkefølge
+                de vil få.</p>
+            <br/>
+            <p class="warning">Husk å lagre endringene før du går videre.</p>
+            <form th:hx-post="@{/admin/sorterRaser/{id}(id=*{id})}"
+                  hx-target="#main-content"
+                  hx-swap="outerHTML"
+                  hx-on::afterRequest="this.reset();">
+                <ol id="sortable-list" class="sortable-list">
+                    <li th:each="rase : ${paameldteRaser}"
+                        th:data-id="${rase}"
+                        th:text="${rase}"
+                        draggable="true"
+                        class="sortable-item">
+                    </li>
+                </ol>
+                <label for="sorterteRaser">Sorterte raser
+                    <input type="text" name="sorterteRaser" id="sorterteRaser" th:value="*{raseSortering}" readonly/>
+                </label>
+                <button type="submit">Lagre sortering</button>
+            </form>
+        </div>
+        <div>
+            <button th:hx-get="@{/admin/{id}(id=${utstilling.id})}"
+                    hx-target="#main-content"
+                    hx-swap="outerHTML"
+                    class="secondary">
+                Tilbake til handlingsoversikt
+            </button>
+        </div>
+    </section>
+    <section th:fragment="dommerFordeling" id="main-content">
+        <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
+        <h2>Dommerfordeling</h2>
+        <p>Her kan du fordele raser på dommere</p>
+        <div>
+            <div class="flex-grid flex-grid-lg">
+                <th:block th:each="dp : ${utstilling.dommere}">
+                    <article th:object="${dp}"
+                             th:fragment="fordelRaserRad"
+                             th:with="valgteRaser=${@RaseStringHjelper.hentUtRaser(dp)}">
+                        <header>
+                            <h3 th:text="*{dommer.navn}">Dommer navn</h3>
+                        </header>
+                        <div>
+                            <form th:hx-post="@{/admin/fordelRaser/{id}(id=*{id})}"
+                                  th:id="|form_*{id}|"
+                                  hx-target="closest article"
+                                  hx-swap="outerHTML"
+                                  hx-on::afterRequest="this.reset();">
+                                <fieldset role="group" class="two-box-system">
+                                    <div class="box-container">
+                                        <div class="box">
+                                            <h4>Tilgjengelige Raser</h4>
+                                            <ul th:id="|availableRaser_*{id}|" class="list-box">
+                                                <!--/*@thymesVar id="raser" type="java.util.List<java.lang.String>"*/-->
+                                                <li th:each="r : ${raser}"
+                                                    th:unless="${valgteRaser.contains(r)}"
+                                                    th:data-value="${r}"
+                                                    th:text="${r}">
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="spacer"></div>
+                                        <div class="box-controls">
+                                            <button type="button" th:id="|addRaser_*{id}|"
+                                                    th:onclick="|moveItems('availableRaser_*{id}', 'selectedRaser_*{id}')|">
+                                                Velg
+                                            </button>
+                                            <button type="button" th:id="|removeRaser_*{id}|"
+                                                    th:onclick="|moveItems('selectedRaser_*{id}', 'availableRaser_*{id}')|">
+                                                Fjern
+                                            </button>
+                                        </div>
+                                        <div class="box">
+                                            <h4>Valgte Raser</h4>
+                                            <ul th:id="|selectedRaser_*{id}|" class="list-box">
+                                                <li th:each="r : ${valgteRaser}"
+                                                    th:data-value="${r}"
+                                                    th:text="${r}">
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="raser" th:id="|selectedRaserInput_*{id}|"/>
+                                </fieldset>
+                            </form>
+                        </div>
+                        <footer>
+                            <button type="submit" th:form="|form_*{id}|">Lagre valgte raser</button>
+                        </footer>
+                    </article>
+                </th:block>
+            </div>
+            <div>
+                <button th:hx-get="@{/admin/{id}(id=${utstilling.id})}"
+                        hx-target="#main-content"
+                        hx-swap="outerHTML"
+                        class="secondary">
+                    Tilbake til handlingsoversikt
+                </button>
+            </div>
+        </div>
+    </section>
+    <section th:fragment="dommerRegistrering" id="main-content">
+        <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
+        <h2>Dommer registrering</h2>
+        <p>Her kan du registrere dommere til utstillingen</p>
+        <div>
+            <h3>Registrer dommer</h3>
+            <form th:hx-post="@{/admin/{id}/registrerDommer(id=${utstilling.id})}"
+                  hx-target="#dommerListe"
+                  hx-swap="outerHTML"
+                  hx-on::afterRequest="this.reset()">
+                <fieldset role="group">
+                    <label for="fornavn">Fornavn
+                        <input type="text" id="fornavn" name="fornavn" placeholder="Fornavn..." required/>
+                    </label>
+                    <label for="etternavn">Etternavn
+                        <input type="text" id="etternavn" name="etternavn" placeholder="Etternavn..." required/>
+                    </label>
+                </fieldset>
+                <p>Her skriver du inn epost og passord for dommeren. Epost blir brukt til pålogging, passord må være
+                    minst 4 tegn</p>
+                <fieldset role="group">
+                    <label for="epost">Epost
+                        <input type="email" id="epost" name="epost" placeholder="Epost..." required/>
+                    </label>
+                    <label for="passord">Passord
+                        <input type="text"
+                               id="passord"
+                               name="passord"
+                               placeholder="Passord..."
+                               minlength="4"
+                               required/>
+                    </label>
+                </fieldset>
+                <fieldset role="group">
+                    <label for="telefon">Telefon
+                        <input type="tel" id="telefon" name="telefon" placeholder="Telefon..." required/>
+                    </label>
+                    <label for="forening">Forening
+                        <input type="text" id="forening" name="forening" placeholder="Forening..." required/>
+                    </label>
+                </fieldset>
+                <button type="submit">Registrer dommer</button>
+            </form>
+        </div>
+        <div>
+            <h3>Registrerte dommere</h3>
+            <div id="dommerListe" th:fragment="dommerListe">
+                <table>
+                    <thead>
+                    <tr>
+                        <th scope="col">Navn</th>
+                        <th scope="col">Epost</th>
+                        <th scope="col">Telefon</th>
+                        <th scope="col">Handling</th>
+                    </tr>
+                    </thead>
+                    <tbody th:each="dp : ${utstilling.dommere}">
+                    <tr th:object="${dp.dommer}">
+                        <td th:text="*{navn}">Peristeri tittel test</td>
+                        <td th:text="*{epost}">Peristeri</td>
+                        <td th:text="*{telefon}">Bergen</td>
+                        <td>
+                            <button class="secondary">Fjern dommer</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button th:hx-get="@{/admin/{id}(id=${utstilling.id})}"
+                    hx-target="#main-content"
+                    hx-swap="outerHTML"
+                    class="secondary">
+                Tilbake til handlingsoversikt
+            </button>
+        </div>
+    </section>
+    <section th:fragment="adminUtstilling" id="main-content">
+        <div class="flex-grid flex-grid-lg">
+            <article>
+                <header>
+                    <h1 th:text="${utstilling.tittel}">Utstillingsnavn</h1>
+                </header>
+                <p th:text="${utstilling.arrangoer}">Peristeri</p>
+                <p th:text="${utstilling.datoRange.penString()}"></p>
+                <p th:text="${utstilling.beskrivelse}">Beskrivelse</p>
+                <hr/>
+                <div th:if="${utstilling.aktiv}">
+                    <p>Denne utstillingen er aktiv og vises på hjemmesiden</p>
+                    <button th:hx-post="@{/admin/deaktiverUtstilling/{id}(id=${utstilling.id})}"
+                            hx-target="#main-content"
+                            hx-swap="outerHTML"
+                            class="secondary">
+                        Fjern denne utstillingen fra aktiv
+                    </button>
+                </div>
+                <div th:unless="${utstilling.aktiv}">
+                    <p>Utstillingen er ikke aktiv og vises ikke på hjemmesiden</p>
+                    <button th:hx-post="@{/admin/aktiverUtstilling/{id}(id=${utstilling.id})}"
+                            hx-target="#main-content"
+                            hx-swap="outerHTML"
+                            class="secondary">
+                        Sett denne utstillingen som aktiv
+                    </button>
+                </div>
+                <footer>
+                    <a th:href="@{/utstilling/{id}(id=${utstilling.id})}">Trykk her for mer info og status</a>
+                </footer>
+            </article>
+            <article>
+                <header>
+                    <h1>Sjekkliste</h1>
+                </header>
+                <div>
+                    <p>Her er en sjekkliste for steg som må gjøres for denne utstillingen:</p>
+                    <ul>
+
+                    </ul>
+                </div>
+                <footer>
+                </footer>
+            </article>
+        </div>
+        <hr/>
+        <p>Velg hva du vil gjøre med knappene under</p>
+        <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
+        <div class="flex-grid grid-links" th:object="${utstilling}">
+            <article th:hx-get="@{/admin/{id}/dommerRegistrering(id=*{id})}"
+                     hx-target="#main-content"
+                     hx-swap="outerHTML"
+                     hx-push-url="false">
+                <header>
+                    <b>Registrer dommere</b>
+                </header>
+                <div>
+                    <p>Her kan du registere dommere til dette arrangementet</p>
+                </div>
+                <footer>
+                    <button class="fill-parent">
+                        Registrer dommere
+                    </button>
+                </footer>
+            </article>
+            <article th:hx-get="@{/admin/{id}/raseSortering(id=*{id})}"
+                     hx-target="#main-content"
+                     hx-swap="outerHTML"
+                     hx-push-url="false">
+                <header>
+                    <b>Sorter raser</b>
+                </header>
+                <div>
+                    <p>Her kan du sette opp sortering av påmeldte raser. Dette må gjøres før burnumre kan opprettes.
+                        Denne krever at påmelding er lukket. Hvis påmelding åpnes igjen, må dette gjøres på nytt.</p>
+                </div>
+                <footer>
+                    <button class="fill-parent">
+                        Sorter raser
+                    </button>
+                </footer>
+            </article>
+            <article th:hx-get="@{/admin/{id}/dommerFordeling(id=*{id})}"
+                     hx-target="#main-content"
+                     hx-swap="outerHTML"
+                     hx-push-url="false">
+                <header>
+                    <b>Sett opp dommerfordeling</b>
+                </header>
+                <div>
+                    <p>Her kan du fordele raser på dommere. Denne krever at påmelding er lukket. Hvis påmelding åpnes
+                        igjen,
+                        må dette gjøres på nytt.</p>
+                </div>
+                <footer>
+                    <button class="fill-parent">
+                        Sett opp dommerfordeling
+                    </button>
+                </footer>
+            </article>
+            <article th:hx-get="@{/admin/{id}/burnummerGenerering(id=*{id})}"
+                     hx-target="#main-content"
+                     hx-swap="outerHTML"
+                     hx-push-url="false">
+                <header>
+                    <b>Generer burnumre</b>
+                </header>
+                <div>
+                    <p>Her kan du se og generere burnumre for alle registrerte duer. Denne krever at påmelding er
+                        lukket. Hvis påmelding åpnes igjen, må dette gjøres på nytt.</p>
+                </div>
+                <footer>
+                    <button class="fill-parent">
+                        Generer burnumre
+                    </button>
+                </footer>
+            </article>
+            <article th:hx-get="@{/admin/{id}/bulkdueendring(id=*{id})}"
+                     hx-target="#main-content"
+                     hx-swap="outerHTML"
+                     hx-push-url="false">
+                <header>
+                    <b>Se og endre påmeldte duer</b>
+                </header>
+                <div>
+                    <p>Her kan du se og endre på alle duer som er påmeldt denne utstillingen. Her finnes det funksjoner
+                        som:<br/>
+                        <strong>Endre alle raser / farger / varianter til Stor Forbokstav</strong>,<br/>
+                        <strong>Endre skrivefeil eller forskjellige skrivemåter på raser, farger etc.</strong>
+                    </p>
+                </div>
+                <footer>
+                    <button class="fill-parent">
+                        Se og endre duer
+                    </button>
+                </footer>
+            </article>
+            <article>
+                <header>
+                    <b>Generer katalog data</b>
+                </header>
+                <div>
+                    <p>Her kan du generere og vise all data so mer relevant for å lage en katalog. Denne krever at
+                        utstillingen er ferdig / alle bedømmelser er registrert.</p>
+                </div>
+                <footer>
+                    <button th:hx-get="@{/admin/genererkatalogdata/{id}(id=*{id})}"
+                            hx-target="#main-content"
+                            hx-swap="outerHTML"
+                            hx-push-url="false"
+                            class="fill-parent">Generer katalog data
+                    </button>
+                </footer>
+            </article>
+        </div>
+        <div>
+            <br>
+            <a href="/admin"
+               role="button"
+               class="secondary">
+                Tilbake
+            </a>
+        </div>
+    </section>
+    <div th:fragment="adminUtstillingListe">
+        <!--/*@thymesVar id="kommendeUtstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
+        <!--/*@thymesVar id="tidligereUtstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
+        <section id="kommendeListe">
+            <h2>Kommende utstillinger</h2>
+            <div class="overflow-auto">
+                <table class="striped">
+                    <thead>
+                    <tr>
+                        <th scope="col">Tittel</th>
+                        <th scope="col">Arrangør</th>
+                        <th scope="col">Sted</th>
+                        <th scope="col">Start Dato</th>
+                        <th scope="col">Påmeldings frist</th>
+                        <th scope="col">Link</th>
+                    </tr>
+                    </thead>
+                    <tbody th:each="u : ${kommendeUtstillinger}">
+                    <tr>
+                        <td th:text="${u.tittel}">Peristeri tittel test</td>
+                        <td th:text="${u.arrangoer}">Peristeri</td>
+                        <td th:text="${u.adresse}">Bergen</td>
+                        <td th:text="${u.datoRange.startDate}">12/12/2024</td>
+                        <td><span th:classappend="${u.paameldingAApnet} ? 'aapen-paamelding' : 'lukket-paamelding'"
+                                  th:text="${u.paameldingsFrist}"></span></td>
+                        <td>
+                            <button th:hx-get="@{/admin/{id}(id=${u.id})}"
+                                    hx-target="#main-content"
+                                    hx-swap="outerHTML"
+                                    hx-push-url="true"
+                            >Velg denne
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section id="tidligereListe">
+            <h2>Tidligere utstillinger</h2>
+            <div class="overflow-auto">
+                <table class="striped">
+                    <thead>
+                    <tr>
+                        <th scope="col">Tittel</th>
+                        <th scope="col">Arrangør</th>
+                        <th scope="col">Sted</th>
+                        <th scope="col">Start Dato</th>
+                        <th scope="col">Slutt Dato</th>
+                        <th scope="col">Link</th>
+                    </tr>
+                    </thead>
+                    <tbody th:each="u : ${tidligereUtstillinger}">
+                    <tr>
+                        <td th:text="${u.tittel}">Peristeri tittel test</td>
+                        <td th:text="${u.arrangoer}">Peristeri</td>
+                        <td th:text="${u.adresse}">Bergen</td>
+                        <td th:text="${u.datoRange.startDate}">12/12/2024</td>
+                        <td th:text="${u.datoRange.endDate}">13/12/2024</td>
+                        <td>
+                            <button th:hx-get="@{/admin/{id}(id=${u.id})}"
+                                    hx-target="#main-content"
+                                    hx-swap="outerHTML"
+                                    hx-push-url="true"
+                            >Velg denne
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    <div th:fragment="genererkatalogdata" id="main-content">
+        <section>
+            <div>
+                <h2>Utstillingsdommere:</h2>
+                <p th:each="dommer : ${utstilling.getDommere}"
+                   th:text="${dommer.dommer.fornavn + ' ' + dommer.dommer.etternavn}"></p>
+            </div>
+
+            <div th:each="rase : ${raseliste}">
+                <h2 th:text="${rase}">Rase</h2>
+                <p th:each="dommer : ${dommerListe}"
+                   th:if="${#strings.contains(dommer.raser, rase)}">
+                    <span>Dommer: </span>
+                    <span th:text="${dommer.dommer.fornavn + ' ' + dommer.dommer.etternavn}">Dommernavn</span>
+                </p>
+
+                <div th:each="variant : ${raseVarianter.get(rase) ?: T(java.util.Collections).singletonList('Standard')}">
+                    <h3 th:text="${variant}">Variant</h3>
+
+                    <div th:each="farge : ${variantFarger.containsKey(variant) ? variantFarger.get(variant) : raseFarger.get(rase)}">
+                        <h5 th:text="${farge}">Farge</h5>
+                        <table>
+                            <tbody>
+                            <tr>
+                                <th><strong>Burnummer</strong></th>
+                                <th><strong>Poeng</strong></th>
+                                <th><strong>Variant</strong></th>
+                                <th><strong>Kjønn</strong></th>
+                                <th><strong>Alder</strong></th>
+                                <th><strong>Eier</strong></th>
+                            </tr>
+                            <th:block th:each="paamelding : ${utstilling.paameldinger}">
+                                <th:block th:each="due : ${paamelding.duer}"
+                                          th:if="${due.bedommelse != null && due.rase == rase && due.farge == farge && (due.variant == variant || (variant == 'Standard' && #strings.isEmpty(due.variant)))}">
+                                    <tr>
+                                        <td th:text="${due.burnummer}">Burnummer</td>
+                                        <td th:text="${due.bedommelse.poeng}">Poeng</td>
+                                        <td th:text="${#strings.isEmpty(due.variant) ? 'Standard' : due.variant}">Variant</td>
+                                        <td th:text="${due.kjonn} ? '1,0' : '0,1'">Kjønn</td>
+                                        <td th:text="${due.alder} ? 'Eldre' : 'Ung'">Alder</td>
+                                        <td th:text="${due.paamelding.utstiller.fornavn + ' ' + due.paamelding.utstiller.etternavn}">
+                                            Eier
+                                        </td>
+                                    </tr>
+                                </th:block>
+                            </th:block>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <br><br>
+        <section>
+            <h3 style="text-align: center">Utstillere</h3>
+            <table>
+                <thead>
+                <tr>
+                    <th>Navn</th>
+                    <th>Epost</th>
+                    <th>Forening</th>
+                    <th>Adresse</th>
+                    <th>Telefon</th>
+                    <th>Raser</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="utstiller : ${sortedUtstillere}">
+                    <td th:text="${utstiller.etternavn + ', ' + utstiller.fornavn}">Navn</td>
+                    <td th:text="${utstiller.epost}">Epost</td>
+                    <td th:text="${utstiller.forening}">Forening</td>
+                    <td th:text="${utstiller.adresse}">Adresse</td>
+                    <td th:text="${utstiller.telefon}">Telefon</td>
+                    <td th:text="${#strings.listJoin(utstillerRaser.get(utstiller.id), ', ')}">Raser</td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+        <button th:hx-get="@{/admin/{id}(id=${utstilling.id})}"
+                hx-target="#main-content"
+                hx-swap="outerHTML"
+                class="secondary">
+            Tilbake til handlingsoversikt
+        </button>
+    </div>
+
+</main>
+</body>
+</html>
