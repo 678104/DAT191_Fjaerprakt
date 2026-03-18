@@ -8,7 +8,12 @@
 <header class="container">
     <nav th:fragment="navbar" id="navbar">
         <ul>
-            <li><img src="/favicon.ico" alt="icon" class="nav-icon"> <strong>Peristeri</strong></li>
+            <li>
+                <a th:href="@{/}" href="/" aria-label="Gå til forsiden">
+                    <img src="/favicon.ico" alt="Peristeri logo" class="nav-icon">
+                    <strong>Peristeri</strong>
+                </a>
+            </li>
         </ul>
         <ul>
             <!--/*@thymesVar id="navLocation" type="String"*/-->
