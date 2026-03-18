@@ -1,5 +1,6 @@
 package no.hvl.peristeri.auth;
 
+import java.util.regex.Pattern;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,12 @@ public class RegistrerController {
 			return "auth/registrer";
 		}
 
+		if (!isValidEmail(nyBruker.getEpost())) {
+			session.setAttribute("nyBruker", nyBruker);
+			model.addAttribute("feilmelding", "Eposten er ikke gyldig.");
+			return "auth/registrer";
+		}
+
 		if (passord.length() < 4) {
 			session.setAttribute("nyBruker", nyBruker);
 			model.addAttribute("feilmelding", "Passord må være minst 4 tegn langt");
@@ -58,6 +65,11 @@ public class RegistrerController {
 		return "redirect:/login";
 	}
 
+	private boolean isValidEmail(String email) {
+		String emailRegex = "^[a-zA-Z0-9._\\-æøåÆØÅ]+@[a-zA-Z0-9.-]+\\.[a-zA-ZæøåÆØÅ]{2,4}$";
+		Pattern pattern = Pattern.compile(emailRegex);
+		return pattern.matcher(email).matches();
+	}
 
 	@ModelAttribute("navLocation")
 	public String navLocation() {
