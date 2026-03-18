@@ -18,7 +18,7 @@
         <p th:text="${error}" class="feilmelding">Feilmelding</p>
     </section>
     <section class="flex-grid">
-        <article style="max-width: 700px" th:if="${@environment.acceptsProfiles('dev')}">
+        <article style="width: 100%; max-width: 800px; min-width: 300px; margin: 0 auto;" th:if="${@environment.acceptsProfiles('dev')}">
             <header>
                 <h1 class="center-text">Dev Login</h1>
             </header>
@@ -42,7 +42,7 @@
                 <input form="devLoginForm" type="submit" value="Logg inn" class="primary">
             </footer>
         </article>
-        <article style="max-width: 700px">
+        <article style="width: 100%; max-width: 800px; min-width: 300px; margin: 0 auto;">
             <header>
                 <h1 class="center-text">Login</h1>
             </header>
@@ -60,20 +60,10 @@
                 </form>
             </div>
             <footer>
-                <input form="loginForm" type="submit" value="Logg inn" class="primary">
+                <button type="submit" form="loginForm" class="primary fill-parent-width" >Logg inn</button>
             </footer>
-        </article>
-        <article style="max-width: 700px">
-            <header>
-                <h2 class="center-text">Ny bruker?</h2>
-            </header>
-            <div>
-                <p>Registrer deg for å kunne melde deg på utstillinger</p>
-            </div>
             <footer>
-                <a role="button" class="primary fix-button-spacing fill-parent-width" th:href="@{/registrer}">
-                    Registrer ny bruker
-                </a>
+                <button type="button" class="primary fill-parent-width" style="width: 100%; max-width: 800px; min-width: 300px; margin: 0 auto;" th:onclick="'window.location.href = \'' + @{/registrer} + '\''">Registrer ny bruker</button>
             </footer>
         </article>
     </section>
