@@ -12,14 +12,16 @@
 <main class="container">
     <th:block th:fragment="kvittering">
         <section>
-            <h3>Legg til deltakere</h3>
+            <h3>Legg til påmeldte duer</h3>
             <p>Fullfør påmeldingen ved å fylle ut informasjonen under</p>
             <article>
                 <header><b th:text="${session.utstilling.tittel}"></b></header>
                 <p><strong>Arrangør:</strong> <span th:text="${session.utstilling.arrangoer}"></span></p>
                 <p><strong>Sted:</strong> <span th:text="${session.utstilling.adresse}"></span></p>
-                <p><strong>Startdato:</strong> <span th:text="${session.utstilling.datoRange.startDate}"></span></p>
-                <p><strong>Sluttdato:</strong> <span th:text="${session.utstilling.datoRange.endDate}"></span></p>
+                <p><strong>Startdato:</strong> <span
+                        th:text="${#temporals.format(session.utstilling.datoRange.startDate, 'dd.MM.yyyy')}"></span></p>
+                <p><strong>Sluttdato:</strong> <span
+                        th:text="${#temporals.format(session.utstilling.datoRange.endDate, 'dd.MM.yyyy')}"></span></p>
             </article>
 
             <!--/*@thymesVar id="utstiller" type="no.hvl.peristeri.feature.bruker.Bruker"*/-->
@@ -52,9 +54,17 @@
             </div>
         </section>
         <section>
+            <div id="duetabell">
+                <article class="muted-placeholder">
+                    Ingen duer er lagt til ennå.
+                </article>
+            </div>
+        </section>
+
+        <section>
             <form id="duepaamelding" method="post" hx-post="/paamelding/duekvittering" hx-trigger="submit"
-                  hx-target="#duetabell" hx-swap="outerHTML:beforeend"
-                  hx-on:htmx:afterRequest="if(validateForm(event)) { let elm = document.getElementById('radId'); let id = parseInt(elm.value); this.reset(); elm.value = ++id; }">
+                  hx-target="#duetabell" hx-swap="outerHTML"
+                  onsubmit="return validateForm(event)">
                 <table>
                     <thead>
                     <tr>
@@ -65,31 +75,51 @@
                         <th>Hanner (Eldre)</th>
                         <th>Hunner (Ung)</th>
                         <th>Hunner (Eldre)</th>
-                        <th>Ikke eget</th>
+                        <th>Ikke eget avl?</th>
                     </tr>
                     </thead>
                     <tbody id="rase-tabell">
                     <tr>
-                        <td><input type="text" name="rase" placeholder="Rase" required></td>
-                        <td><input type="text" name="farge" placeholder="Farge" required></td>
-                        <td><input type="text" name="variant" placeholder="Variant" required></td>
-                        <td><input type="number" name="hannerUng" value="0" min="0" oninput="sjekkNegativ(this)"></td>
-                        <td><input type="number" name="hannerEldre" value="0" min="0" oninput="sjekkNegativ(this)"></td>
-                        <td><input type="number" name="hunnerUng" value="0" min="0" oninput="sjekkNegativ(this)"></td>
-                        <td><input type="number" name="hunnerEldre" value="0" min="0" oninput="sjekkNegativ(this)"></td>
-                        <td><input type="checkbox" name="ikkeEget"></td>
+                        <td>
+                            <label for="ny-due-rase" style="position:absolute;left:-10000px;">Rase</label>
+                            <input id="ny-due-rase" type="text" name="rase" placeholder="Rase" required>
+                        </td>
+                        <td>
+                            <label for="ny-due-farge" style="position:absolute;left:-10000px;">Farge</label>
+                            <input id="ny-due-farge" type="text" name="farge" placeholder="Farge" required>
+                        </td>
+                        <td>
+                            <label for="ny-due-variant" style="position:absolute;left:-10000px;">Variant</label>
+                            <input id="ny-due-variant" type="text" name="variant" placeholder="Variant" required>
+                        </td>
+                        <td>
+                            <label for="ny-due-hanner-ung" style="position:absolute;left:-10000px;">Hanner ung</label>
+                            <input id="ny-due-hanner-ung" type="number" name="hannerUng" value="0" min="0" oninput="sjekkNegativ(this)">
+                        </td>
+                        <td>
+                            <label for="ny-due-hanner-eldre" style="position:absolute;left:-10000px;">Hanner eldre</label>
+                            <input id="ny-due-hanner-eldre" type="number" name="hannerEldre" value="0" min="0" oninput="sjekkNegativ(this)">
+                        </td>
+                        <td>
+                            <label for="ny-due-hunner-ung" style="position:absolute;left:-10000px;">Hunner ung</label>
+                            <input id="ny-due-hunner-ung" type="number" name="hunnerUng" value="0" min="0" oninput="sjekkNegativ(this)">
+                        </td>
+                        <td>
+                            <label for="ny-due-hunner-eldre" style="position:absolute;left:-10000px;">Hunner eldre</label>
+                            <input id="ny-due-hunner-eldre" type="number" name="hunnerEldre" value="0" min="0" oninput="sjekkNegativ(this)">
+                        </td>
+                        <td>
+                            <label for="ny-due-ikke-eget" style="position:absolute;left:-10000px;">Ikke eget avl</label>
+                            <input id="ny-due-ikke-eget" type="checkbox" name="ikkeEget" aria-label="Kryss av hvis duen ikke er eget avl">
+                        </td>
                     </tr>
                     </tbody>
                 </table>
+                <small>"Ikke eget avl" betyr at duen ikke er oppdrettet av deg selv.</small>
                 <div id="error-message" style="display: none; color: red;">Vennligst legg til minst en due</div>
                 <button type="submit">Legg til duer</button>
                 <input type="hidden" id="radId" name="radId" th:value="${radId}">
             </form>
-        </section>
-
-        <section>
-            <div id="duetabell">
-            </div>
         </section>
     </th:block>
 

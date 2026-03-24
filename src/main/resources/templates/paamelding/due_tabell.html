@@ -11,7 +11,7 @@
 </header>
 <main class="container">
     <section>
-        <h4>Dine duer</h4>
+        <h4>Påmeldte duer</h4>
         <div th:fragment="due-tabell" class="container-fluid" id="duetabell">
             <table>
                 <thead>
@@ -23,7 +23,7 @@
                     <th>Hanner eldre</th>
                     <th>Hunner ung</th>
                     <th>Hunner eldre</th>
-                    <th>Ikke eget</th>
+                    <th>Ikke eget avl?</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -35,7 +35,7 @@
                     <td><span th:text="${due.hannerEldre}">Hanner eldre</span></td>
                     <td><span th:text="${due.hunnerUng}">Hunner ung</span></td>
                     <td><span th:text="${due.hunnerEldre}">Hunner eldre</span></td>
-                    <td><span th:text="${due.ikkeEget} ? 'Ikke eget' : 'Egen'">0</span></td>
+                    <td><span th:text="${due.ikkeEget} ? 'Ja' : 'Nei'">0</span></td>
                     <td>
                         <button th:hx-get="@{/paamelding/redigerDue/{id}(id=${due.radId})}" hx-target="closest tr"
                                 hx-swap="outerHTML">
@@ -45,7 +45,8 @@
                 </tr>
             </table>
 
-            <button hx-post="/paamelding/submitPaamelding" hx-target="main" hx-swap="outerHTML">Meld deg på!</button>
+            <button class="meld-pa-knapp" hx-post="/paamelding/submitPaamelding" hx-target="main" hx-swap="outerHTML">Meld deg på!
+            </button>
         </div>
     </section>
 
@@ -53,22 +54,45 @@
         <table>
             <tbody>
             <tr th:fragment="redigerDueRad">
-                <td><input type="text" th:value="${dueDTO.rase}" name="rase"></td>
-                <td><input type="text" th:value="${dueDTO.farge}" name="farge"></td>
-                <td><input type="text" th:value="${dueDTO.variant}" name="variant"></td>
-                <td><input type="number" th:value="${dueDTO.hannerUng}" name="hannerUng" oninput="sjekkNegativ(this)">
+                <td>
+                    <label for="rediger-rase" style="position:absolute;left:-10000px;">Rase</label>
+                    <input id="rediger-rase" type="text" th:value="${dueDTO.rase}" name="rase">
                 </td>
-                <td><input type="number"
+                <td>
+                    <label for="rediger-farge" style="position:absolute;left:-10000px;">Farge</label>
+                    <input id="rediger-farge" type="text" th:value="${dueDTO.farge}" name="farge">
+                </td>
+                <td>
+                    <label for="rediger-variant" style="position:absolute;left:-10000px;">Variant</label>
+                    <input id="rediger-variant" type="text" th:value="${dueDTO.variant}" name="variant">
+                </td>
+                <td>
+                    <label for="rediger-hanner-ung" style="position:absolute;left:-10000px;">Hanner ung</label>
+                    <input id="rediger-hanner-ung" type="number" th:value="${dueDTO.hannerUng}" name="hannerUng" oninput="sjekkNegativ(this)">
+                </td>
+                <td>
+                    <label for="rediger-hanner-eldre" style="position:absolute;left:-10000px;">Hanner eldre</label>
+                    <input id="rediger-hanner-eldre" type="number"
                            th:value="${dueDTO.hannerEldre}"
                            name="hannerEldre"
-                           oninput="sjekkNegativ(this)"></td>
-                <td><input type="number" th:value="${dueDTO.hunnerUng}" name="hunnerUng" oninput="sjekkNegativ(this)">
+                           oninput="sjekkNegativ(this)">
                 </td>
-                <td><input type="number"
+                <td>
+                    <label for="rediger-hunner-ung" style="position:absolute;left:-10000px;">Hunner ung</label>
+                    <input id="rediger-hunner-ung" type="number" th:value="${dueDTO.hunnerUng}" name="hunnerUng" oninput="sjekkNegativ(this)">
+                </td>
+                <td>
+                    <label for="rediger-hunner-eldre" style="position:absolute;left:-10000px;">Hunner eldre</label>
+                    <input id="rediger-hunner-eldre" type="number"
                            th:value="${dueDTO.hunnerEldre}"
                            name="hunnerEldre"
-                           oninput="sjekkNegativ(this)"></td>
-                <td><input type="checkbox" th:checked="${dueDTO.ikkeEget}" name="ikkeEget"></td>
+                           oninput="sjekkNegativ(this)">
+                </td>
+                <td>
+                    <label for="rediger-ikke-eget" style="position:absolute;left:-10000px;">Ikke eget avl</label>
+                    <input id="rediger-ikke-eget" type="checkbox" th:checked="${dueDTO.ikkeEget}" name="ikkeEget"
+                           aria-label="Kryss av hvis duen ikke er eget avl">
+                </td>
                 <td>
                     <button th:hx-post="@{/paamelding/oppdaterDue/{id}(id=${dueDTO.radId})}" hx-target="closest tr"
                             hx-swap="outerHTML" hx-include="closest tr">Lagre
@@ -84,7 +108,7 @@
                 <td><span th:text="${due.hannerEldre}">Hanner eldre</span></td>
                 <td><span th:text="${due.hunnerUng}">Hunner ung</span></td>
                 <td><span th:text="${due.hunnerEldre}">Hunner eldre</span></td>
-                <td><span th:text="${due.ikkeEget} ? 'Ikke eget' : 'Egen'">0</span></td>
+                <td><span th:text="${due.ikkeEget} ? 'Ja' : 'Nei'">0</span></td>
                 <td>
                     <button th:hx-get="@{/paamelding/redigerDue/{id}(id=${due.radId})}" hx-target="closest tr"
                             hx-swap="outerHTML">
