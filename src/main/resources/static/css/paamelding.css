@@ -33,6 +33,24 @@ main {
     gap: 1em;
 }
 
+.paamelding-status {
+    margin-bottom: 0.75rem;
+}
+
+.paamelding-actions,
+.meld-pa-knapp {
+    margin-top: 1rem;
+}
+
+.muted-placeholder {
+    padding: 0.75rem;
+    opacity: 0.75;
+}
+
+.epost-varsel-melding {
+    margin: 0.5rem 0 1rem;
+}
+
 /* For mobiler */
 @media (max-width: 600px) {
     #utstillinger {
