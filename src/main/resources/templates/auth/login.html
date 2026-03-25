@@ -60,10 +60,8 @@
                 </form>
             </div>
             <footer>
-                <button type="submit" form="loginForm" class="primary fill-parent-width" >Logg inn</button>
-            </footer>
-            <footer>
-                <button type="button" class="primary fill-parent-width" style="width: 100%; max-width: 800px; min-width: 300px; margin: 0 auto;" th:onclick="'window.location.href = \'' + @{/registrer} + '\''">Registrer ny bruker</button>
+                <button type="submit" form="loginForm" class="primary fill-parent-width">Logg inn</button>
+                <button type="submit" class="primary fill-parent-width" th:onclick="'window.location.href = \'' + @{/registrer} + '\''">Registrer ny bruker</button>
             </footer>
         </article>
     </section>
