@@ -68,13 +68,23 @@ header {
 header nav a,
 header nav strong {
     color: var(--nav-text) !important;
+#theme-toggle {
+    min-width: 2.5rem;
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
 }
 
 header nav a:hover {
     color: var(--color-green-light) !important;
     text-decoration: none;
+#theme-toggle [data-theme-icon] {
+    display: inline-flex;
+    width: 1.1rem;
+    height: 1.1rem;
+    line-height: 1;
 }
 
+#theme-toggle [data-theme-icon] svg {
 .nav-icon {
     height: 100%;
     max-height: 3rem;
@@ -307,6 +317,8 @@ section {
 .fill-parent {
     width: 100%;
     height: 100%;
+    display: block;
+    fill: currentColor;
 }
 
 .fill-parent-width {

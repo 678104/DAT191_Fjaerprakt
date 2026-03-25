@@ -8,6 +8,7 @@
 <main class="container" th:fragment="paameldt">
     <section>
         <h2>Du er nå påmeldt</h2>
+        <p class="epost-varsel-melding">E-postvarsling er sendt til <strong th:text="${utstiller.epost}">din e-post</strong>.</p>
         <!--/*@thymesVar id="utstiller" type="no.hvl.peristeri.feature.bruker.Bruker"*/-->
         <div class="grid" style="grid-template-columns: auto 1fr; gap: 0.5rem;" th:object="${utstiller}">
             <strong>Navn:</strong><span th:text="|*{fornavn} *{etternavn}|"></span>
@@ -22,14 +23,14 @@
         <table>
             <thead>
             <tr>
-                <td>Rase</td>
-                <td>Farge</td>
-                <td>Variant</td>
-                <td>Hanner (Ung)</td>
-                <td>Hanner (Eldre)</td>
-                <td>Hunner (Ung)</td>
-                <td>Hunner (Eldre)</td>
-                <td>Ikke eget</td>
+                <th>Rase</th>
+                <th>Farge</th>
+                <th>Variant</th>
+                <th>Hanner (Ung)</th>
+                <th>Hanner (Eldre)</th>
+                <th>Hunner (Ung)</th>
+                <th>Hunner (Eldre)</th>
+                <th>Ikke eget avl</th>
             </tr>
             </thead>
             <tbody>
@@ -41,7 +42,7 @@
                 <td><span th:text="${due.hannerEldre}">Hanner eldre</span></td>
                 <td><span th:text="${due.hunnerUng}">Hunner ung</span></td>
                 <td><span th:text="${due.hunnerEldre}">Hunner eldre</span></td>
-                <td><span th:text="${due.ikkeEget} ? 'Ikke eget' : 'Egen'">0</span></td>
+                <td><span th:text="${due.ikkeEget} ? 'Ja' : 'Nei'">0</span></td>
             </tr>
             </tbody>
         </table>
@@ -50,8 +51,10 @@
             <header><b th:text="${session.utstilling.tittel}"></b></header>
             <p><strong>Arrangør:</strong> <span th:text="${session.utstilling.arrangoer}"></span></p>
             <p><strong>Sted:</strong> <span th:text="${session.utstilling.adresse}"></span></p>
-            <p><strong>Startdato:</strong> <span th:text="${session.utstilling.datoRange.startDate}"></span></p>
-            <p><strong>Sluttdato:</strong> <span th:text="${session.utstilling.datoRange.endDate}"></span></p>
+            <p><strong>Startdato:</strong> <span
+                    th:text="${#temporals.format(session.utstilling.datoRange.startDate, 'dd.MM.yyyy')}"></span></p>
+            <p><strong>Sluttdato:</strong> <span
+                    th:text="${#temporals.format(session.utstilling.datoRange.endDate, 'dd.MM.yyyy')}"></span></p>
         </article>
     </section>
 </main>

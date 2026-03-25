@@ -1,8 +1,8 @@
 <div id="resultat-liste">
-    <h2>Påmeldte Duer</h2>
+    <h2>Påmeldte duer</h2>
     <button th:hx-get="@{/bruker/paamelding/{id}/dueliste(id=${paamelding.id})}"
             hx-target="#resultat-liste" hx-swap="outerHTML">
-        Se Due Liste
+        Se dueliste
     </button>
     <table class="striped">
         <thead>
@@ -30,7 +30,7 @@
     </table>
     <button id="endre-ringnr" class=""
             th:hx-get="@{/bruker/paamelding/{id}/ringnumre(id=${paamelding.id})}"
-            hx-target="#due-liste" hx-swap="outerHTML">
-        Legg til eller Endre Ringnumre
+            hx-target="#resultat-liste" hx-swap="outerHTML">
+        Legg til eller endre ringnumre
     </button>
 </div>

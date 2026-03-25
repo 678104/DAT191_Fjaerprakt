@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org" lang="no">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:hx-on="http://www.w3.org/1999/xhtml" lang="no">
 <head>
     <title>Mal</title>
     <th:block th:replace="~{fragments/header :: header}"></th:block>
@@ -17,7 +18,7 @@
                   hx-post="/utstilling/registrer"
                   hx-trigger="submit"
                   hx-push-url="/utstilling"
-                  hx-on:submit="document.getElementById('visRegistrerBtn').classList.remove('hidden');">
+                  onsubmit="document.getElementById('visRegistrerBtn').classList.remove('hidden');">
                 <fieldset>
                     <label for="tittel"><b>Tittel</b>
                         <input type="text" id="tittel" name="tittel" placeholder="Tittel på utstilling" required>
@@ -57,7 +58,7 @@
                     <button hx-target="#content"
                             class="secondary"
                             hx-get="/utstilling/liste"
-                            hx-on:click="document.getElementById('visRegistrerBtn').classList.remove('hidden');"
+                            onclick="document.getElementById('visRegistrerBtn').classList.remove('hidden');"
                             hx-push-url="/utstilling"
                     >Avbryt Registrering
                     </button>
@@ -91,9 +92,9 @@
                     <td th:text="${u.tittel}">tittel</td>
                     <td th:text="${u.arrangoer}">arrangør</td>
                     <td th:text="${u.adresse}">adresse</td>
-                    <td th:text="${u.datoRange.startDate}">dato</td>
+                    <td th:text="${#temporals.format(u.datoRange.startDate, 'dd.MM.yyyy')}">dato</td>
                     <td><span th:classappend="${u.paameldingAApnet} ? 'aapen-paamelding' : 'lukket-paamelding'"
-                              th:text="${u.paameldingsFrist}"></span></td>
+                              th:text="${#temporals.format(u.paameldingsFrist, 'dd.MM.yyyy')}"></span></td>
                     <td>
                         <a th:href="@{/utstilling/{id}(id=${u.id})}"
                            role="button"
@@ -126,8 +127,8 @@
                     <td th:text="${u.tittel}">Peristeri tittel test</td>
                     <td th:text="${u.arrangoer}">Peristeri</td>
                     <td th:text="${u.adresse}">Bergen</td>
-                    <td th:text="${u.datoRange.startDate}">12/12/2024</td>
-                    <td th:text="${u.datoRange.endDate}">13/12/2024</td>
+                    <td th:text="${#temporals.format(u.datoRange.startDate, 'dd.MM.yyyy')}">12.12.2024</td>
+                    <td th:text="${#temporals.format(u.datoRange.endDate, 'dd.MM.yyyy')}">13.12.2024</td>
                     <td>
                         <a th:href="@{/utstilling/{id}(id=${u.id})}"
                            role="button"
@@ -156,12 +157,12 @@
                     <hr/>
                     <div>
                         <b>Start Dato</b>
-                        <div th:text="*{datoRange.startDate}">12/12/2024</div>
+                        <div th:text="${#temporals.format(utstilling.datoRange.startDate, 'dd.MM.yyyy')}">12.12.2024</div>
                     </div>
                     <hr/>
                     <div>
                         <b>Påmeldingsfrist</b>
-                        <div th:text="*{paameldingsFrist}">10/11/2024</div>
+                        <div th:text="${#temporals.format(utstilling.paameldingsFrist, 'dd.MM.yyyy')}">10.11.2024</div>
                     </div>
                 </div>
                 <div>
@@ -172,13 +173,13 @@
                     <hr/>
                     <div>
                         <b>Sluttdato</b>
-                        <div th:text="*{datoRange.endDate}">13/12/2024</div>
+                        <div th:text="${#temporals.format(utstilling.datoRange.endDate, 'dd.MM.yyyy')}">13.12.2024</div>
                     </div>
                     <hr/>
                     <div>
-                        <b>Påmelding Mulig</b>
+                        <b>Påmeldingsstatus</b>
                         <div th:classappend="*{paameldingAApnet} ? 'aapen-paamelding' : 'lukket-paamelding'"
-                             th:text="*{paameldingAApnet}? 'Ja' : 'Nei'">
+                             th:text="*{paameldingAApnet}? 'Påmelding pågår' : 'Påmelding stengt'">
                         </div>
                         <button th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
                                 hx-target="#content"
@@ -255,7 +256,7 @@
                     <button hx-target="#content"
                             class="secondary"
                             hx-get="/utstilling/liste"
-                            hx-on:click="document.getElementById('visRegistrerBtn')?.classList.remove('hidden');"
+                            onclick="document.getElementById('visRegistrerBtn')?.classList.remove('hidden');"
                             hx-push-url="/utstilling">
                         Tilbake
                     </button>

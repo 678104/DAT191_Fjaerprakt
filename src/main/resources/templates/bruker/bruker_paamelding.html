@@ -20,9 +20,9 @@
                     <div id="utstilling-info">
                         <p>Utstilling: <span id="utstilling-tittel" th:text="*{utstilling.tittel}">Utstilling</span></p>
                         <p>Startdato: <span id="utstilling-startdato"
-                                            th:text="*{utstilling.datoRange.startDate}">Startdato</span></p>
+                                            th:text="${#temporals.format(paamelding.utstilling.datoRange.startDate, 'dd.MM.yyyy')}">Startdato</span></p>
                         <p>Sluttdato: <span id="utstilling-sluttdato"
-                                            th:text="*{utstilling.datoRange.endDate}">Sluttdato</span></p>
+                                            th:text="${#temporals.format(paamelding.utstilling.datoRange.endDate, 'dd.MM.yyyy')}">Sluttdato</span></p>
                         <p>Arrangør: <span id="utstilling-arrangoer" th:text="*{utstilling.arrangoer}">Arrangør</span>
                         </p>
                         <p>Adresse: <span id="utstilling-adresse" th:text="*{utstilling.adresse}">Adresse</span></p>
@@ -62,7 +62,7 @@
                         <button id="endre-ringnr" class=""
                                 th:hx-get="@{/bruker/paamelding/{id}/ringnumre(id=${paamelding.id})}"
                                 hx-target="#due-liste" hx-swap="outerHTML">
-                            Legg til eller Endre Ringnumre
+                            Legg til eller endre ringnumre
                         </button>
                     </div>
                 </div>

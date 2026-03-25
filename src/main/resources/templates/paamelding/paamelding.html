@@ -12,6 +12,7 @@
 </header>
 <main class="container">
     <section class="content">
+        <p class="paamelding-status"><strong>Påmelding pågår</strong> for utstillingene under.</p>
         <h3>Velg utstilling</h3>
         <div class="grid" id="utstillinger">
             <div class="card radio-card"
@@ -23,9 +24,9 @@
                     <h4 th:text="${u.tittel}"></h4>
                     <p><b>Arrangør:</b> <span th:text="${u.arrangoer}"></span></p>
                     <p><b>Sted:</b> <span th:text="${u.adresse}"></span></p>
-                    <p><b>Startdato:</b> <span th:text="${u.datoRange.startDate}"></span></p>
-                    <p><b>Sluttdato:</b> <span th:text="${u.datoRange.endDate}"></span></p>
-                    <p><b>Påmeldingsfrist:</b> <span th:text="${u.paameldingsFrist}"></span></p>
+                    <p><b>Startdato:</b> <span th:text="${#temporals.format(u.datoRange.startDate, 'dd.MM.yyyy')}"></span></p>
+                    <p><b>Sluttdato:</b> <span th:text="${#temporals.format(u.datoRange.endDate, 'dd.MM.yyyy')}"></span></p>
+                    <p><b>Påmeldingsfrist:</b> <span th:text="${#temporals.format(u.paameldingsFrist, 'dd.MM.yyyy')}"></span></p>
                 </div>
             </div>
         </div>
@@ -33,7 +34,7 @@
             <p th:text="${ingenUtstilling}" style="color: red; font-weight: bold;"></p>
         </div>
         <div class="spacer-lg"></div>
-        <div>
+        <div class="paamelding-actions">
             <form id="paamelding"
                   method="post"
                   hx-post="/paamelding/paameldingskvittering"

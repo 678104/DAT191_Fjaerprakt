@@ -16,7 +16,7 @@
                 <h1 class="center-text">Din Bruker</h1>
             </header>
             <!--/*@thymesVar id="bruker" type="no.hvl.peristeri.feature.bruker.Bruker"*/-->
-            <div id="user-info" th:object="${bruker}">
+            <div id="user-info-passord" th:object="${bruker}">
                 <table class="bruker-info-table">
                     <tr>
                         <th>Fornavn</th>
@@ -57,7 +57,7 @@
                       hx-post="/bruker/endrePassord"
                       hx-target="closest article"
                       hx-swap="outerHTML"
-                      hx-on:htmx:validation:validate="sjekkPassord()">
+                      onsubmit="sjekkPassord()">
                     <label for="passord">Nåværende passord:</label>
                     <input id="passord" type="password" name="passord" minlength="4" required>
                     <label for="nyttPassord">Nytt passord:</label>
@@ -113,7 +113,7 @@
                 <h1 class="center-text">Din Bruker</h1>
             </header>
             <!--/*@thymesVar id="bruker" type="no.hvl.peristeri.feature.bruker.Bruker"*/-->
-            <div id="user-info" th:object="${bruker}">
+            <div id="user-info-rediger" th:object="${bruker}">
                 <form id="redigerBrukerInfoForm"
                       hx-post="/bruker/redigerBrukerInfo"
                       hx-target="closest article"
@@ -121,35 +121,59 @@
                     <table class="bruker-info-table">
                         <tr>
                             <th>Fornavn</th>
-                            <td><input id="fornavn" th:value="*{fornavn}" name="fornavn" required></td>
+                            <td>
+                                <label for="fornavn" style="position:absolute;left:-10000px;">Fornavn</label>
+                                <input id="fornavn" th:value="*{fornavn}" name="fornavn" required>
+                            </td>
                         </tr>
                         <tr>
                             <th>Etternavn</th>
-                            <td><input id="etternavn" th:value="*{etternavn}" name="etternavn" required></td>
+                            <td>
+                                <label for="etternavn" style="position:absolute;left:-10000px;">Etternavn</label>
+                                <input id="etternavn" th:value="*{etternavn}" name="etternavn" required>
+                            </td>
                         </tr>
                         <tr>
                             <th>E-post</th>
-                            <td><input id="epost" th:value="*{epost}" name="epost" type="email" required></td>
+                            <td>
+                                <label for="epost" style="position:absolute;left:-10000px;">E-post</label>
+                                <input id="epost" th:value="*{epost}" name="epost" type="email" required>
+                            </td>
                         </tr>
                         <tr>
                             <th>Telefonnummer</th>
-                            <td><input id="telefon" th:value="*{telefon}" name="telefon" type="tel" required></td>
+                            <td>
+                                <label for="telefon" style="position:absolute;left:-10000px;">Telefonnummer</label>
+                                <input id="telefon" th:value="*{telefon}" name="telefon" type="tel" required>
+                            </td>
                         </tr>
                         <tr>
                             <th>Adresse</th>
-                            <td><input id="adresse" th:value="*{adresse}" name="adresse" required></td>
+                            <td>
+                                <label for="adresse" style="position:absolute;left:-10000px;">Adresse</label>
+                                <input id="adresse" th:value="*{adresse}" name="adresse" required>
+                            </td>
                         </tr>
                         <tr>
                             <th>Postnummer</th>
-                            <td><input id="postnummer" th:value="*{postnummer}" name="postnummer" required></td>
+                            <td>
+                                <label for="postnummer" style="position:absolute;left:-10000px;">Postnummer</label>
+                                <input id="postnummer" th:value="*{postnummer}" name="postnummer" required>
+                            </td>
                         </tr>
                         <tr>
                             <th>Poststed</th>
-                            <td><input id="poststed" th:value="*{poststed}" name="poststed"></td>
+                            <td>
+                                <label for="poststed" style="position:absolute;left:-10000px;">Poststed</label>
+                                <input id="poststed" th:value="*{poststed}" name="poststed">
+                            </td>
                         </tr>
                         <tr>
                             <th>Forening</th>
-                            <td><input id="forening" th:value="*{forening}" name="forening" required></td>
+                            <td>
+                                <label for="forening" style="position:absolute;left:-10000px;">Forening</label>
+                                <input id="forening" th:value="*{forening}" name="forening" required>
+                            </td>
                         </tr>
                     </table>
                 </form>
@@ -203,8 +227,8 @@
                 <tbody>
                 <tr th:each="p : ${liste}">
                     <td th:text="${p.utstilling.tittel}"></td>
-                    <td th:text="${p.utstilling.datoRange.startDate}"></td>
-                    <td th:text="${p.utstilling.datoRange.endDate}"></td>
+                    <td th:text="${#temporals.format(p.utstilling.datoRange.startDate, 'dd.MM.yyyy')}"></td>
+                    <td th:text="${#temporals.format(p.utstilling.datoRange.endDate, 'dd.MM.yyyy')}"></td>
                     <td th:text="${p.utstilling.arrangoer}"></td>
                     <td th:text="${p.utstilling.adresse}"></td>
                     <td>
@@ -216,12 +240,12 @@
         </div>
         <!--/*@thymesVar id="paamelding" type="no.hvl.peristeri.feature.paamelding.Paamelding"*/-->
         <div th:fragment="redigerRingnumre" th:object="${paamelding}" id="endre-due-liste">
-            <h1>Rediger Ringnumre</h1>
+            <h1>Rediger ringnumre</h1>
             <table class="striped">
                 <thead>
                 <tr>
-                    <th>Løpenummer</th>
-                    <th>Årstall</th>
+                    <th>Ringnummer (løpenr.)</th>
+                    <th>Ringnummer (år)</th>
                     <th>Rase</th>
                     <th>Farge</th>
                     <th>Variant</th>
@@ -233,8 +257,14 @@
                 </thead>
                 <tbody>
                 <tr th:each="d : *{duer}">
-                    <td><input th:value="${d.lopenummer}" name="lopenr"></td>
-                    <td><input th:value="${d.aarstall}" name="aarstall"></td>
+                    <td>
+                        <label th:for="|lopenr-${d.id}|" style="position:absolute;left:-10000px;">Ringnummer løpenummer</label>
+                        <input th:id="|lopenr-${d.id}|" th:value="${d.lopenummer}" name="lopenr" placeholder="f.eks. 1234" aria-label="Ringnummer løpenummer">
+                    </td>
+                    <td>
+                        <label th:for="|aarstall-${d.id}|" style="position:absolute;left:-10000px;">Ringnummer årstall</label>
+                        <input th:id="|aarstall-${d.id}|" th:value="${d.aarstall}" name="aarstall" placeholder="f.eks. 25" aria-label="Ringnummer årstall">
+                    </td>
                     <td th:text="${d.rase}">Rase</td>
                     <td th:text="${d.farge}">Farge</td>
                     <td th:text="${d.variant}">Variant</td>
