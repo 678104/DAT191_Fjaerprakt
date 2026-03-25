@@ -68,6 +68,8 @@ header {
 header nav a,
 header nav strong {
     color: var(--nav-text) !important;
+}
+
 #theme-toggle {
     min-width: 2.5rem;
     padding-left: 0.6rem;
@@ -77,6 +79,8 @@ header nav strong {
 header nav a:hover {
     color: var(--color-green-light) !important;
     text-decoration: none;
+}
+
 #theme-toggle [data-theme-icon] {
     display: inline-flex;
     width: 1.1rem;
@@ -84,7 +88,7 @@ header nav a:hover {
     line-height: 1;
 }
 
-#theme-toggle [data-theme-icon] svg {
+#theme-toggle [data-theme-icon] svg {}
 .nav-icon {
     height: 100%;
     max-height: 3rem;
@@ -339,4 +343,4 @@ section {
 
 .bruker-info-table th {
     width: 10rem;
-}}}}
+}
