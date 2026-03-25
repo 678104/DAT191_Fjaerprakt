@@ -45,6 +45,12 @@
                 <a href="/bruker" role="button"
                    th:classappend="${navLocation == 'bruker'} ? 'contrast' : ''">Din Bruker</a>
             </li>
+            <li>
+                <button id="theme-toggle" type="button" class="secondary outline" aria-label="Bytt til morkt tema"
+                        aria-pressed="false" title="Bytt tema">
+                    <span data-theme-icon aria-hidden="true"></span>
+                </button>
+            </li>
 
         </ul>
     </nav>
