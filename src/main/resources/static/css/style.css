@@ -65,15 +65,50 @@ header {
     border-radius: 0 0 0.5rem 0.5rem;
 }
 
+header nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+header nav ul {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+header nav ul:first-child {
+    justify-content: flex-start;
+}
+
+header nav li {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
 header nav a,
 header nav strong {
     color: var(--nav-text) !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 #theme-toggle {
     min-width: 2.5rem;
     padding-left: 0.6rem;
     padding-right: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 header nav a:hover {
@@ -108,6 +143,13 @@ input[type="submit"] {
     color: #ffffff !important;
     border-radius: 0.4rem;
     transition: background-color 0.2s ease, transform 0.1s ease;
+    height: 2.5rem;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
 }
 
 button:hover,
@@ -118,6 +160,19 @@ input[type="submit"]:hover {
     background-color: var(--color-blue-light);
     color: #ffffff !important;
     transform: translateY(-1px);
+}
+
+/* Override Pico CSS secondary outline styling in navbar */
+header nav button.secondary.outline {
+    background-color: var(--color-blue-dark);
+    border-color: var(--color-blue-dark);
+    color: #ffffff !important;
+}
+
+header nav button.secondary.outline:hover {
+    background-color: var(--color-blue-light);
+    border-color: var(--color-blue-light);
+    color: #ffffff !important;
 }
 
 /* ─── Cards / articles ───────────────────────────────────────── */
