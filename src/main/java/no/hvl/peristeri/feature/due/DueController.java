@@ -2,8 +2,6 @@ package no.hvl.peristeri.feature.due;
 
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +12,8 @@ import org.springframework.web.servlet.view.FragmentsRendering;
 @Controller
 @RequestMapping("/due")
 public class DueController {
-	private final Logger logger = LoggerFactory.getLogger(DueController.class);
-
 	private final DueService dueService;
+	private final DueLookupService dueLookupService;
 
 	@HxRequest
 	@PostMapping("/endreRingnummer/{id}/rad")
@@ -40,10 +37,13 @@ public class DueController {
 
 	@HxRequest
 	@PostMapping("/adminEndreDue")
-	public String oppdaterDueHtmxFraAdmin(@RequestParam Long id, @RequestParam String rase,
-	                              @RequestParam(required = false) String farge, @RequestParam(required = false) String variant, Model model) {
-		Due saved = dueService.oppdaterDueInfo(id, rase, farge, variant);
+	public String oppdaterDueHtmxFraAdmin(@RequestParam Long id, @RequestParam Long raseId,
+	                              @RequestParam Long fargeId, @RequestParam Long variantId, Model model) {
+		Due saved = dueService.oppdaterDueInfo(id, raseId, fargeId, variantId);
 		model.addAttribute("due", saved);
+		model.addAttribute("raser", dueLookupService.hentAlleRaser());
+		model.addAttribute("farger", dueLookupService.hentAlleFarger());
+		model.addAttribute("varianter", dueLookupService.hentAlleVarianter());
 		return "admin/admin_fragments :: bulkEditRad";
 	}
 }

@@ -82,15 +82,24 @@
                     <tr>
                         <td>
                             <label for="ny-due-rase" style="position:absolute;left:-10000px;">Rase</label>
-                            <input id="ny-due-rase" type="text" name="rase" placeholder="Rase" required>
+                            <select id="ny-due-rase" name="raseId" required>
+                                <option value="">Velg rase</option>
+                                <option th:each="r : ${raser}" th:value="${r.id}" th:text="${r.visningsnavn}"></option>
+                            </select>
                         </td>
                         <td>
                             <label for="ny-due-farge" style="position:absolute;left:-10000px;">Farge</label>
-                            <input id="ny-due-farge" type="text" name="farge" placeholder="Farge" required>
+                            <select id="ny-due-farge" name="fargeId" required>
+                                <option value="">Velg farge</option>
+                                <option th:each="f : ${farger}" th:value="${f.id}" th:text="${f.navn}"></option>
+                            </select>
                         </td>
                         <td>
                             <label for="ny-due-variant" style="position:absolute;left:-10000px;">Variant</label>
-                            <input id="ny-due-variant" type="text" name="variant" placeholder="Variant" required>
+                            <select id="ny-due-variant" name="variantId" required>
+                                <option value="">Velg variant</option>
+                                <option th:each="v : ${varianter}" th:value="${v.id}" th:text="${v.navn}"></option>
+                            </select>
                         </td>
                         <td>
                             <label for="ny-due-hanner-ung" style="position:absolute;left:-10000px;">Hanner ung</label>

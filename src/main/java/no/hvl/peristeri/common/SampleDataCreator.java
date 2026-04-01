@@ -8,6 +8,7 @@ import no.hvl.peristeri.feature.dommer.Bedommelse;
 import no.hvl.peristeri.feature.dommer.DommerPaamelding;
 import no.hvl.peristeri.feature.dommer.DommerService;
 import no.hvl.peristeri.feature.due.Due;
+import no.hvl.peristeri.feature.due.DueLookupService;
 import no.hvl.peristeri.feature.due.DueService;
 import no.hvl.peristeri.feature.paamelding.Paamelding;
 import no.hvl.peristeri.feature.paamelding.PaameldingService;
@@ -40,6 +41,7 @@ public class SampleDataCreator implements CommandLineRunner {
 	private final UtstillingService utstillingService;
 	private final BrukerService     brukerService;
 	private final DueService        dueService;
+	private final DueLookupService  dueLookupService;
 	private final DommerService     dommerService;
 	private final PaameldingService paameldingService;
 	private final PasswordEncoder   passwordEncoder;
@@ -62,6 +64,20 @@ public class SampleDataCreator implements CommandLineRunner {
 
 	private void setPassword(Bruker bruker, String nyttPassord) {
 		bruker.setPassword(passwordEncoder.encode(nyttPassord));
+	}
+
+	private Due lagDue(String ringnummer, String rase, String farge, String variant, Boolean kjonn, Boolean alder,
+	                   Boolean ikkeEget, Paamelding paamelding) {
+		return new Due(
+				ringnummer,
+				dueLookupService.finnEllerLagRase(rase, "Standardgruppe"),
+				dueLookupService.finnEllerLagFarge(farge),
+				dueLookupService.finnEllerLagVariant(variant),
+				kjonn,
+				alder,
+				ikkeEget,
+				paamelding
+		);
 	}
 
 	private List<Utstilling> utstillingerTestData() {
@@ -130,17 +146,17 @@ public class SampleDataCreator implements CommandLineRunner {
 		Paamelding p2 = new Paamelding(cris, u);
 		Paamelding p3 = new Paamelding(bell, u);
 
-		Due ds1 = new Due("1-23", "Norsk Tomler", "Hvit", "Standard", true, false, false, p1);
+		Due ds1 = lagDue("1-23", "Norsk Tomler", "Hvit", "Standard", true, false, false, p1);
 		ds1.setPaamelding(p1);
-		Due ds2 = new Due("2-23", "Norsk Tomler", "Grå", "Standard", true, false, false, p1);
+		Due ds2 = lagDue("2-23", "Norsk Tomler", "Grå", "Standard", true, false, false, p1);
 		ds2.setPaamelding(p1);
-		Due ds3 = new Due("3-23", "Norsk Tomler", "Blå", "Sjelden", false, true, false, p1);
+		Due ds3 = lagDue("3-23", "Norsk Tomler", "Blå", "Sjelden", false, true, false, p1);
 		ds3.setPaamelding(p1);
-		Due ds4 = new Due("4-23", "Norsk Tomler", "Oransje", "Sjelden", false, true, false, p1);
+		Due ds4 = lagDue("4-23", "Norsk Tomler", "Oransje", "Sjelden", false, true, false, p1);
 		ds4.setPaamelding(p1);
-		Due dc1 = new Due("5-23", "Engelsk Tippler", "Rød", "Lang", false, true, false, p2);
+		Due dc1 = lagDue("5-23", "Engelsk Tippler", "Rød", "Lang", false, true, false, p2);
 		dc1.setPaamelding(p2);
-		Due db1 = new Due("6-23", "Bergensprakt", "Blå", "Kort", false, false, true, p3);
+		Due db1 = lagDue("6-23", "Bergensprakt", "Blå", "Kort", false, false, true, p3);
 		db1.setPaamelding(p3);
 
 		Bedommelse b2 = new Bedommelse(94, "Ønsker mer rød", "Fint posture", "Ingen feil");
@@ -211,35 +227,35 @@ public class SampleDataCreator implements CommandLineRunner {
 		Paamelding paamelding3 = new Paamelding(bruker3, utstilling);
 		Paamelding paamelding4 = new Paamelding(bruker4, utstilling);
 
-		Due due1 = new Due("7-23", "Norsk Tomler", "Hvit", "Standard", true, false, false, paamelding1);
+		Due due1 = lagDue("7-23", "Norsk Tomler", "Hvit", "Standard", true, false, false, paamelding1);
 		due1.setPaamelding(paamelding1);
-		Due due2 = new Due("8-23", "Norsk Tomler", "Svart", "Standard", true, false, false, paamelding1);
+		Due due2 = lagDue("8-23", "Norsk Tomler", "Svart", "Standard", true, false, false, paamelding1);
 		due2.setPaamelding(paamelding1);
-		Due due3 = new Due("9-23", "Engelsk Tippler", "Blå", "Lang", false, true, false, paamelding2);
+		Due due3 = lagDue("9-23", "Engelsk Tippler", "Blå", "Lang", false, true, false, paamelding2);
 		due3.setPaamelding(paamelding2);
-		Due due4 = new Due("10-23", "Engelsk Tippler", "Grønn", "Kort", false, false, true, paamelding2);
+		Due due4 = lagDue("10-23", "Engelsk Tippler", "Grønn", "Kort", false, false, true, paamelding2);
 
-		Due due5 = new Due("11-23", "Bergensprakt", "Hvit", "Standard", true, false, false, paamelding3);
+		Due due5 = lagDue("11-23", "Bergensprakt", "Hvit", "Standard", true, false, false, paamelding3);
 		due5.setPaamelding(paamelding3);
-		Due due6 = new Due("12-23", "Bergensprakt", "Svart", "Standard", true, false, false, paamelding3);
+		Due due6 = lagDue("12-23", "Bergensprakt", "Svart", "Standard", true, false, false, paamelding3);
 		due6.setPaamelding(paamelding3);
-		Due due7 = new Due("13-23", "Norsk Tomler", "Blå", "Lang", false, true, false, paamelding3);
+		Due due7 = lagDue("13-23", "Norsk Tomler", "Blå", "Lang", false, true, false, paamelding3);
 		due7.setPaamelding(paamelding3);
-		Due due8 = new Due("14-23", "Norsk Tomler", "Grønn", "Kort", false, false, true, paamelding3);
+		Due due8 = lagDue("14-23", "Norsk Tomler", "Grønn", "Kort", false, false, true, paamelding3);
 
-		Due due9 = new Due("15-23", "Engelsk Tippler", "Rød", "Standard", true, false, false, paamelding4);
+		Due due9 = lagDue("15-23", "Engelsk Tippler", "Rød", "Standard", true, false, false, paamelding4);
 		due9.setPaamelding(paamelding4);
-		Due due10 = new Due("16-23", "Bergensprakt", "Gul", "Standard", true, false, false, paamelding4);
+		Due due10 = lagDue("16-23", "Bergensprakt", "Gul", "Standard", true, false, false, paamelding4);
 		due10.setPaamelding(paamelding4);
-		Due due11 = new Due("17-23", "Fantastisk Flyver", "Oransje", "Lang", false, true, false, paamelding4);
+		Due due11 = lagDue("17-23", "Fantastisk Flyver", "Oransje", "Lang", false, true, false, paamelding4);
 		due11.setPaamelding(paamelding4);
-		Due due12 = new Due("18-23", "Fantastisk Flyver", "Lilla", "Kort", false, false, true, paamelding4);
+		Due due12 = lagDue("18-23", "Fantastisk Flyver", "Lilla", "Kort", false, false, true, paamelding4);
 
-		Due due13 = new Due("19-23", "Bergensprakt", "Grå", "Standard", true, false, false, paamelding4);
+		Due due13 = lagDue("19-23", "Bergensprakt", "Grå", "Standard", true, false, false, paamelding4);
 		due13.setPaamelding(paamelding4);
-		Due due14 = new Due("20-23", "Fantastisk Flyver", "Hvit", "Lang", false, true, false, paamelding4);
+		Due due14 = lagDue("20-23", "Fantastisk Flyver", "Hvit", "Lang", false, true, false, paamelding4);
 		due14.setPaamelding(paamelding4);
-		Due due15 = new Due("21-23", "Engelsk Tippler", "Svart", "Kort", false, false, true, paamelding4);
+		Due due15 = lagDue("21-23", "Engelsk Tippler", "Svart", "Kort", false, false, true, paamelding4);
 
 		// Save additional Paamelding and Due instances
 		paameldingService.manueltLeggTilPaamelding(paamelding1);
@@ -308,7 +324,7 @@ public class SampleDataCreator implements CommandLineRunner {
 		List<Due> duer = new ArrayList<>();
 
 		for (int i = 0; i < antallDuer; i++) {
-			Due due = new Due(i + "-23", dr.get(random.nextInt(dr.size())), c.get(random.nextInt(c.size())),
+			Due due = lagDue(i + "-23", dr.get(random.nextInt(dr.size())), c.get(random.nextInt(c.size())),
 					v.get(random.nextInt(v.size())), random.nextBoolean(), random.nextBoolean(),
 					random.nextBoolean(), p);
 			due.setPaamelding(p);

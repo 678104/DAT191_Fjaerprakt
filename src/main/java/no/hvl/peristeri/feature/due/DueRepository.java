@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface DueRepository extends JpaRepository<Due, Long> {
 
-	@Query("SELECT DISTINCT d.rase FROM Due d JOIN d.paamelding p WHERE p.utstilling.id = :utstillingId")
+	@Query("SELECT DISTINCT CONCAT(d.raseLookup.navn, ' (', d.raseLookup.gruppe, ')') FROM Due d JOIN d.paamelding p WHERE p.utstilling.id = :utstillingId AND d.raseLookup IS NOT NULL")
 	List<String> hentRaserPaameldtUtstilling(@Param("utstillingId") Long utstillingId);
 
 	List<Due> findByPaamelding_Utstilling_Id(Long utstillingId);
@@ -23,22 +23,23 @@ public interface DueRepository extends JpaRepository<Due, Long> {
 
 	List<Due> findByBurnummerOrderByBurnummerAsc(Integer burnummer);
 
-	@Query("SELECT d FROM Due d WHERE d.paamelding.utstilling.id = :utstillingId AND d.burnummer = :burnummer AND d.rase IN :raseFilter")
+	@Query("SELECT d FROM Due d WHERE d.paamelding.utstilling.id = :utstillingId AND d.raseLookup IS NOT NULL AND d.burnummer = :burnummer AND CONCAT(d.raseLookup.navn, ' (', d.raseLookup.gruppe, ')') IN :raseFilter")
 	Due finnDuePaameldtUtstillingMedBurnummerOgRiktigRase(@NonNull Long utstillingId, @NonNull Integer burnummer,
 	                                                      @NonNull Collection<String> raseFilter);
 
+	@Query("SELECT d FROM Due d WHERE d.paamelding.utstilling.id = :id AND d.raseLookup IS NOT NULL AND CONCAT(d.raseLookup.navn, ' (', d.raseLookup.gruppe, ')') IN :rases ORDER BY d.burnummer ASC")
 	List<Due> findByPaamelding_Utstilling_IdAndRaseInIgnoreCaseOrderByBurnummerAsc(@NonNull Long id,
 	                                                                               @NonNull Collection<String> rases);
 
 	@Modifying
-	@Query("UPDATE Due d SET d.rase = :nyRase WHERE d.id IN :idListe")
-	void updateRaseForIds(@Param("nyRase") @Nullable String nyRase, @Param("idListe") List<Long> idListe);
+	@Query("UPDATE Due d SET d.raseLookup = :nyRase WHERE d.id IN :idListe")
+	void updateRaseForIds(@Param("nyRase") @Nullable Rase nyRase, @Param("idListe") List<Long> idListe);
 
 	@Modifying
-	@Query("UPDATE Due d SET d.farge = :nyFarge WHERE d.id IN :idListe")
-	void updateFargeForIds(@Param("nyFarge") @Nullable String nyFarge, @Param("idListe") List<Long> idListe);
+	@Query("UPDATE Due d SET d.fargeLookup = :nyFarge WHERE d.id IN :idListe")
+	void updateFargeForIds(@Param("nyFarge") @Nullable Farge nyFarge, @Param("idListe") List<Long> idListe);
 
 	@Modifying
-	@Query("UPDATE Due d SET d.variant = :nyVariant WHERE d.id IN :idListe")
-	void updateVariantForIds(@Param("nyVariant") @Nullable String nyVariant, @Param("idListe") List<Long> idListe);
+	@Query("UPDATE Due d SET d.variantLookup = :nyVariant WHERE d.id IN :idListe")
+	void updateVariantForIds(@Param("nyVariant") @Nullable Variant nyVariant, @Param("idListe") List<Long> idListe);
 }

@@ -2,8 +2,6 @@ package no.hvl.peristeri.feature.due;
 
 import lombok.RequiredArgsConstructor;
 import no.hvl.peristeri.common.exception.ResourceNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,9 +13,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Service
 public class DueServiceImpl implements DueService {
-	private final Logger logger = LoggerFactory.getLogger(DueServiceImpl.class);
-
 	private final DueRepository dueRepository;
+	private final DueLookupService dueLookupService;
 
 	@Override
 	public Due leggTilDue(Due due) {
@@ -85,30 +82,30 @@ public class DueServiceImpl implements DueService {
 	}
 
 	@Override
-	public Due oppdaterDueInfo(Long dueId, String rase, String farge, String variant) {
+	public Due oppdaterDueInfo(Long dueId, Long raseId, Long fargeId, Long variantId) {
 		Due due = dueRepository.findById(dueId).orElseThrow(() -> new ResourceNotFoundException("Due", dueId));
-		due.setRase(rase);
-		due.setFarge(farge);
-		due.setVariant(variant);
+		due.setRaseLookup(dueLookupService.finnRaseMedId(raseId));
+		due.setFargeLookup(dueLookupService.finnFargeMedId(fargeId));
+		due.setVariantLookup(dueLookupService.finnVariantMedId(variantId));
 		return dueRepository.save(due);
 	}
 
 	@Transactional
 	@Override
-	public void endreRasePaDuer(String nyRase, List<Long> dueIdListe) {
-		dueRepository.updateRaseForIds(nyRase, dueIdListe);
+	public void endreRasePaDuer(Long nyRaseId, List<Long> dueIdListe) {
+		dueRepository.updateRaseForIds(dueLookupService.finnRaseMedId(nyRaseId), dueIdListe);
 	}
 
 	@Transactional
 	@Override
-	public void endreFargePaDuer(String nyFarge, List<Long> dueIdListe) {
-		dueRepository.updateFargeForIds(nyFarge, dueIdListe);
+	public void endreFargePaDuer(Long nyFargeId, List<Long> dueIdListe) {
+		dueRepository.updateFargeForIds(dueLookupService.finnFargeMedId(nyFargeId), dueIdListe);
 	}
 
 	@Transactional
 	@Override
-	public void endreVariantPaDuer(String nyVariant, List<Long> dueIdListe) {
-		dueRepository.updateVariantForIds(nyVariant, dueIdListe);
+	public void endreVariantPaDuer(Long nyVariantId, List<Long> dueIdListe) {
+		dueRepository.updateVariantForIds(dueLookupService.finnVariantMedId(nyVariantId), dueIdListe);
 	}
 
 }

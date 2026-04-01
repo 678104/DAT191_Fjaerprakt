@@ -19,9 +19,18 @@ public class Due {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long    id;
-	private String  rase;
-	private String  farge;
-	private String  variant;
+
+	@ManyToOne
+	@JoinColumn(name = "rase_id")
+	private Rase raseLookup;
+
+	@ManyToOne
+	@JoinColumn(name = "farge_id")
+	private Farge fargeLookup;
+
+	@ManyToOne
+	@JoinColumn(name = "variant_id")
+	private Variant variantLookup;
 	// Hannduer er true og hunnduer er false
 	private Boolean kjonn;
 	// Eldre duer er true og unge duer er false
@@ -58,33 +67,51 @@ public class Due {
 		this.aarstall   = split[1];
 	}
 
+	@Transient
+	public String getRase() {
+		return raseLookup == null ? null : raseLookup.getVisningsnavn();
+	}
 
-	public Due(String rase, String farge, String variant, Boolean kjonn, Boolean alder, Boolean ikkeEget) {
-		this.rase     = rase;
-		this.farge    = farge;
-		this.variant  = variant;
+	@Transient
+	public String getFarge() {
+		return fargeLookup == null ? null : fargeLookup.getNavn();
+	}
+
+	@Transient
+	public String getVariant() {
+		return variantLookup == null ? null : variantLookup.getNavn();
+	}
+
+
+	public Due(Rase raseLookup, Farge fargeLookup, Variant variantLookup, Boolean kjonn, Boolean alder,
+	           Boolean ikkeEget) {
+		this.raseLookup = raseLookup;
+		this.fargeLookup = fargeLookup;
+		this.variantLookup = variantLookup;
 		this.kjonn    = kjonn;
 		this.alder    = alder;
 		this.ikkeEget = ikkeEget;
 	}
 
-	public Due(String ringnummer, String rase, String farge, String variant, Boolean kjonn, Boolean alder,
+	public Due(String ringnummer, Rase raseLookup, Farge fargeLookup, Variant variantLookup, Boolean kjonn,
+	           Boolean alder,
 	           Boolean ikkeEget) {
 		setRingnummer(ringnummer);
-		this.rase       = rase;
-		this.farge      = farge;
-		this.variant    = variant;
+		this.raseLookup = raseLookup;
+		this.fargeLookup = fargeLookup;
+		this.variantLookup = variantLookup;
 		this.kjonn      = kjonn;
 		this.alder      = alder;
 		this.ikkeEget   = ikkeEget;
 	}
 
-	public Due(String ringnummer, String rase, String farge, String variant, Boolean kjonn, Boolean alder,
+	public Due(String ringnummer, Rase raseLookup, Farge fargeLookup, Variant variantLookup, Boolean kjonn,
+	           Boolean alder,
 	           Boolean ikkeEget, Paamelding paamelding) {
 		setRingnummer(ringnummer);
-		this.rase       = rase;
-		this.farge      = farge;
-		this.variant    = variant;
+		this.raseLookup = raseLookup;
+		this.fargeLookup = fargeLookup;
+		this.variantLookup = variantLookup;
 		this.kjonn      = kjonn;
 		this.alder      = alder;
 		this.ikkeEget   = ikkeEget;

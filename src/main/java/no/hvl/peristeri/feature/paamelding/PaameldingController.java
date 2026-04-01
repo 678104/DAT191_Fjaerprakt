@@ -4,7 +4,10 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import no.hvl.peristeri.common.exception.BusinessRuleViolationException;
 import no.hvl.peristeri.feature.bruker.Bruker;
-import no.hvl.peristeri.feature.due.DueService;
+import no.hvl.peristeri.feature.due.DueLookupService;
+import no.hvl.peristeri.feature.due.Farge;
+import no.hvl.peristeri.feature.due.Rase;
+import no.hvl.peristeri.feature.due.Variant;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
 import org.slf4j.Logger;
@@ -27,7 +30,7 @@ public class PaameldingController {
 	private final Logger logger = LoggerFactory.getLogger(PaameldingController.class);
 
 	private final PaameldingService paameldingService;
-	private final DueService        dueService;
+	private final DueLookupService  dueLookupService;
 	private final UtstillingService utstillingService;
 
 	@GetMapping
@@ -67,16 +70,35 @@ public class PaameldingController {
 
 	@PostMapping("/duekvittering")
 	public String duekvittering(@ModelAttribute DueDTO dueDTO, Model model, HttpSession session) {
-		logger.info("PaameldingDTO: {}", dueDTO);
+		Rase rase = dueLookupService.finnRaseMedId(dueDTO.raseId());
+		Farge farge = dueLookupService.finnFargeMedId(dueDTO.fargeId());
+		Variant variant = dueLookupService.finnVariantMedId(dueDTO.variantId());
 
-		if (dueDTO.hunnerUng() == 0 && dueDTO.hunnerEldre() == 0 && dueDTO.hannerUng() == 0 &&
-		    dueDTO.hannerEldre() == 0) {
+		DueDTO enrichedDueDTO = new DueDTO(
+				dueDTO.radId(),
+				dueDTO.raseId(),
+				rase.getVisningsnavn(),
+				dueDTO.fargeId(),
+				farge.getNavn(),
+				dueDTO.variantId(),
+				variant.getNavn(),
+				dueDTO.hannerUng(),
+				dueDTO.hannerEldre(),
+				dueDTO.hunnerUng(),
+				dueDTO.hunnerEldre(),
+				dueDTO.ikkeEget()
+		);
+
+		logger.info("PaameldingDTO: {}", enrichedDueDTO);
+
+		if (enrichedDueDTO.hunnerUng() == 0 && enrichedDueDTO.hunnerEldre() == 0 && enrichedDueDTO.hannerUng() == 0 &&
+		    enrichedDueDTO.hannerEldre() == 0) {
 			model.addAttribute("errorMessage", "Du må melde på minst én due.");
 			return "paamelding/due_tabell :: due-tabell";
 		}
 		DueDTOList duerDTO = getDueList(session);
 
-		duerDTO.leggTilDueDTO(dueDTO);
+		duerDTO.leggTilDueDTO(enrichedDueDTO);
 
 		Integer antallDuer = paameldingService.antallDuer(getDueList(session).getListe());
 		model.addAttribute("antallDuer", antallDuer);
@@ -96,9 +118,28 @@ public class PaameldingController {
 	@PostMapping("/oppdaterDue/{radId}")
 	public String oppdaterDueRad(@ModelAttribute DueDTO due, Model model, @PathVariable Integer radId,
 	                             HttpSession session) {
-		model.addAttribute("due", due);
-		getDueList(session).endreDue(due);
-		logger.info("Lagre knapp trykket: {}", due);
+		Rase rase = dueLookupService.finnRaseMedId(due.raseId());
+		Farge farge = dueLookupService.finnFargeMedId(due.fargeId());
+		Variant variant = dueLookupService.finnVariantMedId(due.variantId());
+
+		DueDTO enrichedDue = new DueDTO(
+				due.radId(),
+				due.raseId(),
+				rase.getVisningsnavn(),
+				due.fargeId(),
+				farge.getNavn(),
+				due.variantId(),
+				variant.getNavn(),
+				due.hannerUng(),
+				due.hannerEldre(),
+				due.hunnerUng(),
+				due.hunnerEldre(),
+				due.ikkeEget()
+		);
+
+		model.addAttribute("due", enrichedDue);
+		getDueList(session).endreDue(enrichedDue);
+		logger.info("Lagre knapp trykket: {}", enrichedDue);
 
 		return "paamelding/due_tabell :: oppdatertDueRad";
 	}
@@ -133,6 +174,21 @@ public class PaameldingController {
 	@ModelAttribute("navLocation")
 	public String navLocation() {
 		return navLocation;
+	}
+
+	@ModelAttribute("raser")
+	public List<Rase> raser() {
+		return dueLookupService.hentAlleRaser();
+	}
+
+	@ModelAttribute("farger")
+	public List<Farge> farger() {
+		return dueLookupService.hentAlleFarger();
+	}
+
+	@ModelAttribute("varianter")
+	public List<Variant> varianter() {
+		return dueLookupService.hentAlleVarianter();
 	}
 
 	public DueDTOList getDueList(HttpSession session) {

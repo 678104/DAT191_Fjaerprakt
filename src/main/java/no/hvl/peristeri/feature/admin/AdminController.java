@@ -9,6 +9,7 @@ import no.hvl.peristeri.feature.bruker.BrukerService;
 import no.hvl.peristeri.feature.dommer.DommerPaamelding;
 import no.hvl.peristeri.feature.dommer.DommerService;
 import no.hvl.peristeri.feature.due.Due;
+import no.hvl.peristeri.feature.due.DueLookupService;
 import no.hvl.peristeri.feature.due.DueService;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
@@ -34,6 +35,7 @@ public class AdminController {
 	private final UtstillingService utstillingService;
 	private final DommerService     dommerService;
 	private final DueService        dueService;
+	private final DueLookupService  dueLookupService;
 
 	@GetMapping
 	public String getAdmin(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
@@ -172,6 +174,9 @@ public class AdminController {
 		List<Due>  paameldteDuer = dueService.finnAlleDuerPaameldtUTstilling(utstillingId);
 		model.addAttribute("utstilling", utstilling);
 		model.addAttribute("paameldteDuer", paameldteDuer);
+		model.addAttribute("raser", dueLookupService.hentAlleRaser());
+		model.addAttribute("farger", dueLookupService.hentAlleFarger());
+		model.addAttribute("varianter", dueLookupService.hentAlleVarianter());
 		return "admin/admin_fragments :: bulkDueEndring";
 	}
 
@@ -184,19 +189,22 @@ public class AdminController {
 			List<Due>  paameldteDuer = dueService.finnAlleDuerPaameldtUTstilling(utstillingId);
 			model.addAttribute("utstilling", utstilling);
 			model.addAttribute("paameldteDuer", paameldteDuer);
+			model.addAttribute("raser", dueLookupService.hentAlleRaser());
+			model.addAttribute("farger", dueLookupService.hentAlleFarger());
+			model.addAttribute("varianter", dueLookupService.hentAlleVarianter());
 			return "admin/admin_fragments :: bulkDueEndring";
 		}
 		Utstilling utstilling    = utstillingService.finnUtstillingMedId(utstillingId);
 		List<Due>  paameldteDuer = dueService.finnAlleDuerPaameldtUTstilling(utstillingId);
 		switch (felt) {
 			case "rase" -> {
-				paameldteDuer.sort((d1, d2) -> d1.getRase().compareToIgnoreCase(d2.getRase()));
+				paameldteDuer.sort((d1, d2) -> String.valueOf(d1.getRase()).compareToIgnoreCase(String.valueOf(d2.getRase())));
 			}
 			case "farge" -> {
-				paameldteDuer.sort((d1, d2) -> d1.getFarge().compareToIgnoreCase(d2.getFarge()));
+				paameldteDuer.sort((d1, d2) -> String.valueOf(d1.getFarge()).compareToIgnoreCase(String.valueOf(d2.getFarge())));
 			}
 			case "variant" -> {
-				paameldteDuer.sort((d1, d2) -> d1.getVariant().compareToIgnoreCase(d2.getVariant()));
+				paameldteDuer.sort((d1, d2) -> String.valueOf(d1.getVariant()).compareToIgnoreCase(String.valueOf(d2.getVariant())));
 			}
 		}
 
@@ -204,6 +212,9 @@ public class AdminController {
 		model.addAttribute("utstilling", utstilling);
 		model.addAttribute("paameldteDuer", paameldteDuer);
 		model.addAttribute("felt", felt);
+		model.addAttribute("raser", dueLookupService.hentAlleRaser());
+		model.addAttribute("farger", dueLookupService.hentAlleFarger());
+		model.addAttribute("varianter", dueLookupService.hentAlleVarianter());
 		return "admin/admin_fragments :: bulkEditSelection";
 	}
 
@@ -211,7 +222,7 @@ public class AdminController {
 	@PostMapping("/{utstillingId}/bulkendre/{felt}")
 	public String postBulkDueFeltEndringHtmx(@PathVariable Long utstillingId, @PathVariable String felt,
 	                                         Model model, HttpSession session, RedirectAttributes redirectAttributes,
-	                                         @RequestParam List<Long> dueId, @RequestParam(required = false) String nyVerdi) {
+	                                         @RequestParam List<Long> dueId, @RequestParam Long nyVerdi) {
 		switch (felt) {
 			case "rase" -> dueService.endreRasePaDuer(nyVerdi, dueId);
 			case "farge" -> dueService.endreFargePaDuer(nyVerdi, dueId);
@@ -224,6 +235,9 @@ public class AdminController {
 		model.addAttribute("utstilling", utstilling);
 		model.addAttribute("paameldteDuer", paameldteDuer);
 		model.addAttribute("felt", felt);
+		model.addAttribute("raser", dueLookupService.hentAlleRaser());
+		model.addAttribute("farger", dueLookupService.hentAlleFarger());
+		model.addAttribute("varianter", dueLookupService.hentAlleVarianter());
 		return "admin/admin_fragments :: bulkDueEndring";
 	}
 

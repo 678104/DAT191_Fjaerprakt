@@ -56,15 +56,30 @@
             <tr th:fragment="redigerDueRad">
                 <td>
                     <label for="rediger-rase" style="position:absolute;left:-10000px;">Rase</label>
-                    <input id="rediger-rase" type="text" th:value="${dueDTO.rase}" name="rase">
+                    <select id="rediger-rase" name="raseId" required>
+                        <option th:each="r : ${raser}"
+                                th:value="${r.id}"
+                                th:text="${r.visningsnavn}"
+                                th:selected="${dueDTO.raseId == r.id}"></option>
+                    </select>
                 </td>
                 <td>
                     <label for="rediger-farge" style="position:absolute;left:-10000px;">Farge</label>
-                    <input id="rediger-farge" type="text" th:value="${dueDTO.farge}" name="farge">
+                    <select id="rediger-farge" name="fargeId" required>
+                        <option th:each="f : ${farger}"
+                                th:value="${f.id}"
+                                th:text="${f.navn}"
+                                th:selected="${dueDTO.fargeId == f.id}"></option>
+                    </select>
                 </td>
                 <td>
                     <label for="rediger-variant" style="position:absolute;left:-10000px;">Variant</label>
-                    <input id="rediger-variant" type="text" th:value="${dueDTO.variant}" name="variant">
+                    <select id="rediger-variant" name="variantId" required>
+                        <option th:each="v : ${varianter}"
+                                th:value="${v.id}"
+                                th:text="${v.navn}"
+                                th:selected="${dueDTO.variantId == v.id}"></option>
+                    </select>
                 </td>
                 <td>
                     <label for="rediger-hanner-ung" style="position:absolute;left:-10000px;">Hanner ung</label>

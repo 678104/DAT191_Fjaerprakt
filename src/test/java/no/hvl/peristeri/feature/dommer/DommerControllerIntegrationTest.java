@@ -2,14 +2,17 @@ package no.hvl.peristeri.feature.dommer;
 
 import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.due.Due;
+import no.hvl.peristeri.feature.due.Farge;
+import no.hvl.peristeri.feature.due.Rase;
+import no.hvl.peristeri.feature.due.Variant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -25,8 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Integration tests for DommerController.
  * 
- * Note: Using @MockBean despite deprecation warnings in Spring Boot 3.4.0+
- * as it's the most straightforward way to set up the test for now.
+ * Uses @MockitoBean for controller-layer dependency mocking.
  */
 @WebMvcTest(DommerController.class)
 @ActiveProfiles({"prod","test"})
@@ -35,7 +37,7 @@ public class DommerControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private DommerService dommerService;
 
     private Due testDue;
@@ -53,9 +55,9 @@ public class DommerControllerIntegrationTest {
         // Set up test pigeon
         testDue = new Due();
         testDue.setId(1L);
-        testDue.setRase("Norsk Tomler");
-        testDue.setFarge("Rød");
-        testDue.setVariant("Standard");
+        testDue.setRaseLookup(new Rase(1L, "Norsk Tomler", "Tomler"));
+        testDue.setFargeLookup(new Farge(1L, "Rød"));
+        testDue.setVariantLookup(new Variant(1L, "Standard"));
         testDue.setKjonn(true); // Male
         testDue.setAlder(true); // Older
         testDue.setIkkeEget(false);

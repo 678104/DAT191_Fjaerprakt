@@ -44,9 +44,30 @@
                         <td th:text="${due.burnummer ?: 'Ingen'}">Burnummer</td>
                         <td th:text="${due.paamelding.utstiller.navn}">Utstiller</td>
                         <td th:text="${due.ringnummer}">Ringnummer</td>
-                        <td><input type="text" th:value="${due.rase}" name="rase" placeholder="Rase" required></td>
-                        <td><input type="text" th:value="${due.farge}" name="farge" placeholder="Farge"></td>
-                        <td><input type="text" th:value="${due.variant}" name="variant" placeholder="Variant"></td>
+                        <td>
+                            <select name="raseId" required>
+                                <option th:each="r : ${raser}"
+                                        th:value="${r.id}"
+                                        th:text="${r.visningsnavn}"
+                                        th:selected="${due.raseLookup != null and due.raseLookup.id == r.id}"></option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="fargeId" required>
+                                <option th:each="f : ${farger}"
+                                        th:value="${f.id}"
+                                        th:text="${f.navn}"
+                                        th:selected="${due.fargeLookup != null and due.fargeLookup.id == f.id}"></option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="variantId" required>
+                                <option th:each="v : ${varianter}"
+                                        th:value="${v.id}"
+                                        th:text="${v.navn}"
+                                        th:selected="${due.variantLookup != null and due.variantLookup.id == v.id}"></option>
+                            </select>
+                        </td>
                         <td th:text="${due.kjonn} ? '1,0' : '0,1'">Kjønn</td>
                         <td th:text="${due.alder} ? 'Eldre' : 'Ung'">Alder</td>
 
@@ -90,8 +111,19 @@
                   hx-swap="outerHTML"
                   hx-include="#bulkEditSelectionBody">
                 <fieldset role="group">
-                    <legend th:text="|Skriv inn ${felt} de markerte duene skal endres til|"></legend>
-                    <input id="bulkRaseInput" type="text" name="nyVerdi" th:placeholder="|Ny ${felt}|">
+                    <legend th:text="|Velg ${felt} de markerte duene skal endres til|"></legend>
+                    <select id="bulkRaseInput" name="nyVerdi" required>
+                        <option value="" th:text="|Velg ${felt}|"></option>
+                        <th:block th:if="${felt == 'rase'}">
+                            <option th:each="r : ${raser}" th:value="${r.id}" th:text="${r.visningsnavn}"></option>
+                        </th:block>
+                        <th:block th:if="${felt == 'farge'}">
+                            <option th:each="f : ${farger}" th:value="${f.id}" th:text="${f.navn}"></option>
+                        </th:block>
+                        <th:block th:if="${felt == 'variant'}">
+                            <option th:each="v : ${varianter}" th:value="${v.id}" th:text="${v.navn}"></option>
+                        </th:block>
+                    </select>
                     <input type="submit" value="Endre">
                 </fieldset>
             </form>

@@ -2,8 +2,11 @@ package no.hvl.peristeri.feature.paamelding;
 
 public record DueDTO(
 		Integer radId,
+		Long raseId,
 		String rase,
+		Long fargeId,
 		String farge,
+		Long variantId,
 		String variant,
 		Integer hannerUng,
 		Integer hannerEldre,

@@ -35,14 +35,14 @@ public interface DueService {
 
 	Due finnDueMedId(Long dueId);
 
-	Due oppdaterDueInfo(Long dueId, String rase, String farge, String variant);
+	Due oppdaterDueInfo(Long dueId, Long raseId, Long fargeId, Long variantId);
 
 	@Transactional
-	void endreRasePaDuer(String nyRase, List<Long> dueIdListe);
+	void endreRasePaDuer(Long nyRaseId, List<Long> dueIdListe);
 
 	@Transactional
-	void endreFargePaDuer(String nyFarge, List<Long> dueIdListe);
+	void endreFargePaDuer(Long nyFargeId, List<Long> dueIdListe);
 
 	@Transactional
-	void endreVariantPaDuer(String nyVariant, List<Long> dueIdListe);
+	void endreVariantPaDuer(Long nyVariantId, List<Long> dueIdListe);
 }

@@ -7,7 +7,11 @@ import no.hvl.peristeri.common.exception.ResourceNotFoundException;
 import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.bruker.BrukerService;
 import no.hvl.peristeri.feature.due.Due;
+import no.hvl.peristeri.feature.due.DueLookupService;
 import no.hvl.peristeri.feature.due.DueService;
+import no.hvl.peristeri.feature.due.Farge;
+import no.hvl.peristeri.feature.due.Rase;
+import no.hvl.peristeri.feature.due.Variant;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
 import org.slf4j.Logger;
@@ -29,6 +33,7 @@ public class PaameldingServiceImpl implements PaameldingService {
 	private final BrukerService        brukerService;
 	private final UtstillingService    utstillingService;
 	private final DueService           dueService;
+	private final DueLookupService     dueLookupService;
 
 
 	/**
@@ -121,17 +126,20 @@ public class PaameldingServiceImpl implements PaameldingService {
 	@Override
 	public List<Due> konverterDueDTOtilDue(DueDTO dueDTO) {
 		List<Due> duer = new ArrayList<>();
+		Rase rase = dueLookupService.finnRaseMedId(dueDTO.raseId());
+		Farge farge = dueLookupService.finnFargeMedId(dueDTO.fargeId());
+		Variant variant = dueLookupService.finnVariantMedId(dueDTO.variantId());
 		for (int i = 0; i < dueDTO.hannerUng(); i++) {
-			duer.add(new Due(dueDTO.rase(), dueDTO.farge(), dueDTO.variant(), true, false, dueDTO.ikkeEget()));
+			duer.add(new Due(rase, farge, variant, true, false, dueDTO.ikkeEget()));
 		}
 		for (int i = 0; i < dueDTO.hannerEldre(); i++) {
-			duer.add(new Due(dueDTO.rase(), dueDTO.farge(), dueDTO.variant(), true, true, dueDTO.ikkeEget()));
+			duer.add(new Due(rase, farge, variant, true, true, dueDTO.ikkeEget()));
 		}
 		for (int i = 0; i < dueDTO.hunnerUng(); i++) {
-			duer.add(new Due(dueDTO.rase(), dueDTO.farge(), dueDTO.variant(), false, false, dueDTO.ikkeEget()));
+			duer.add(new Due(rase, farge, variant, false, false, dueDTO.ikkeEget()));
 		}
 		for (int i = 0; i < dueDTO.hunnerEldre(); i++) {
-			duer.add(new Due(dueDTO.rase(), dueDTO.farge(), dueDTO.variant(), false, true, dueDTO.ikkeEget()));
+			duer.add(new Due(rase, farge, variant, false, true, dueDTO.ikkeEget()));
 		}
 
 		return duer;

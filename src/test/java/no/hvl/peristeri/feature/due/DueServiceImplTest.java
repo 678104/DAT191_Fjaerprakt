@@ -22,10 +22,16 @@ class DueServiceImplTest {
     @Mock
     private DueRepository dueRepository;
 
+    @Mock
+    private DueLookupService dueLookupService;
+
     @InjectMocks
     private DueServiceImpl dueService;
 
     private Due testDue;
+    private Rase testRase;
+    private Farge testFarge;
+    private Variant testVariant;
     private Long testUtstillingId;
     private List<Long> testDueIdList;
 
@@ -33,9 +39,12 @@ class DueServiceImplTest {
     void setUp() {
         testDue = new Due();
         testDue.setId(1L);
-        testDue.setRase("Norsk Tomler");
-        testDue.setFarge("Rød");
-        testDue.setVariant("Standard");
+        testRase = new Rase(1L, "Norsk Tomler", "Tomler");
+        testFarge = new Farge(1L, "Rød");
+        testVariant = new Variant(1L, "Standard");
+        testDue.setRaseLookup(testRase);
+        testDue.setFargeLookup(testFarge);
+        testDue.setVariantLookup(testVariant);
         testDue.setKjonn(true); // Handue
         testDue.setAlder(true); // Eldre due
         testDue.setLopenummer("123");
@@ -122,16 +131,20 @@ class DueServiceImplTest {
     void findAllSortedByCustomOrder_shouldReturnDuesSortedByCustomOrder() {
         // Arrange
         Due due1 = new Due();
-        due1.setRase("Norsk Tomler");
+        due1.setRaseLookup(new Rase(10L, "Norsk Tomler", "Tomler"));
         
         Due due2 = new Due();
-        due2.setRase("Dansk Tomler");
+        due2.setRaseLookup(new Rase(11L, "Dansk Tomler", "Tomler"));
         
         Due due3 = new Due();
-        due3.setRase("Tysk Modeneser");
+        due3.setRaseLookup(new Rase(12L, "Tysk Modeneser", "Modeneser"));
         
         List<Due> duesFromRepo = Arrays.asList(due1, due2, due3);
-        List<String> customOrder = Arrays.asList("Dansk Tomler", "Tysk Modeneser", "Norsk Tomler");
+        List<String> customOrder = Arrays.asList(
+                "Dansk Tomler (Tomler)",
+                "Tysk Modeneser (Modeneser)",
+                "Norsk Tomler (Tomler)"
+        );
         
         when(dueRepository.findByPaamelding_Utstilling_Id(testUtstillingId)).thenReturn(duesFromRepo);
 
@@ -140,9 +153,9 @@ class DueServiceImplTest {
 
         // Assert
         assertEquals(3, result.size());
-        assertEquals("Dansk Tomler", result.get(0).getRase());
-        assertEquals("Tysk Modeneser", result.get(1).getRase());
-        assertEquals("Norsk Tomler", result.get(2).getRase());
+        assertEquals("Dansk Tomler (Tomler)", result.get(0).getRase());
+        assertEquals("Tysk Modeneser (Modeneser)", result.get(1).getRase());
+        assertEquals("Norsk Tomler (Tomler)", result.get(2).getRase());
         verify(dueRepository).findByPaamelding_Utstilling_Id(testUtstillingId);
     }
 
@@ -191,13 +204,16 @@ class DueServiceImplTest {
     void oppdaterDueInfo_withExistingId_shouldUpdateAndReturnDue() {
         // Arrange
         when(dueRepository.findById(1L)).thenReturn(Optional.of(testDue));
+        when(dueLookupService.finnRaseMedId(2L)).thenReturn(new Rase(2L, "Dansk Tomler", "Tomler"));
+        when(dueLookupService.finnFargeMedId(3L)).thenReturn(new Farge(3L, "Blå"));
+        when(dueLookupService.finnVariantMedId(4L)).thenReturn(new Variant(4L, "Skjellet"));
         when(dueRepository.save(testDue)).thenReturn(testDue);
 
         // Act
-        Due result = dueService.oppdaterDueInfo(1L, "Dansk Tomler", "Blå", "Skjellet");
+        Due result = dueService.oppdaterDueInfo(1L, 2L, 3L, 4L);
 
         // Assert
-        assertEquals("Dansk Tomler", result.getRase());
+        assertEquals("Dansk Tomler (Tomler)", result.getRase());
         assertEquals("Blå", result.getFarge());
         assertEquals("Skjellet", result.getVariant());
         verify(dueRepository).findById(1L);
@@ -212,7 +228,7 @@ class DueServiceImplTest {
         // Act & Assert
         ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
-                () -> dueService.oppdaterDueInfo(999L, "Dansk Tomler", "Blå", "Skjellet")
+                () -> dueService.oppdaterDueInfo(999L, 2L, 3L, 4L)
         );
         assertEquals("Due with id 999 not found", exception.getMessage());
         verify(dueRepository).findById(999L);
@@ -221,28 +237,37 @@ class DueServiceImplTest {
 
     @Test
     void endreRasePaDuer_shouldCallRepositoryMethod() {
+        Rase rase = new Rase(2L, "Dansk Tomler", "Tomler");
+        when(dueLookupService.finnRaseMedId(2L)).thenReturn(rase);
+
         // Act
-        dueService.endreRasePaDuer("Dansk Tomler", testDueIdList);
+        dueService.endreRasePaDuer(2L, testDueIdList);
 
         // Assert
-        verify(dueRepository).updateRaseForIds("Dansk Tomler", testDueIdList);
+        verify(dueRepository).updateRaseForIds(rase, testDueIdList);
     }
 
     @Test
     void endreFargePaDuer_shouldCallRepositoryMethod() {
+        Farge farge = new Farge(3L, "Blå");
+        when(dueLookupService.finnFargeMedId(3L)).thenReturn(farge);
+
         // Act
-        dueService.endreFargePaDuer("Blå", testDueIdList);
+        dueService.endreFargePaDuer(3L, testDueIdList);
 
         // Assert
-        verify(dueRepository).updateFargeForIds("Blå", testDueIdList);
+        verify(dueRepository).updateFargeForIds(farge, testDueIdList);
     }
 
     @Test
     void endreVariantPaDuer_shouldCallRepositoryMethod() {
+        Variant variant = new Variant(4L, "Skjellet");
+        when(dueLookupService.finnVariantMedId(4L)).thenReturn(variant);
+
         // Act
-        dueService.endreVariantPaDuer("Skjellet", testDueIdList);
+        dueService.endreVariantPaDuer(4L, testDueIdList);
 
         // Assert
-        verify(dueRepository).updateVariantForIds("Skjellet", testDueIdList);
+        verify(dueRepository).updateVariantForIds(variant, testDueIdList);
     }
 }

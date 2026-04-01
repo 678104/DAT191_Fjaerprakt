@@ -6,11 +6,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -28,8 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Integration tests for UtstillingController.
  * 
- * Note: Using @MockBean despite deprecation warnings in Spring Boot 3.4.0+
- * as it's the most straightforward way to set up the test for now.
+ * Uses @MockitoBean for controller-layer dependency mocking.
  */
 @WebMvcTest(UtstillingController.class)
 @ActiveProfiles({"prod","test"})
@@ -38,10 +37,10 @@ public class UtstillingControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private UtstillingService utstillingService;
 
-    @MockBean
+    @MockitoBean
     private PaameldingService paameldingService;
 
     private Utstilling testUtstilling;
