@@ -12,16 +12,6 @@
 <main class="container">
     <section>
         <h1>Utstillinger</h1>
-        <div th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
-            <button id="visRegistrerBtn"
-                    hx-get="/utstilling/registrer"
-                    hx-trigger="click"
-                    hx-target="#content"
-                    hx-on:click="document.getElementById('visRegistrerBtn')?.classList.add('hidden');"
-                    th:classappend="${fragment == 'liste'} ? '' : 'hidden'"
-            >Registrer ny utstilling
-            </button>
-        </div>
         <div id="content">
             <div th:replace="~{utstilling/utstilling_fragments :: ${fragment}}"></div>
         </div>

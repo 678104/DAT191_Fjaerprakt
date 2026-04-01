@@ -43,6 +43,22 @@ public class AdminController {
 		return "admin/admin";
 	}
 
+	@GetMapping("/panel")
+	public String getAdminPanel() {
+		Utstilling aktivUtstilling = utstillingService.finnAktivUtstilling();
+		if (aktivUtstilling != null) {
+			return "redirect:/admin/" + aktivUtstilling.getId();
+		}
+		return "redirect:/admin";
+	}
+
+	@GetMapping("/tildel-dommer-rolle-liste")
+	public String getTildelDommerRolleListe(Model model) {
+		model.addAttribute("kommendeUtstillinger", utstillingService.finnIkkeTidligereUtstillinger());
+		model.addAttribute("fragment", "tildelDommerRolleListe");
+		return "admin/admin";
+	}
+
 	@HxRequest
 	@GetMapping("/{id}")
 	public String getAdminUtstillingHtmx(@PathVariable Long id, Model model, HttpSession session,

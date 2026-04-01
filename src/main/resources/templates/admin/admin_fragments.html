@@ -437,22 +437,6 @@
         <p>Velg hva du vil gjøre med knappene under</p>
         <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
         <div class="flex-grid grid-links" th:object="${utstilling}">
-            <article th:hx-get="@{/admin/{id}/tildel-dommer-rolle(id=*{id})}"
-                     hx-target="#main-content"
-                     hx-swap="outerHTML"
-                     hx-push-url="false">
-                <header>
-                    <b>Tildel dommer rolle</b>
-                </header>
-                <div>
-                    <p>Her kan du tildele dommer-rollen til eksisterende brukere for denne utstillingen</p>
-                </div>
-                <footer>
-                    <button class="fill-parent">
-                        Tildel dommer rolle
-                    </button>
-                </footer>
-            </article>
             <article th:hx-get="@{/admin/{id}/raseSortering(id=*{id})}"
                      hx-target="#main-content"
                      hx-swap="outerHTML"
@@ -709,6 +693,50 @@
                 class="secondary">
             Tilbake til handlingsoversikt
         </button>
+    </div>
+    <div th:fragment="tildelDommerRolleListe" id="main-content">
+        <!--/*@thymesVar id="kommendeUtstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
+        <section>
+            <h2>Tildel dommer rolle</h2>
+            <p>Velg en utstilling for å tildele dommer rolle</p>
+            <div class="overflow-auto">
+                <table class="striped">
+                    <thead>
+                    <tr>
+                        <th scope="col">Tittel</th>
+                        <th scope="col">Arrangør</th>
+                        <th scope="col">Sted</th>
+                        <th scope="col">Start Dato</th>
+                        <th scope="col">Påmeldings frist</th>
+                        <th scope="col">Handling</th>
+                    </tr>
+                    </thead>
+                    <tbody th:each="u : ${kommendeUtstillinger}">
+                    <tr>
+                        <td th:text="${u.tittel}">Tittel</td>
+                        <td th:text="${u.arrangoer}">Arrangør</td>
+                        <td th:text="${u.adresse}">Sted</td>
+                        <td th:text="${u.datoRange.startDate}">Dato</td>
+                        <td th:text="${u.paameldingsFrist}">Frist</td>
+                        <td>
+                            <button th:hx-get="@{/admin/{id}/tildel-dommer-rolle(id=${u.id})}"
+                                    hx-target="#main-content"
+                                    hx-swap="outerHTML"
+                                    hx-push-url="true">
+                                Tildel dommer rolle
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button th:hx-get="@{/admin}"
+                    hx-target="#main-content"
+                    hx-swap="outerHTML"
+                    class="secondary">
+                Tilbake til admin panel
+            </button>
+        </section>
     </div>
 
 </main>

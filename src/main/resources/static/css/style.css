@@ -158,6 +158,13 @@ article {
     border-left: 4px solid var(--color-red-dark);
 }
 
+.feiltekst {
+    color: var(--color-red-dark);
+    display: block;
+    font-weight: 700;
+    margin-top: 0.25rem;
+}
+
 .warning {
     background-color: var(--pico-warning-color, #fff3cd);
     color: var(--pico-warning-text-color, #856404);

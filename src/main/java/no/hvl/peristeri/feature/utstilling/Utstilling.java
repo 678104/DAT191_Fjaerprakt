@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import no.hvl.peristeri.common.DateRange;
 import no.hvl.peristeri.common.validation.ValidDateRange;
+import no.hvl.peristeri.common.validation.ValidUtstillingDates;
 import no.hvl.peristeri.feature.dommer.DommerPaamelding;
 import no.hvl.peristeri.feature.paamelding.Paamelding;
 import no.hvl.peristeri.util.RaseStringHjelper;
@@ -22,6 +23,7 @@ import java.util.List;
 @Setter
 @Getter
 @Entity(name = "Utstilling")
+@ValidUtstillingDates
 public class Utstilling {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,8 +38,14 @@ public class Utstilling {
 	@Embedded
 	private DateRange datoRange;
 
+	@Column(name = "paamelding_start_dato")
+	private LocalDate paameldingStartDato;
+
 	@Column(name = "paameldings_frist")
 	private LocalDate paameldingsFrist;
+
+	@Column(name = "redigerings_frist")
+	private LocalDate redigeringsFrist;
 
 	@Column(name = "paamelding_aapnet")
 	private Boolean paameldingAApnet;
@@ -79,27 +87,31 @@ public class Utstilling {
 	public Utstilling(String arrangoer, String adresse, String tittel, String beskrivelse, LocalDate startDate,
 	                  LocalDate endDate,
 	                  LocalDate paameldingsFrist, Double duePris) {
-		this.arrangoer        = arrangoer;
-		this.adresse          = adresse;
-		this.tittel           = tittel;
-		this.beskrivelse      = beskrivelse;
-		this.datoRange        = new DateRange(startDate, endDate);
-		this.paameldingsFrist = paameldingsFrist;
-		this.paameldingAApnet = false;
-		this.duePris          = BigDecimal.valueOf(duePris);
+		this.arrangoer           = arrangoer;
+		this.adresse             = adresse;
+		this.tittel              = tittel;
+		this.beskrivelse         = beskrivelse;
+		this.datoRange           = new DateRange(startDate, endDate);
+		this.paameldingStartDato = paameldingsFrist != null ? paameldingsFrist.minusDays(30) : null;
+		this.paameldingsFrist    = paameldingsFrist;
+		this.redigeringsFrist    = paameldingsFrist;
+		this.paameldingAApnet    = false;
+		this.duePris             = BigDecimal.valueOf(duePris);
 	}
 
 	public Utstilling(String arrangoer, String adresse, String tittel, String beskrivelse, LocalDate startDate,
 	                  LocalDate endDate,
 	                  LocalDate paameldingsFrist, BigDecimal duePris) {
-		this.arrangoer        = arrangoer;
-		this.adresse          = adresse;
-		this.tittel           = tittel;
-		this.beskrivelse      = beskrivelse;
-		this.datoRange        = new DateRange(startDate, endDate);
-		this.paameldingsFrist = paameldingsFrist;
-		this.paameldingAApnet = false;
-		this.duePris          = duePris;
+		this.arrangoer           = arrangoer;
+		this.adresse             = adresse;
+		this.tittel              = tittel;
+		this.beskrivelse         = beskrivelse;
+		this.datoRange           = new DateRange(startDate, endDate);
+		this.paameldingStartDato = paameldingsFrist != null ? paameldingsFrist.minusDays(30) : null;
+		this.paameldingsFrist    = paameldingsFrist;
+		this.redigeringsFrist    = paameldingsFrist;
+		this.paameldingAApnet    = false;
+		this.duePris             = duePris;
 	}
 
 }

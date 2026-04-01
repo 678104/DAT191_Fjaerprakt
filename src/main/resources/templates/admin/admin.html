@@ -12,6 +12,9 @@
 <main class="container">
     <section>
         <h1>Admin panel</h1>
+        <a href="/admin/panel" role="button" class="secondary">Admin panel</a>
+        <a href="/utstilling/registrer" role="button" class="secondary">Registrer ny utstilling</a>
+        <a href="/admin/tildel-dommer-rolle-liste" role="button" class="secondary">Tildel dommerrolle</a>
     </section>
     <th:block th:if="${fragment}">
         <th:block th:replace="~{admin/admin_fragments :: ${fragment}}"></th:block>
