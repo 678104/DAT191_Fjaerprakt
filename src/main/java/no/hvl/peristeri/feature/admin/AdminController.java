@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.bruker.BrukerService;
+import no.hvl.peristeri.feature.bruker.Rolle;
 import no.hvl.peristeri.feature.dommer.DommerPaamelding;
 import no.hvl.peristeri.feature.dommer.DommerService;
 import no.hvl.peristeri.feature.due.Due;
@@ -60,20 +61,40 @@ public class AdminController {
 	}
 
 	@HxRequest
-	@GetMapping("/{id}/dommerRegistrering")
-	public String getDommerRegistreringHtmx(@PathVariable Long id, Model model, HttpSession session,
-	                                        RedirectAttributes redirectAttributes) {
+	@GetMapping("/{id}/tildel-dommer-rolle")
+	public String getTildelDommerRolleHtmx(@PathVariable Long id, Model model, HttpSession session,
+	                                       RedirectAttributes redirectAttributes) {
 		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(id));
-		return "admin/admin_fragments :: dommerRegistrering";
+		model.addAttribute("brukere", brukerService.getBrukere());
+		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(id));
+		return "admin/admin_fragments :: tildelDommerRolle";
 	}
 
 	@HxRequest
-	@PostMapping("/{utstillingId}/registrerDommer")
-	public String postRegistrerDommer(@PathVariable Long utstillingId, Model model, HttpSession session,
-	                                  RedirectAttributes redirectAttributes, @ModelAttribute @Valid Bruker dommer, @RequestParam String passord) {
-		dommerService.lagreDommerPaamelding(dommer, utstillingId, passord);
+	@PostMapping("/{utstillingId}/tildel-dommer-rolle")
+	public String postTildelDommerRolle(@PathVariable Long utstillingId, Model model, HttpSession session,
+	                                    RedirectAttributes redirectAttributes, @RequestParam Long brukerId) {
+		Bruker bruker = brukerService.hentBrukerMedId(brukerId);
+		bruker.leggTilRolle(Rolle.DOMMER);
+		brukerService.lagreBruker(bruker);
+		
+		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
+		DommerPaamelding dommerPaamelding = new DommerPaamelding(utstilling, bruker);
+		dommerService.lagreDommerPaaMelding(dommerPaamelding);
 
-		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(utstillingId));
+		model.addAttribute("utstilling", utstilling);
+		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
+		return "admin/admin_fragments :: dommerListe";
+	}
+
+	@HxRequest
+	@PostMapping("/{utstillingId}/fjern-dommer/{dommerPaameldingId}")
+	public String postFjernDommer(@PathVariable Long utstillingId, @PathVariable Long dommerPaameldingId, 
+	                               Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+		dommerService.fjernDommerPaamelding(dommerPaameldingId);
+		
+		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
+		model.addAttribute("utstilling", utstilling);
 		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
 		return "admin/admin_fragments :: dommerListe";
 	}

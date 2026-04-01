@@ -151,6 +151,24 @@ public class DommerServiceImpl implements DommerService {
 	}
 
 	@Override
+	public DommerPaamelding lagreDommerPaaMelding(DommerPaamelding dommerPaamelding) {
+		if (dommerPaamelding == null) {
+			throw new InvalidParameterException("dommerPaamelding", "cannot be null");
+		}
+		return dommerPaameldingRepository.save(dommerPaamelding);
+	}
+
+	@Override
+	public void fjernDommerPaamelding(Long dommerPaameldingId) {
+		if (dommerPaameldingId == null) {
+			throw new InvalidParameterException("dommerPaameldingId", "cannot be null");
+		}
+		DommerPaamelding dp = dommerPaameldingRepository.findById(dommerPaameldingId)
+				.orElseThrow(() -> new ResourceNotFoundException("DommerPaamelding", dommerPaameldingId));
+		dommerPaameldingRepository.delete(dp);
+	}
+
+	@Override
 	public Due finnDueDommerSkalBedommeMedBurnummer(Bruker dommer, Integer burnummer) {
 		if (dommer == null) {
 			throw new InvalidParameterException("dommer", "cannot be null");

@@ -320,74 +320,34 @@
             </div>
         </div>
     </section>
-    <section th:fragment="dommerRegistrering" id="main-content">
+    <section th:fragment="tildelDommerRolle" id="main-content">
         <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
-        <h2>Dommer registrering</h2>
-        <p>Her kan du registrere dommere til utstillingen</p>
+        <!--/*@thymesVar id="brukere" type="java.util.List<no.hvl.peristeri.feature.bruker.Bruker>"*/-->
+        <h2>Tildel dommer rolle</h2>
+        <p>Her kan du tildele dommer-rollen til eksisterende brukere for denne utstillingen</p>
         <div>
-            <h3>Registrer dommer</h3>
-            <form th:hx-post="@{/admin/{id}/registrerDommer(id=${utstilling.id})}"
+            <h3>Velg bruker å tildele dommer rolle</h3>
+            <form th:hx-post="@{/admin/{id}/tildel-dommer-rolle(id=${utstilling.id})}"
                   hx-target="#dommerListe"
                   hx-swap="outerHTML"
                   hx-on::afterRequest="this.reset()">
                 <fieldset role="group">
-                    <label for="fornavn">Fornavn
-                        <input type="text" id="fornavn" name="fornavn" placeholder="Fornavn..." required/>
-                    </label>
-                    <label for="etternavn">Etternavn
-                        <input type="text" id="etternavn" name="etternavn" placeholder="Etternavn..." required/>
-                    </label>
-                </fieldset>
-                <p>Her skriver du inn epost og passord for dommeren. Epost blir brukt til pålogging, passord må være
-                    minst 4 tegn</p>
-                <fieldset role="group">
-                    <label for="epost">Epost
-                        <input type="email" id="epost" name="epost" placeholder="Epost..." required/>
-                    </label>
-                    <label for="passord">Passord
-                        <input type="text"
-                               id="passord"
-                               name="passord"
-                               placeholder="Passord..."
-                               minlength="4"
-                               required/>
+                    <label for="bruker">Velg bruker
+                        <select id="bruker" name="brukerId" required>
+                            <option value="">-- Velg bruker --</option>
+                            <option th:each="bruker : ${brukere}"
+                                    th:value="${bruker.id}"
+                                    th:text="${bruker.fornavn} + ' ' + ${bruker.etternavn}">
+                            </option>
+                        </select>
                     </label>
                 </fieldset>
-                <fieldset role="group">
-                    <label for="telefon">Telefon
-                        <input type="tel" id="telefon" name="telefon" placeholder="Telefon..." required/>
-                    </label>
-                    <label for="forening">Forening
-                        <input type="text" id="forening" name="forening" placeholder="Forening..." required/>
-                    </label>
-                </fieldset>
-                <button type="submit">Registrer dommer</button>
+                <button type="submit">Tildel dommer rolle</button>
             </form>
         </div>
         <div>
-            <h3>Registrerte dommere</h3>
-            <div id="dommerListe" th:fragment="dommerListe">
-                <table>
-                    <thead>
-                    <tr>
-                        <th scope="col">Navn</th>
-                        <th scope="col">Epost</th>
-                        <th scope="col">Telefon</th>
-                        <th scope="col">Handling</th>
-                    </tr>
-                    </thead>
-                    <tbody th:each="dp : ${utstilling.dommere}">
-                    <tr th:object="${dp.dommer}">
-                        <td th:text="*{navn}">Peristeri tittel test</td>
-                        <td th:text="*{epost}">Peristeri</td>
-                        <td th:text="*{telefon}">Bergen</td>
-                        <td>
-                            <button class="secondary">Fjern dommer</button>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+            <h3>Tildelt dommer for denne utstillingen</h3>
+            <div th:replace="~{admin/admin_fragments :: dommerListe}"></div>
             <button th:hx-get="@{/admin/{id}(id=${utstilling.id})}"
                     hx-target="#main-content"
                     hx-swap="outerHTML"
@@ -396,6 +356,37 @@
             </button>
         </div>
     </section>
+    <div id="dommerListe" th:fragment="dommerListe">
+        <!--/*@thymesVar id="dommerListe" type="java.util.List<no.hvl.peristeri.feature.dommer.DommerPaamelding>"*/-->
+        <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Navn</th>
+                <th scope="col">Epost</th>
+                <th scope="col">Telefon</th>
+                <th scope="col">Handling</th>
+            </tr>
+            </thead>
+            <tbody th:each="dp : ${dommerListe}">
+            <tr th:object="${dp.dommer}">
+                <td th:text="*{fornavn} + ' ' + *{etternavn}">Peristeri tittel test</td>
+                <td th:text="*{epost}">Peristeri</td>
+                <td th:text="*{telefon}">Bergen</td>
+                <td>
+                    <button th:hx-post="@{/admin/{utstillingId}/fjern-dommer/{dommerPaameldingId}(utstillingId=${utstilling.id},dommerPaameldingId=${dp.id})}"
+                            hx-target="#dommerListe"
+                            hx-swap="outerHTML"
+                            hx-confirm="Er du sikker på at du vil fjerne denne dommeren?"
+                            class="secondary">
+                        Fjern dommer
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <!-- OLD SECTION REMOVED: dommerRegistrering -->
     <section th:fragment="adminUtstilling" id="main-content">
         <div class="flex-grid flex-grid-lg">
             <article>
@@ -446,19 +437,19 @@
         <p>Velg hva du vil gjøre med knappene under</p>
         <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
         <div class="flex-grid grid-links" th:object="${utstilling}">
-            <article th:hx-get="@{/admin/{id}/dommerRegistrering(id=*{id})}"
+            <article th:hx-get="@{/admin/{id}/tildel-dommer-rolle(id=*{id})}"
                      hx-target="#main-content"
                      hx-swap="outerHTML"
                      hx-push-url="false">
                 <header>
-                    <b>Registrer dommere</b>
+                    <b>Tildel dommer rolle</b>
                 </header>
                 <div>
-                    <p>Her kan du registere dommere til dette arrangementet</p>
+                    <p>Her kan du tildele dommer-rollen til eksisterende brukere for denne utstillingen</p>
                 </div>
                 <footer>
                     <button class="fill-parent">
-                        Registrer dommere
+                        Tildel dommer rolle
                     </button>
                 </footer>
             </article>

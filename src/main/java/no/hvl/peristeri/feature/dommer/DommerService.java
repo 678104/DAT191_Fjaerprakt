@@ -16,6 +16,10 @@ public interface DommerService {
 
 	DommerPaamelding lagreDommerPaamelding(Bruker dommer, Long utstillingId, String passord);
 
+	DommerPaamelding lagreDommerPaaMelding(DommerPaamelding dommerPaamelding);
+
+	void fjernDommerPaamelding(Long dommerPaameldingId);
+
 	DommerPaamelding fordelRaserTilDommer(Long dommerPaameldingId, List<String> raser);
 
 	Due hentDueMedId(Long dueId);
