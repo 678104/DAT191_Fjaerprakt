@@ -12,9 +12,11 @@
 <main class="container">
     <section>
         <h1>Admin panel</h1>
-        <a href="/admin/panel" role="button" class="secondary">Admin panel</a>
-        <a href="/utstilling/registrer" role="button" class="secondary">Registrer ny utstilling</a>
-        <a href="/admin/tildel-dommer-rolle-liste" role="button" class="secondary">Tildel dommerrolle</a>
+        <div class="admin-action-buttons">
+            <a href="/admin/panel" role="button" class="secondary">Admin panel</a>
+            <a href="/utstilling/registrer" role="button" class="secondary">Registrer ny utstilling</a>
+            <a href="/admin/tildel-dommer-rolle-liste" role="button" class="secondary">Tildel dommerrolle</a>
+        </div>
     </section>
     <th:block th:if="${fragment}">
         <th:block th:replace="~{admin/admin_fragments :: ${fragment}}"></th:block>
@@ -53,6 +55,215 @@
             .map(item => item.getAttribute('data-value'));
         document.getElementById(`selectedRaserInput_${formId}`).value = selectedRaser.join(',');
     }
+
+    function velgBrukerFraForslag(button) {
+        const input = document.getElementById('brukerSok');
+        const hidden = document.getElementById('brukerId');
+        const form = input?.closest('form');
+
+        if (input && hidden && form) {
+            const brukerId = button.dataset.brukerId || '';
+            const brukerNavn = button.dataset.brukerNavn || '';
+            input.value = brukerNavn;
+            input.dataset.valgtBrukerNavn = brukerNavn;
+            form.dataset.valgtBrukerId = brukerId;
+            form.dataset.valgtBrukerNavn = brukerNavn;
+            hidden.value = brukerId;
+            fjernAktivBrukerForslag();
+            skjulBrukerFeil();
+        }
+    }
+
+    function hentBrukerForslag() {
+        return Array.from(document.querySelectorAll('#brukerForslagContainer .autocomplete-option'));
+    }
+
+    function fjernAktivBrukerForslag() {
+        hentBrukerForslag().forEach(option => {
+            option.classList.remove('autocomplete-option--active');
+            option.removeAttribute('aria-selected');
+        });
+        const input = document.getElementById('brukerSok');
+        if (input) {
+            input.removeAttribute('aria-activedescendant');
+        }
+    }
+
+    function settAktivBrukerForslag(index) {
+        const options = hentBrukerForslag();
+        if (!options.length) {
+            fjernAktivBrukerForslag();
+            return;
+        }
+
+        const safeIndex = ((index % options.length) + options.length) % options.length;
+        fjernAktivBrukerForslag();
+
+        const active = options[safeIndex];
+        active.classList.add('autocomplete-option--active');
+        active.setAttribute('aria-selected', 'true');
+        if (!active.id) {
+            active.id = `brukerForslag_${safeIndex}`;
+        }
+
+        const input = document.getElementById('brukerSok');
+        if (input) {
+            input.setAttribute('aria-activedescendant', active.id);
+        }
+    }
+
+    function valgtAktivBrukerForslag() {
+        return document.querySelector('#brukerForslagContainer .autocomplete-option.autocomplete-option--active');
+    }
+
+    function velgAktivBrukerForslag() {
+        const active = valgtAktivBrukerForslag();
+        if (active) {
+            velgBrukerFraForslag(active);
+            return true;
+        }
+
+        const options = hentBrukerForslag();
+        if (options.length === 1) {
+            velgBrukerFraForslag(options[0]);
+            return true;
+        }
+
+        return false;
+    }
+
+    function nullstillBrukerId() {
+        const hidden = document.getElementById('brukerId');
+        const input = document.getElementById('brukerSok');
+        const form = input?.closest('form');
+
+        if (input && form && input.value === (form.dataset.valgtBrukerNavn || '')) {
+            skjulBrukerFeil();
+            return;
+        }
+
+        if (hidden) {
+            hidden.value = '';
+        }
+        if (input) {
+            delete input.dataset.valgtBrukerNavn;
+        }
+        if (form) {
+            delete form.dataset.valgtBrukerId;
+            delete form.dataset.valgtBrukerNavn;
+        }
+        skjulBrukerFeil();
+    }
+
+    function nullstillBrukerVelger() {
+        const input = document.getElementById('brukerSok');
+        const hidden = document.getElementById('brukerId');
+        const form = input?.closest('form');
+
+        if (input) {
+            input.value = '';
+            delete input.dataset.valgtBrukerNavn;
+        }
+        if (hidden) {
+            hidden.value = '';
+        }
+        if (form) {
+            delete form.dataset.valgtBrukerId;
+            delete form.dataset.valgtBrukerNavn;
+        }
+        skjulBrukerFeil();
+    }
+
+    function visBrukerFeil(melding) {
+        const feil = document.getElementById('brukerFeilmelding');
+        const input = document.getElementById('brukerSok');
+        if (!feil) {
+            return;
+        }
+
+        feil.textContent = melding;
+        feil.hidden = false;
+        if (input) {
+            input.setAttribute('aria-invalid', 'true');
+        }
+    }
+
+    function skjulBrukerFeil() {
+        const feil = document.getElementById('brukerFeilmelding');
+        const input = document.getElementById('brukerSok');
+        if (!feil) {
+            return;
+        }
+
+        feil.textContent = '';
+        feil.hidden = true;
+        if (input) {
+            input.removeAttribute('aria-invalid');
+        }
+    }
+
+    function sjekkBrukerValgt() {
+        const hidden = document.getElementById('brukerId');
+        const input = document.getElementById('brukerSok');
+        const form = input?.closest('form');
+
+        if (!hidden || !input || !form) {
+            visBrukerFeil('Velg bruker å tildele rolle');
+            return false;
+        }
+
+        if (!hidden.value && form.dataset.valgtBrukerId) {
+            hidden.value = form.dataset.valgtBrukerId;
+        }
+
+        if (hidden && hidden.value) {
+            skjulBrukerFeil();
+            return true;
+        }
+
+        visBrukerFeil('Velg bruker å tildele rolle');
+        return false;
+    }
+
+    document.addEventListener('keydown', function (event) {
+        const input = document.getElementById('brukerSok');
+        if (!input || document.activeElement !== input) {
+            return;
+        }
+
+        const options = hentBrukerForslag();
+        if (!options.length) {
+            return;
+        }
+
+        const activeIndex = options.findIndex(option => option.classList.contains('autocomplete-option--active'));
+
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            settAktivBrukerForslag(activeIndex < 0 ? 0 : activeIndex + 1);
+        }
+
+        if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            settAktivBrukerForslag(activeIndex < 0 ? options.length - 1 : activeIndex - 1);
+        }
+
+        if (event.key === 'Enter') {
+            if (velgAktivBrukerForslag()) {
+                event.preventDefault();
+            }
+        }
+
+        if (event.key === 'Escape') {
+            fjernAktivBrukerForslag();
+        }
+    });
+
+    htmx.onLoad(function (content) {
+        if (content.querySelector('#brukerForslagContainer')) {
+            fjernAktivBrukerForslag();
+        }
+    });
 
     document.addEventListener('click', function (event) {
         if (event.target.tagName === 'LI') {

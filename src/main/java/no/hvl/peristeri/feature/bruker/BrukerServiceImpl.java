@@ -5,8 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import no.hvl.peristeri.common.exception.InvalidParameterException;
 import no.hvl.peristeri.common.exception.ResourceNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,7 +18,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 public class BrukerServiceImpl implements BrukerService {
-	private final Logger logger = LoggerFactory.getLogger(BrukerServiceImpl.class);
 
 	private final BrukerRepository                   brukerRepository;
 	private final PasswordEncoder                    passwordEncoder;
@@ -28,6 +25,21 @@ public class BrukerServiceImpl implements BrukerService {
 	@Override
 	public List<Bruker> getBrukere() {
 		return brukerRepository.findAll();
+	}
+
+	@Override
+	public List<Bruker> finnBrukere(String sok) {
+		if (sok == null || sok.isBlank()) {
+			return getBrukere();
+		}
+
+		String filter = sok.trim();
+		if (filter.isEmpty()) {
+			return getBrukere();
+		}
+
+		return brukerRepository.findByFornavnStartingWithIgnoreCaseOrEtternavnStartingWithIgnoreCaseOrEpostStartingWithIgnoreCase(
+				filter, filter, filter);
 	}
 
 	@Override

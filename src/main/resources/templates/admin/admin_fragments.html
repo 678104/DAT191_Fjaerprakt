@@ -322,29 +322,43 @@
     </section>
     <section th:fragment="tildelDommerRolle" id="main-content">
         <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
-        <!--/*@thymesVar id="brukere" type="java.util.List<no.hvl.peristeri.feature.bruker.Bruker>"*/-->
         <h2>Tildel dommer rolle</h2>
         <p>Her kan du tildele dommer-rollen til eksisterende brukere for denne utstillingen</p>
-        <div>
-            <h3>Velg bruker å tildele dommer rolle</h3>
-            <form th:hx-post="@{/admin/{id}/tildel-dommer-rolle(id=${utstilling.id})}"
-                  hx-target="#dommerListe"
-                  hx-swap="outerHTML"
-                  hx-on::afterRequest="this.reset()">
-                <fieldset role="group">
-                    <label for="bruker">Velg bruker
-                        <select id="bruker" name="brukerId" required>
-                            <option value="">-- Velg bruker --</option>
-                            <option th:each="bruker : ${brukere}"
-                                    th:value="${bruker.id}"
-                                    th:text="${bruker.fornavn} + ' ' + ${bruker.etternavn}">
-                            </option>
-                        </select>
+        <form th:hx-post="@{/admin/{id}/tildel-dommer-rolle(id=${utstilling.id})}"
+              hx-target="#dommerListe"
+              hx-swap="outerHTML"
+              hx-on::afterRequest="this.reset(); nullstillBrukerVelger();"
+              onsubmit="return sjekkBrukerValgt();">
+            <fieldset role="group">
+                <div class="autocomplete-field">
+                    <label for="brukerSok">
+                        Velg bruker
+                        <input id="brukerSok"
+                               type="search"
+                               name="sok"
+                               placeholder="Skriv fornavn eller e-post..."
+                               autocomplete="off"
+                               aria-autocomplete="list"
+                               aria-controls="brukerForslagContainer"
+                               th:hx-get="@{/admin/{id}/tildel-dommer-rolle/brukere(id=${utstilling.id})}"
+                               hx-target="#brukerForslagContainer"
+                               hx-swap="outerHTML"
+                               hx-trigger="keyup changed delay:300ms, search"
+                               hx-include="this"
+                               oninput="nullstillBrukerId()"/>
                     </label>
-                </fieldset>
-                <button type="submit">Tildel dommer rolle</button>
-            </form>
-        </div>
+                    <input type="hidden" id="brukerId" name="brukerId">
+                    <p id="brukerFeilmelding"
+                       class="feilmelding"
+                       aria-live="polite"
+                       hidden="hidden"
+                       th:text="${brukerFeil}">
+                    </p>
+                    <div id="brukerForslagContainer" th:replace="~{admin/admin_fragments :: brukerForslag}"></div>
+                </div>
+            </fieldset>
+            <button type="submit">Tildel dommer rolle</button>
+        </form>
         <div>
             <h3>Tildelt dommer for denne utstillingen</h3>
             <div th:replace="~{admin/admin_fragments :: dommerListe}"></div>
@@ -356,6 +370,25 @@
             </button>
         </div>
     </section>
+    <div id="brukerForslagContainer" th:fragment="brukerForslag">
+        <!--/*@thymesVar id="brukere" type="java.util.List<no.hvl.peristeri.feature.bruker.Bruker>"*/-->
+        <!--/*@thymesVar id="sok" type="java.lang.String"*/-->
+        <div class="autocomplete-results" th:if="${!#lists.isEmpty(brukere)}" role="listbox" aria-label="Forslag til brukere">
+            <button type="button"
+                    class="secondary outline-small autocomplete-option"
+                    th:each="bruker : ${brukere}"
+                    th:attr="data-bruker-id=${bruker.id},data-bruker-navn=${bruker.fornavn + ' ' + bruker.etternavn + ' (' + bruker.epost + ')'}"
+                    role="option"
+                    tabindex="-1"
+                    onclick="velgBrukerFraForslag(this)">
+                <span th:text="${bruker.fornavn + ' ' + bruker.etternavn}"></span>
+                <small th:text="${bruker.epost}"></small>
+            </button>
+        </div>
+        <p th:if="${sok != null and !sok.isBlank() and #lists.isEmpty(brukere)}">
+            Ingen brukere funnet.
+        </p>
+    </div>
     <div id="dommerListe" th:fragment="dommerListe">
         <!--/*@thymesVar id="dommerListe" type="java.util.List<no.hvl.peristeri.feature.dommer.DommerPaamelding>"*/-->
         <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
@@ -717,13 +750,17 @@
                         <td th:text="${u.arrangoer}">Arrangør</td>
                         <td th:text="${u.adresse}">Sted</td>
                         <td th:text="${u.datoRange.startDate}">Dato</td>
-                        <td th:text="${u.paameldingsFrist}">Frist</td>
+                        <td>
+                            <span th:classappend="${u.paameldingAApnet} ? 'aapen-paamelding' : 'lukket-paamelding'"
+                                  th:text="${u.paameldingsFrist}">Frist</span>
+                        </td>
                         <td>
                             <button th:hx-get="@{/admin/{id}/tildel-dommer-rolle(id=${u.id})}"
                                     hx-target="#main-content"
                                     hx-swap="outerHTML"
-                                    hx-push-url="true">
-                                Tildel dommer rolle
+                                    hx-push-url="true"
+                                    class="secondary button-small">
+                                Tildel dommerrolle
                             </button>
                         </td>
                     </tr>

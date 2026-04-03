@@ -10,6 +10,8 @@ import java.util.Optional;
 public interface BrukerService {
 	List<Bruker> getBrukere();
 
+	List<Bruker> finnBrukere(String sok);
+
 	Optional<Bruker> getBruker(String fornavn, String etternavn);
 
 	/**
