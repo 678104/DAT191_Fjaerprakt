@@ -99,6 +99,7 @@ public class UtstillingController {
 	@HxRequest
 	@GetMapping("/registrer")
 	public View visRegistrerUtstillingHtmx(Model model) {
+		model.addAttribute("utstilling", new Utstilling());
 		return FragmentsRendering
 				.with("utstilling/utstilling_fragments :: registreringsSkjema")
 				.build();
@@ -106,6 +107,7 @@ public class UtstillingController {
 
 	@GetMapping("/registrer")
 	public String visRegistrerUtstilling(Model model) {
+		model.addAttribute("utstilling", new Utstilling());
 		model.addAttribute("fragment", "registreringsSkjema");
 		return "utstilling/utstilling";
 	}

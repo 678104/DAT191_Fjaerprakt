@@ -1,19 +1,19 @@
 package no.hvl.peristeri.feature.admin;
 
+import io.github.wimdeblauwe.htmx.spring.boot.mvc.HtmxReswap;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest;
+import io.github.wimdeblauwe.htmx.spring.boot.mvc.HtmxResponse;
 import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.bruker.BrukerService;
+import no.hvl.peristeri.feature.bruker.Rolle;
 import no.hvl.peristeri.feature.dommer.DommerPaamelding;
 import no.hvl.peristeri.feature.dommer.DommerService;
 import no.hvl.peristeri.feature.due.Due;
 import no.hvl.peristeri.feature.due.DueService;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +28,6 @@ import java.util.Map;
 public class AdminController {
 	private static final String navLocation = "admin";
 
-	private final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
 	private final BrukerService     brukerService;
 	private final UtstillingService utstillingService;
@@ -39,6 +38,22 @@ public class AdminController {
 	public String getAdmin(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
 		model.addAttribute("kommendeUtstillinger", utstillingService.finnIkkeTidligereUtstillinger());
 		model.addAttribute("tidligereUtstillinger", utstillingService.finnTidligereUtstillinger());
+		return "admin/admin";
+	}
+
+	@GetMapping("/panel")
+	public String getAdminPanel() {
+		Utstilling aktivUtstilling = utstillingService.finnAktivUtstilling();
+		if (aktivUtstilling != null) {
+			return "redirect:/admin/" + aktivUtstilling.getId();
+		}
+		return "redirect:/admin";
+	}
+
+	@GetMapping("/tildel-dommer-rolle-liste")
+	public String getTildelDommerRolleListe(Model model) {
+		model.addAttribute("kommendeUtstillinger", utstillingService.finnIkkeTidligereUtstillinger());
+		model.addAttribute("fragment", "tildelDommerRolleListe");
 		return "admin/admin";
 	}
 
@@ -60,20 +75,61 @@ public class AdminController {
 	}
 
 	@HxRequest
-	@GetMapping("/{id}/dommerRegistrering")
-	public String getDommerRegistreringHtmx(@PathVariable Long id, Model model, HttpSession session,
-	                                        RedirectAttributes redirectAttributes) {
+	@GetMapping("/{id}/tildel-dommer-rolle")
+	public String getTildelDommerRolleHtmx(@PathVariable Long id, Model model, HttpSession session,
+	                                       RedirectAttributes redirectAttributes) {
 		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(id));
-		return "admin/admin_fragments :: dommerRegistrering";
+		model.addAttribute("brukere", List.of());
+		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(id));
+		return "admin/admin_fragments :: tildelDommerRolle";
 	}
 
 	@HxRequest
-	@PostMapping("/{utstillingId}/registrerDommer")
-	public String postRegistrerDommer(@PathVariable Long utstillingId, Model model, HttpSession session,
-	                                  RedirectAttributes redirectAttributes, @ModelAttribute @Valid Bruker dommer, @RequestParam String passord) {
-		dommerService.lagreDommerPaamelding(dommer, utstillingId, passord);
+	@GetMapping("/{id}/tildel-dommer-rolle/brukere")
+	public String getTildelDommerRolleBrukereHtmx(@PathVariable Long id, @RequestParam(required = false) String sok,
+	                                             Model model) {
+		model.addAttribute("brukere", sok == null || sok.isBlank() ? List.of() : brukerService.finnBrukere(sok));
+		model.addAttribute("sok", sok);
+		return "admin/admin_fragments :: brukerForslag";
+	}
 
-		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(utstillingId));
+	@HxRequest
+	@PostMapping("/{utstillingId}/tildel-dommer-rolle")
+	public String postTildelDommerRolle(@PathVariable Long utstillingId, Model model, HttpSession session,
+	                                    RedirectAttributes redirectAttributes, @RequestParam(required = false) Long brukerId,
+	                                    HtmxResponse htmxResponse) {
+		if (brukerId == null) {
+			Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
+			model.addAttribute("utstilling", utstilling);
+			model.addAttribute("brukere", List.of());
+			model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
+			model.addAttribute("brukerFeil", "Velg bruker å tildele rolle");
+			htmxResponse.setReswap(HtmxReswap.outerHtml());
+			htmxResponse.setRetarget("main-content");
+			return "admin/admin_fragments :: tildelDommerRolle";
+		}
+
+		Bruker bruker = brukerService.hentBrukerMedId(brukerId);
+		bruker.leggTilRolle(Rolle.DOMMER);
+		brukerService.lagreBruker(bruker);
+		
+		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
+		DommerPaamelding dommerPaamelding = new DommerPaamelding(utstilling, bruker);
+		dommerService.lagreDommerPaaMelding(dommerPaamelding);
+
+		model.addAttribute("utstilling", utstilling);
+		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
+		return "admin/admin_fragments :: dommerListe";
+	}
+
+	@HxRequest
+	@PostMapping("/{utstillingId}/fjern-dommer/{dommerPaameldingId}")
+	public String postFjernDommer(@PathVariable Long utstillingId, @PathVariable Long dommerPaameldingId, 
+	                               Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+		dommerService.fjernDommerPaamelding(dommerPaameldingId);
+		
+		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
+		model.addAttribute("utstilling", utstilling);
 		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
 		return "admin/admin_fragments :: dommerListe";
 	}

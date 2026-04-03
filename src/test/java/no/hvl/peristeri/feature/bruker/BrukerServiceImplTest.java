@@ -67,6 +67,38 @@ class BrukerServiceImplTest {
     }
 
     @Test
+    void finnBrukere_withSearchTerm_shouldSearchForFornavnEtternavnAndEpost() {
+        // Arrange
+        List<Bruker> expectedBrukere = List.of(testBruker);
+        when(brukerRepository.findByFornavnStartingWithIgnoreCaseOrEtternavnStartingWithIgnoreCaseOrEpostStartingWithIgnoreCase(
+                "Test", "Test", "Test")).thenReturn(expectedBrukere);
+
+        // Act
+        List<Bruker> actualBrukere = brukerService.finnBrukere("Test");
+
+        // Assert
+        assertEquals(expectedBrukere, actualBrukere);
+        verify(brukerRepository).findByFornavnStartingWithIgnoreCaseOrEtternavnStartingWithIgnoreCaseOrEpostStartingWithIgnoreCase(
+                "Test", "Test", "Test");
+    }
+
+    @Test
+    void finnBrukere_withBlankSearch_shouldReturnAllUsers() {
+        // Arrange
+        List<Bruker> expectedBrukere = Arrays.asList(testBruker, new Bruker());
+        when(brukerRepository.findAll()).thenReturn(expectedBrukere);
+
+        // Act
+        List<Bruker> actualBrukere = brukerService.finnBrukere("   ");
+
+        // Assert
+        assertEquals(expectedBrukere, actualBrukere);
+        verify(brukerRepository).findAll();
+        verify(brukerRepository, never()).findByFornavnStartingWithIgnoreCaseOrEtternavnStartingWithIgnoreCaseOrEpostStartingWithIgnoreCase(
+                any(), any(), any());
+    }
+
+    @Test
     void getBruker_withValidNames_shouldReturnUser() {
         // Arrange
         when(brukerRepository.findFirstByFornavnAndEtternavn("Test", "Bruker"))

@@ -152,9 +152,11 @@ public class UtstillingServiceImpl implements UtstillingService {
 		existing.setAdresse(oppdatertUtstilling.getAdresse());
 		existing.setArrangoer(oppdatertUtstilling.getArrangoer());
 		existing.setDatoRange(oppdatertUtstilling.getDatoRange());
+		existing.setPaameldingStartDato(oppdatertUtstilling.getPaameldingStartDato());
 		existing.setPaameldingAApnet(
 				oppdatertUtstilling.getPaameldingAApnet() != null ? oppdatertUtstilling.getPaameldingAApnet() : false);
 		existing.setPaameldingsFrist(oppdatertUtstilling.getPaameldingsFrist());
+		existing.setRedigeringsFrist(oppdatertUtstilling.getRedigeringsFrist());
 		existing.setBeskrivelse(oppdatertUtstilling.getBeskrivelse());
 		existing.setTittel(oppdatertUtstilling.getTittel());
 		Utstilling saved = utstillingRepository.save(existing);

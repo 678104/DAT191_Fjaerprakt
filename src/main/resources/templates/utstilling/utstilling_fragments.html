@@ -14,49 +14,66 @@
                 <h2>Registrer Utstilling</h2>
             </header>
             <form id="registrer"
+                  th:object="${utstilling}"
                   hx-target="#content"
                   hx-post="/utstilling/registrer"
                   hx-trigger="submit"
                   hx-push-url="/utstilling"
                   onsubmit="document.getElementById('visRegistrerBtn').classList.remove('hidden');">
                 <fieldset>
+                    <div th:if="${#fields.hasGlobalErrors()}" class="feilmelding" role="alert">
+                        <p th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+                    </div>
                     <label for="tittel"><b>Tittel</b>
-                        <input type="text" id="tittel" name="tittel" placeholder="Tittel på utstilling" required>
+                        <input type="text" id="tittel" th:field="*{tittel}" placeholder="Tittel på utstilling" required>
                     </label>
                     <label for="arrangoer"><b>Arrangør</b>
-                        <input type="text" id="arrangoer" name="arrangoer" placeholder="Utstillingens arrangør"
+                        <input type="text" id="arrangoer" th:field="*{arrangoer}" placeholder="Utstillingens arrangør"
                                required>
                     </label>
                     <label for="adresse"><b>Adresse / Sted</b>
-                        <input type="text" id="adresse" name="adresse"
+                        <input type="text" id="adresse" th:field="*{adresse}"
                                placeholder="Adressen hvor utstillingen befinner seg" required>
                     </label>
                     <label for="beskrivelse"><b>Beskrivelse</b>
-                        <textarea type="text" id="beskrivelse" name="beskrivelse"
+                        <textarea type="text" id="beskrivelse" th:field="*{beskrivelse}"
                                   placeholder="En tekstbeskrivelse med annen info etc. dere ønsker å vise"
                                   required></textarea>
                     </label>
                     <label for="duePris"><b>Pris per due</b>
-                        <input type="number" id="duePris" name="duePris" placeholder="Pris per due" step="any" required>
+                        <input type="number" id="duePris" th:field="*{duePris}" placeholder="Pris per due" step="any" required>
                     </label>
                     <fieldset class="grid">
-                        <label for="startDato"><b>Startdato</b>
-                            <input type="date" id="startDato" name="datoRange.startDate"
-                                   placeholder="Datoen utstillingen begynner" required>
+                        <label for="paameldingStartDato"><b>Startdato for påmelding</b>
+                            <input type="date" id="paameldingStartDato" th:field="*{paameldingStartDato}" required>
                         </label>
-                        <label for="sluttDato"><b>Sluttdato</b>
-                            <input type="date" id="sluttDato" name="datoRange.endDate"
-                                   placeholder="Datoen utstillingen avsluttes" required>
+                        <small class="feiltekst" th:if="${#fields.hasErrors('paameldingStartDato')}" th:errors="*{paameldingStartDato}"></small>
+                        <label for="paameldingsFrist"><b>Frist for påmelding</b>
+                            <input type="date" id="paameldingsFrist" th:field="*{paameldingsFrist}" required>
                         </label>
+                        <small class="feiltekst" th:if="${#fields.hasErrors('paameldingsFrist')}" th:errors="*{paameldingsFrist}"></small>
                     </fieldset>
                     <fieldset class="grid">
-                        <label for="paameldingsFrist"><b>Påmeldingsfrist</b>
-                            <input type="date" id="paameldingsFrist" name="paameldingsFrist" required>
+                        <label for="redigeringsFrist"><b>Frist for å kunne redigere egen påmelding</b>
+                            <input type="date" id="redigeringsFrist" th:field="*{redigeringsFrist}" required>
                         </label>
+                        <small class="feiltekst" th:if="${#fields.hasErrors('redigeringsFrist')}" th:errors="*{redigeringsFrist}"></small>
+                    </fieldset>
+                    <fieldset class="grid">
+                        <label for="startDato"><b>Startdato for utstilling</b>
+                            <input type="date" id="startDato" th:field="*{datoRange.startDate}"
+                                   placeholder="Datoen utstillingen begynner" required>
+                        </label>
+                        <small class="feiltekst" th:if="${#fields.hasErrors('datoRange.startDate')}" th:errors="*{datoRange.startDate}"></small>
+                        <label for="sluttDato"><b>Sluttdato for utstilling</b>
+                            <input type="date" id="sluttDato" th:field="*{datoRange.endDate}"
+                                   placeholder="Datoen utstillingen avsluttes" required>
+                        </label>
+                        <small class="feiltekst" th:if="${#fields.hasErrors('datoRange.endDate')}" th:errors="*{datoRange.endDate}"></small>
                     </fieldset>
                     <button type="submit">Registrer</button>
                     <button hx-target="#content"
-                            class="secondary"
+                            class="secondary fill-parent-width"
                             hx-get="/utstilling/liste"
                             onclick="document.getElementById('visRegistrerBtn').classList.remove('hidden');"
                             hx-push-url="/utstilling"
@@ -156,13 +173,18 @@
                     </div>
                     <hr/>
                     <div>
-                        <b>Start Dato</b>
-                        <div th:text="${#temporals.format(utstilling.datoRange.startDate, 'dd.MM.yyyy')}">12.12.2024</div>
+                        <b>Startdato for påmelding</b>
+                        <div th:text="${utstilling.paameldingStartDato != null ? #temporals.format(utstilling.paameldingStartDato, 'dd.MM.yyyy') : '-'}">-</div>
                     </div>
                     <hr/>
                     <div>
-                        <b>Påmeldingsfrist</b>
+                        <b>Frist for påmelding</b>
                         <div th:text="${#temporals.format(utstilling.paameldingsFrist, 'dd.MM.yyyy')}">10.11.2024</div>
+                    </div>
+                    <hr/>
+                    <div>
+                        <b>Frist for å redigere egen påmelding</b>
+                        <div th:text="${utstilling.redigeringsFrist != null ? #temporals.format(utstilling.redigeringsFrist, 'dd.MM.yyyy') : '-'}">-</div>
                     </div>
                 </div>
                 <div>
@@ -172,7 +194,12 @@
                     </div>
                     <hr/>
                     <div>
-                        <b>Sluttdato</b>
+                        <b>Startdato for utstilling</b>
+                        <div th:text="${#temporals.format(utstilling.datoRange.startDate, 'dd.MM.yyyy')}">12.12.2024</div>
+                    </div>
+                    <hr/>
+                    <div>
+                        <b>Sluttdato for utstilling</b>
                         <div th:text="${#temporals.format(utstilling.datoRange.endDate, 'dd.MM.yyyy')}">13.12.2024</div>
                     </div>
                     <hr/>
@@ -291,14 +318,20 @@
                         </div>
                         <hr/>
                         <div>
-                            <label><b>Start Dato</b>
-                                <input type="date" th:value="*{datoRange.startDate}" name="datoRange.startDate">
+                            <label><b>Startdato for påmelding</b>
+                                <input type="date" th:value="*{paameldingStartDato}" name="paameldingStartDato">
                             </label>
                         </div>
                         <hr/>
                         <div>
-                            <label><b>Påmeldingsfrist</b>
+                            <label><b>Frist for påmelding</b>
                                 <input type="date" th:value="*{paameldingsFrist}" name="paameldingsFrist">
+                            </label>
+                        </div>
+                        <hr/>
+                        <div>
+                            <label><b>Frist for å redigere egen påmelding</b>
+                                <input type="date" th:value="*{redigeringsFrist}" name="redigeringsFrist">
                             </label>
                         </div>
                     </div>
@@ -310,7 +343,13 @@
                         </div>
                         <hr/>
                         <div>
-                            <label><b>Sluttdato</b>
+                            <label><b>Startdato for utstilling</b>
+                                <input type="date" th:value="*{datoRange.startDate}" name="datoRange.startDate">
+                            </label>
+                        </div>
+                        <hr/>
+                        <div>
+                            <label><b>Sluttdato for utstilling</b>
                                 <input type="date" th:value="*{datoRange.endDate}" name="datoRange.endDate">
                             </label>
                         </div>
