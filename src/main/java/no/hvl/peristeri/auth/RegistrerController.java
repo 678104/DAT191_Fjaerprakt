@@ -1,5 +1,7 @@
 package no.hvl.peristeri.auth;
 
+import java.util.regex.Pattern;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +9,10 @@ import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.bruker.BrukerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,6 +26,7 @@ public class RegistrerController {
 	private static final String        navLocation = "login";
 	private final        Logger        logger      = LoggerFactory.getLogger(RegistrerController.class);
 	private final        BrukerService brukerService;
+	private final AuthenticationManager authenticationManager;
 
 	@GetMapping
 	public String getRegistrer(Model model, HttpSession session) {
@@ -30,13 +37,20 @@ public class RegistrerController {
 
 	@PostMapping
 	public String postRegistrer(@ModelAttribute @Valid Bruker nyBruker, @RequestParam String passord,
-	                            Model model, RedirectAttributes ra, BindingResult bindingResult, HttpSession session) {
+	                            Model model, RedirectAttributes ra, BindingResult bindingResult, HttpSession session,
+	                            HttpServletRequest request) {
 
 		if (bindingResult.hasErrors()) {
 			logger.info("Valideringsfeil: {}", bindingResult.getAllErrors());
 			session.setAttribute("nyBruker", nyBruker);
 			model.addAttribute("feilmelding",
 					"Mangler obligatoriske felt. Vennligst fyll inn alle obligatoriske felt.");
+			return "auth/registrer";
+		}
+
+		if (!isValidEmail(nyBruker.getEpost())) {
+			session.setAttribute("nyBruker", nyBruker);
+			model.addAttribute("feilmelding", "Eposten er ikke gyldig.");
 			return "auth/registrer";
 		}
 
@@ -52,12 +66,26 @@ public class RegistrerController {
 			return "auth/registrer";
 		}
 		session.removeAttribute("nyBruker");
-		brukerService.lagreBrukerMedPassord(nyBruker, passord);
-		ra.addFlashAttribute("melding", "Bruker registrert. Du kan nå logge inn.");
-		ra.addFlashAttribute("epost", nyBruker.getEpost());
-		return "redirect:/login";
+		Bruker savedUser = brukerService.lagreBrukerMedPassord(nyBruker, passord);
+
+		// Automatically log in the new user
+		Authentication authentication = authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(savedUser.getEpost(), passord)
+		);
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+
+		// Manually set the authentication in the session
+		request.getSession().setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+
+		ra.addFlashAttribute("melding", "Bruker registrert og logget inn.");
+		return "redirect:/";
 	}
 
+	private boolean isValidEmail(String email) {
+		String emailRegex = "^[a-zA-Z0-9._\\-æøåÆØÅ]+@[a-zA-Z0-9.-]+\\.[a-zA-ZæøåÆØÅ]{2,4}$";
+		Pattern pattern = Pattern.compile(emailRegex);
+		return pattern.matcher(email).matches();
+	}
 
 	@ModelAttribute("navLocation")
 	public String navLocation() {
