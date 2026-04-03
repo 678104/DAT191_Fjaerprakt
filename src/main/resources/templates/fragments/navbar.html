@@ -43,7 +43,16 @@
             </li>
             <li sec:authorize="isAuthenticated()">
                 <a href="/bruker" role="button"
-                   th:classappend="${navLocation == 'bruker'} ? 'contrast' : ''">Din Bruker</a>
+                   th:classappend="${navLocation == 'bruker'} ? 'contrast' : ''">
+                    <span th:if="${#authorization.expression('hasRole(''ADMIN'')')}">Din bruker: Admin</span>
+                    <span th:if="${#authorization.expression('hasRole(''DOMMER'') and not hasRole(''ADMIN'')')}">Din bruker: Dommer</span>
+                    <span th:if="${not #authorization.expression('hasRole(''ADMIN'') or hasRole(''DOMMER'')')}">Din bruker</span>
+                </a>
+            </li>
+            <li sec:authorize="isAuthenticated()">
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" role="button" class="contrast logout-btn" style="border: none; background: none; padding: 0; cursor: pointer; font-size: inherit;">Logg ut</button>
+                </form>
             </li>
             <li>
                 <button id="theme-toggle" type="button" class="secondary outline" aria-label="Bytt til morkt tema"
