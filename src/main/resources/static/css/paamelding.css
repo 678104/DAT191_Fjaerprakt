@@ -11,20 +11,21 @@ main {
     cursor: pointer;
     padding: 1em;
     border-radius: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-blue-light, #5CA5FF);
+    background: var(--surface-strong, #ffffff);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .radio-card:hover {
     transform: scale(1.02);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 16px rgba(0, 55, 122, 0.14);
 }
 
 .radio-card.selected {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    border: 2px solid #0f1114;
-    background-color: #e0fae1;
+    transform: scale(1.03);
+    box-shadow: 0 8px 18px rgba(0, 55, 122, 0.2);
+    border: 2px solid var(--color-green-dark, #2F6317);
+    background-color: rgba(142, 220, 106, 0.2);
 }
 
 #utstillinger {

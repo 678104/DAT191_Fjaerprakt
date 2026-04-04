@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import no.hvl.peristeri.feature.dommer.DommerPaamelding;
 import no.hvl.peristeri.feature.dommer.Bedommelse;
 import no.hvl.peristeri.feature.paamelding.Paamelding;
 
@@ -36,6 +37,10 @@ public class Due {
 
 	@OneToOne(mappedBy = "due", cascade = CascadeType.ALL)
 	private Bedommelse bedommelse;
+
+	@ManyToOne
+	@JoinColumn(name = "tildelt_dommer_paamelding_id")
+	private DommerPaamelding tildeltDommer;
 
 	// En due må ha en paamelding
 	@ManyToOne

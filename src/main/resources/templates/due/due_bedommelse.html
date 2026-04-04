@@ -28,15 +28,29 @@
             <label>Poeng:
                 <input th:value="*{bedommelse.poeng}" readonly/>
             </label>
-            <label>Fordeler:
-                <textarea th:text="*{bedommelse.fordeler}" readonly></textarea>
-            </label>
-            <label>Ønsker:
-                <textarea th:text="*{bedommelse.onsker}" readonly></textarea>
-            </label>
-            <label>Feil:
-                <textarea th:text="*{bedommelse.feil}" readonly></textarea>
-            </label>
+            <div th:if="*{bedommelse != null and !#maps.isEmpty(bedommelse.kategorier)}">
+                <h4>Hovedkategorier</h4>
+                <article th:each="entry : *{bedommelse.kategorier}">
+                    <p><strong th:text="${entry.key.visningsnavn}"></strong></p>
+                    <p th:if="${entry.value.standardKommentar != null and !entry.value.standardKommentar.isBlank()}">
+                        <strong>Standard:</strong> <span th:text="${entry.value.standardKommentar}"></span>
+                    </p>
+                    <p th:if="${entry.value.fritekstKommentar != null and !entry.value.fritekstKommentar.isBlank()}">
+                        <strong>Fritekst:</strong> <span th:text="${entry.value.fritekstKommentar}"></span>
+                    </p>
+                </article>
+            </div>
+            <div th:if="*{bedommelse == null or #maps.isEmpty(bedommelse.kategorier)}">
+                <label>Fordeler:
+                    <textarea th:text="*{bedommelse.fordeler}" readonly></textarea>
+                </label>
+                <label>Ønsker:
+                    <textarea th:text="*{bedommelse.onsker}" readonly></textarea>
+                </label>
+                <label>Feil:
+                    <textarea th:text="*{bedommelse.feil}" readonly></textarea>
+                </label>
+            </div>
         </div>
         <footer>
             <button autofocus data-target="modal" onclick="toggleModal(event)">

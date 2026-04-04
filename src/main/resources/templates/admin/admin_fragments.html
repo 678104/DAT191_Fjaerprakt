@@ -249,83 +249,76 @@
     </section>
     <section th:fragment="dommerFordeling" id="main-content">
         <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
-        <h2>Dommerfordeling</h2>
-        <p>Her kan du fordele raser på dommere</p>
-        <div>
-            <div class="flex-grid flex-grid-lg">
-                <th:block th:each="dp : ${utstilling.dommere}">
-                    <article th:object="${dp}"
-                             th:fragment="fordelRaserRad"
-                             th:with="valgteRaser=${@RaseStringHjelper.hentUtRaser(dp)}">
-                        <header>
-                            <h3 th:text="*{dommer.navn}">Dommer navn</h3>
-                        </header>
-                        <div>
-                            <form th:hx-post="@{/admin/fordelRaser/{id}(id=*{id})}"
-                                  th:id="|form_*{id}|"
-                                  hx-target="closest article"
-                                  hx-swap="outerHTML"
-                                  hx-on::afterRequest="this.reset();">
-                                <fieldset role="group" class="two-box-system">
-                                    <div class="box-container">
-                                        <div class="box">
-                                            <h4>Tilgjengelige Raser</h4>
-                                            <ul th:id="|availableRaser_*{id}|" class="list-box">
-                                                <!--/*@thymesVar id="raser" type="java.util.List<java.lang.String>"*/-->
-                                                <li th:each="r : ${raser}"
-                                                    th:unless="${valgteRaser.contains(r)}"
-                                                    th:data-value="${r}"
-                                                    th:text="${r}">
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div class="spacer"></div>
-                                        <div class="box-controls">
-                                            <button type="button" th:id="|addRaser_*{id}|"
-                                                    th:onclick="|moveItems('availableRaser_*{id}', 'selectedRaser_*{id}')|">
-                                                Velg
-                                            </button>
-                                            <button type="button" th:id="|removeRaser_*{id}|"
-                                                    th:onclick="|moveItems('selectedRaser_*{id}', 'availableRaser_*{id}')|">
-                                                Fjern
-                                            </button>
-                                        </div>
-                                        <div class="box">
-                                            <h4>Valgte Raser</h4>
-                                            <ul th:id="|selectedRaser_*{id}|" class="list-box">
-                                                <li th:each="r : ${valgteRaser}"
-                                                    th:data-value="${r}"
-                                                    th:text="${r}">
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="raser" th:id="|selectedRaserInput_*{id}|"/>
-                                </fieldset>
-                            </form>
-                        </div>
-                        <footer>
-                            <button type="submit" th:form="|form_*{id}|">Lagre valgte raser</button>
-                        </footer>
-                    </article>
-                </th:block>
-            </div>
-            <div>
-                <button th:hx-get="@{/admin/{id}(id=${utstilling.id})}"
-                        hx-target="#main-content"
-                        hx-swap="outerHTML"
-                        class="secondary">
-                    Tilbake til handlingsoversikt
-                </button>
-            </div>
-        </div>
+        <h2>Fordel raser til dommere</h2>
+        <p>Velg dommer og en eller flere raser, og trykk lagre.</p>
+
+        <form th:hx-post="@{/admin/{utstillingId}/fordel-dommer(utstillingId=${utstilling.id})}"
+              hx-target="#main-content"
+              hx-swap="outerHTML"
+              hx-on::afterRequest="this.reset();">
+            <fieldset>
+                <label for="dommerPaameldingId">Dommer</label>
+                <select id="dommerPaameldingId" name="dommerPaameldingId" required>
+                    <option value="">Velg dommer</option>
+                    <option th:each="dp : ${dommerListe}"
+                            th:value="${dp.id}"
+                            th:text="${dp.dommer.fornavn + ' ' + dp.dommer.etternavn}"></option>
+                </select>
+
+                <p><strong>Raser (velg en eller flere):</strong></p>
+                <div style="max-height: 16rem; overflow-y: auto; border: 1px solid #ccc; padding: 0.75rem; border-radius: 0.35rem;">
+                    <label th:if="${!#maps.isEmpty(tilgjengeligeRaseAntall)}"
+                           th:each="entry : ${tilgjengeligeRaseAntall}"
+                           style="display: block; margin-bottom: 0.35rem;">
+                        <input type="checkbox" name="raser" th:value="${entry.key}">
+                        <span th:text="${entry.key + ' (' + entry.value + ')'}"></span>
+                    </label>
+                    <p th:if="${#maps.isEmpty(tilgjengeligeRaseAntall)}" style="margin: 0;">Ingen flere raser</p>
+                </div>
+            </fieldset>
+            <button type="submit">Lagre</button>
+        </form>
+
+        <h3>Fullstendig liste med raser og dommere</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Rase</th>
+                <th>Antall duer</th>
+                <th>Dommer</th>
+                <th>Handling</th>
+            </tr>
+            </thead>
+            <tbody>
+            <th:block th:each="dp : ${dommerListe}" th:with="valgteRaser=${T(no.hvl.peristeri.util.RaseStringHjelper).hentUtRaser(dp)}">
+                <tr th:each="rase : ${valgteRaser}">
+                    <td th:text="${rase}"></td>
+                    <td th:text="${(raseAntallNormalisert != null and raseAntallNormalisert[rase.trim().toLowerCase()] != null) ? raseAntallNormalisert[rase.trim().toLowerCase()] : 0}"></td>
+                    <td th:text="${dp.dommer.fornavn + ' ' + dp.dommer.etternavn}"></td>
+                    <td>
+                        <form th:hx-post="@{/admin/{utstillingId}/fordel-dommer/fjern-rase(utstillingId=${utstilling.id})}"
+                              hx-target="#main-content"
+                              hx-swap="outerHTML">
+                            <input type="hidden" name="dommerPaameldingId" th:value="${dp.id}">
+                            <input type="hidden" name="rase" th:value="${rase}">
+                            <button type="submit"
+                                    class="secondary"
+                                    hx-confirm="Fjerne denne rase-tildelingen fra dommeren?">
+                                Fjern
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            </th:block>
+            </tbody>
+        </table>
     </section>
     <section th:fragment="tildelDommerRolle" id="main-content">
         <!--/*@thymesVar id="utstilling" type="no.hvl.peristeri.feature.utstilling.Utstilling"*/-->
         <h2>Tildel dommer rolle</h2>
         <p>Her kan du tildele dommer-rollen til eksisterende brukere for denne utstillingen</p>
         <form th:hx-post="@{/admin/{id}/tildel-dommer-rolle(id=${utstilling.id})}"
-              hx-target="#dommerListe"
+              hx-target="#main-content"
               hx-swap="outerHTML"
               hx-on::afterRequest="this.reset(); nullstillBrukerVelger();"
               onsubmit="return sjekkBrukerValgt();">
@@ -403,12 +396,12 @@
             </thead>
             <tbody th:each="dp : ${dommerListe}">
             <tr th:object="${dp.dommer}">
-                <td th:text="*{fornavn} + ' ' + *{etternavn}">Peristeri tittel test</td>
+                <td th:text="*{fornavn + ' ' + etternavn}">Peristeri tittel test</td>
                 <td th:text="*{epost}">Peristeri</td>
                 <td th:text="*{telefon}">Bergen</td>
                 <td>
                     <button th:hx-post="@{/admin/{utstillingId}/fjern-dommer/{dommerPaameldingId}(utstillingId=${utstilling.id},dommerPaameldingId=${dp.id})}"
-                            hx-target="#dommerListe"
+                            hx-target="#main-content"
                             hx-swap="outerHTML"
                             hx-confirm="Er du sikker på at du vil fjerne denne dommeren?"
                             class="secondary">
@@ -492,16 +485,14 @@
                      hx-swap="outerHTML"
                      hx-push-url="false">
                 <header>
-                    <b>Sett opp dommerfordeling</b>
+                    <b>Fordel raser til dommere</b>
                 </header>
                 <div>
-                    <p>Her kan du fordele raser på dommere. Denne krever at påmelding er lukket. Hvis påmelding åpnes
-                        igjen,
-                        må dette gjøres på nytt.</p>
+                    <p>Her kan du velge hvilken dommer som skal få hvilken due på utstillingen.</p>
                 </div>
                 <footer>
                     <button class="fill-parent">
-                        Sett opp dommerfordeling
+                        Fordel raser til dommere
                     </button>
                 </footer>
             </article>
@@ -658,7 +649,7 @@
                     <span th:text="${dommer.dommer.fornavn + ' ' + dommer.dommer.etternavn}">Dommernavn</span>
                 </p>
 
-                <div th:each="variant : ${raseVarianter.get(rase) ?: T(java.util.Collections).singletonList('Standard')}">
+                <div th:each="variant : ${(raseVarianter != null and raseVarianter.get(rase) != null) ? raseVarianter.get(rase) : T(java.util.Collections).singletonList('Standard')}">
                     <h3 th:text="${variant}">Variant</h3>
 
                     <div th:each="farge : ${variantFarger.containsKey(variant) ? variantFarger.get(variant) : raseFarger.get(rase)}">
