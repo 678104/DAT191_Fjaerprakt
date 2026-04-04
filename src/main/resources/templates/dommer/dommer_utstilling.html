@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Dommer - Utstilling</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section>
+        <h1>Duer du skal bedømme</h1>
+        <p>Søk etter burnummer eller trykk på due for å starte bedømming</p>
+        <div id="content">
+            <th:block th:replace="~{dommer/dommer_fragments :: dueliste}"></th:block>
+        </div>
+    </section>
+
+    <section>
+        <h2>Andre dommere pa utstillingen med deres duer</h2>
+        <div th:if="${#maps.isEmpty(andreDommereMedDuer)}">
+            <p>Ingen andre dommere med tildelte duer.</p>
+        </div>
+        <th:block th:unless="${#maps.isEmpty(andreDommereMedDuer)}" th:each="entry : ${andreDommereMedDuer}">
+            <article>
+                <header>
+                    <h3 th:text="${entry.key.dommer.fornavn + ' ' + entry.key.dommer.etternavn}">Dommernavn</h3>
+                </header>
+                <div th:if="${#maps.isEmpty(entry.value)}">
+                    <p>Ingen duer tildelt.</p>
+                </div>
+                <th:block th:unless="${#maps.isEmpty(entry.value)}" th:each="raseEntry : ${entry.value}">
+                    <h4 th:text="${raseEntry.key}">Rase</h4>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Burnummer</th>
+                            <th>Rase</th>
+                            <th>Farge</th>
+                            <th>Status</th>
+                            <th>Poeng</th>
+                            <th>Ferdig bedømt</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="due : ${raseEntry.value}">
+                            <td th:text="${due.burnummer}"></td>
+                            <td th:text="${due.rase}"></td>
+                            <td th:text="${due.farge}"></td>
+                            <td th:text="${due.bedommelse != null ? 'Bedømt' : 'Mangler bedømming'}"></td>
+                            <td th:text="${due.bedommelse != null ? due.bedommelse?.poeng : 'Ikke dømt'}"></td>
+                            <td th:if="${due.bedommelse != null && due.bedommelse.poeng != null}">
+                              <span style="color: green; font-size: 1.2em; font-weight: bold;">✓</span>
+                            </td>
+                            <td th:unless="${due.bedommelse != null && due.bedommelse.poeng != null}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </th:block>
+            </article>
+        </th:block>
+    </section>
+</main>
+<footer class="container">
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>
+

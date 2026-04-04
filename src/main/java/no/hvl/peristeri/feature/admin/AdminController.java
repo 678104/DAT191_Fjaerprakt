@@ -14,13 +14,19 @@ import no.hvl.peristeri.feature.due.Due;
 import no.hvl.peristeri.feature.due.DueService;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
+import no.hvl.peristeri.util.RaseStringHjelper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller
@@ -98,11 +104,12 @@ public class AdminController {
 	public String postTildelDommerRolle(@PathVariable Long utstillingId, Model model, HttpSession session,
 	                                    RedirectAttributes redirectAttributes, @RequestParam(required = false) Long brukerId,
 	                                    HtmxResponse htmxResponse) {
+		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
+		model.addAttribute("utstilling", utstilling);
+		model.addAttribute("brukere", List.of());
+		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
+
 		if (brukerId == null) {
-			Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
-			model.addAttribute("utstilling", utstilling);
-			model.addAttribute("brukere", List.of());
-			model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
 			model.addAttribute("brukerFeil", "Velg bruker å tildele rolle");
 			htmxResponse.setReswap(HtmxReswap.outerHtml());
 			htmxResponse.setRetarget("main-content");
@@ -112,14 +119,15 @@ public class AdminController {
 		Bruker bruker = brukerService.hentBrukerMedId(brukerId);
 		bruker.leggTilRolle(Rolle.DOMMER);
 		brukerService.lagreBruker(bruker);
-		
-		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
-		DommerPaamelding dommerPaamelding = new DommerPaamelding(utstilling, bruker);
-		dommerService.lagreDommerPaaMelding(dommerPaamelding);
-
-		model.addAttribute("utstilling", utstilling);
+		List<DommerPaamelding> eksisterende = dommerService.finnDommerPaameldingerTilUtstilling(utstillingId).stream()
+				.filter(dp -> dp.getDommer() != null && dp.getDommer().getId().equals(brukerId))
+				.toList();
+		if (eksisterende.isEmpty()) {
+			DommerPaamelding dommerPaamelding = new DommerPaamelding(utstilling, bruker);
+			dommerService.lagreDommerPaaMelding(dommerPaamelding);
+		}
 		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
-		return "admin/admin_fragments :: dommerListe";
+		return "admin/admin_fragments :: tildelDommerRolle";
 	}
 
 	@HxRequest
@@ -130,29 +138,124 @@ public class AdminController {
 		
 		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
 		model.addAttribute("utstilling", utstilling);
+		model.addAttribute("brukere", List.of());
 		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
-		return "admin/admin_fragments :: dommerListe";
+		return "admin/admin_fragments :: tildelDommerRolle";
 	}
 
 	@HxRequest
 	@GetMapping("/{utstillingId}/dommerFordeling")
 	public String getDommerFordelingHtmx(@PathVariable Long utstillingId, Model model, HttpSession session,
 	                                     RedirectAttributes redirectAttributes) {
-		model.addAttribute("raser", dueService.hentRaserPaameldtUtstilling(utstillingId));
-		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(utstillingId));
-		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
+		settDommerFordelingModel(model, utstillingId);
 		return "admin/admin_fragments :: dommerFordeling";
 	}
 
 	@HxRequest
-	@PostMapping("/fordelRaser/{dommerPaameldingId}")
-	public String postFordelDommerHtmx(Model model, HttpSession session,
-	                                   RedirectAttributes redirectAttributes, @RequestParam List<String> raser,
-	                                   @PathVariable Long dommerPaameldingId) {
-		DommerPaamelding dp = dommerService.fordelRaserTilDommer(dommerPaameldingId, raser);
-		model.addAttribute("raser", dueService.hentRaserPaameldtUtstilling(dp.getUtstilling().getId()));
-		model.addAttribute("dp", dp);
-		return "admin/admin_fragments :: fordelRaserRad";
+	@PostMapping("/{utstillingId}/fordel-dommer")
+	public String postFordelDommerHtmx(@PathVariable Long utstillingId,
+	                                   Model model,
+	                                   HttpSession session,
+	                                   RedirectAttributes redirectAttributes,
+	                                   @RequestParam Long dommerPaameldingId,
+	                                   @RequestParam(value = "raser", required = false) List<String> raser) {
+		List<String> valgteRaser = raser == null ? List.of() : raser.stream()
+				.filter(rase -> rase != null && !rase.isBlank())
+				.distinct()
+				.toList();
+
+		if (!valgteRaser.isEmpty()) {
+			DommerPaamelding valgtDommer = dommerService.finnDommerPaameldingerTilUtstilling(utstillingId).stream()
+					.filter(dp -> dp.getId().equals(dommerPaameldingId))
+					.findFirst()
+					.orElseThrow();
+
+			List<String> eksisterende = new ArrayList<>(RaseStringHjelper.hentUtRaser(valgtDommer));
+			eksisterende.addAll(valgteRaser);
+			List<String> oppdatert = eksisterende.stream().filter(r -> r != null && !r.isBlank()).distinct().toList();
+			dommerService.fordelRaserTilDommer(dommerPaameldingId, oppdatert);
+			dommerService.tilordneDuerTilDommerEtterRaser(dommerPaameldingId, utstillingId, valgteRaser);
+		}
+
+		settDommerFordelingModel(model, utstillingId);
+		return "admin/admin_fragments :: dommerFordeling";
+	}
+
+	@HxRequest
+	@PostMapping("/{utstillingId}/fordel-dommer/fjern-rase")
+	public String postFjernRaseFraDommer(@PathVariable Long utstillingId,
+	                                     Model model,
+	                                     @RequestParam Long dommerPaameldingId,
+	                                     @RequestParam String rase) {
+		DommerPaamelding valgtDommer = dommerService.finnDommerPaameldingerTilUtstilling(utstillingId).stream()
+				.filter(dp -> dp.getId().equals(dommerPaameldingId))
+				.findFirst()
+				.orElseThrow();
+
+		List<String> oppdatert = RaseStringHjelper.hentUtRaser(valgtDommer).stream()
+				.filter(tildeltRase -> !tildeltRase.equalsIgnoreCase(rase))
+				.toList();
+		dommerService.fordelRaserTilDommer(dommerPaameldingId, oppdatert);
+
+		List<Due> duer = dueService.finnAlleDuerPaameldtUTstilling(utstillingId).stream()
+				.peek(due -> {
+					if (due.getTildeltDommer() != null
+							&& due.getTildeltDommer().getId().equals(dommerPaameldingId)
+							&& due.getRase() != null
+							&& due.getRase().equalsIgnoreCase(rase)) {
+						due.setTildeltDommer(null);
+					}
+				})
+				.toList();
+		dueService.saveAll(duer);
+
+		settDommerFordelingModel(model, utstillingId);
+		return "admin/admin_fragments :: dommerFordeling";
+	}
+
+	private void settDommerFordelingModel(Model model, Long utstillingId) {
+		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(utstillingId));
+		List<DommerPaamelding> dommerListe = dommerService.finnDommerPaameldingerTilUtstilling(utstillingId);
+		List<Due> paameldteDuer = dueService.finnAlleDuerPaameldtUTstilling(utstillingId);
+		Map<String, Long> raseAntall = byggRaseAntall(paameldteDuer);
+		model.addAttribute("dommerListe", dommerListe);
+		model.addAttribute("paameldteDuer", paameldteDuer);
+		model.addAttribute("raseAntall", raseAntall);
+		model.addAttribute("raseAntallNormalisert", byggNormalisertRaseAntall(raseAntall));
+		model.addAttribute("tilgjengeligeRaseAntall", byggTilgjengeligeRaseAntall(raseAntall, dommerListe));
+	}
+
+	private Map<String, Long> byggRaseAntall(List<Due> duer) {
+		return duer.stream()
+				.collect(Collectors.groupingBy(
+						due -> due.getRase() == null || due.getRase().isBlank() ? "Ukjent" : due.getRase(),
+						LinkedHashMap::new,
+						Collectors.counting()
+				));
+	}
+
+	private Map<String, Long> byggTilgjengeligeRaseAntall(Map<String, Long> raseAntall, List<DommerPaamelding> dommerListe) {
+		Set<String> tildelteRaser = new HashSet<>();
+		dommerListe.forEach(dp -> tildelteRaser.addAll(RaseStringHjelper.hentUtRaser(dp)));
+
+		return raseAntall.entrySet().stream()
+				.filter(entry -> tildelteRaser.stream().noneMatch(r -> r.equalsIgnoreCase(entry.getKey())))
+				.collect(Collectors.toMap(
+						Map.Entry::getKey,
+						Map.Entry::getValue,
+						(a, b) -> a,
+						LinkedHashMap::new
+				));
+	}
+
+	private Map<String, Long> byggNormalisertRaseAntall(Map<String, Long> raseAntall) {
+		return raseAntall.entrySet().stream()
+				.collect(Collectors.toMap(
+						entry -> entry.getKey().trim().toLowerCase(),
+						Map.Entry::getValue,
+						Long::sum,
+						LinkedHashMap::new
+				));
 	}
 
 	@HxRequest

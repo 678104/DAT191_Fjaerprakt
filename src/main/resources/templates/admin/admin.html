@@ -47,6 +47,7 @@
         });
 
         updateHiddenInput(sourceId, targetId);
+        oppdaterRaseMarkering();
     }
 
     function updateHiddenInput(sourceId, targetId) {
@@ -54,6 +55,28 @@
         const selectedRaser = Array.from(document.getElementById(`selectedRaser_${formId}`).children)
             .map(item => item.getAttribute('data-value'));
         document.getElementById(`selectedRaserInput_${formId}`).value = selectedRaser.join(',');
+    }
+
+    function oppdaterRaseMarkering() {
+        const tildelteRaser = new Set(
+            Array.from(document.querySelectorAll('[id^="selectedRaser_"] li[data-value]'))
+                .map(item => item.getAttribute('data-value'))
+                .filter(Boolean)
+        );
+
+        document.querySelectorAll('[id^="availableRaser_"] li[data-value]').forEach(item => {
+            const rase = item.getAttribute('data-value');
+            const ikkeTildelt = !tildelteRaser.has(rase);
+            item.classList.toggle('rase-ikke-tildelt', ikkeTildelt);
+            item.classList.toggle('rase-tildelt', !ikkeTildelt);
+            item.title = ikkeTildelt ? 'Denne rasen er ikke tildelt noen dommer' : 'Denne rasen er allerede tildelt en dommer';
+        });
+
+        document.querySelectorAll('[id^="selectedRaser_"] li[data-value]').forEach(item => {
+            item.classList.remove('rase-ikke-tildelt');
+            item.classList.add('rase-tildelt');
+            item.title = 'Denne rasen er tildelt denne dommeren';
+        });
     }
 
     function velgBrukerFraForslag(button) {
@@ -263,6 +286,14 @@
         if (content.querySelector('#brukerForslagContainer')) {
             fjernAktivBrukerForslag();
         }
+
+        if (content.querySelector('[id^="availableRaser_"]') || content.querySelector('[id^="selectedRaser_"]')) {
+            oppdaterRaseMarkering();
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        oppdaterRaseMarkering();
     });
 
     document.addEventListener('click', function (event) {

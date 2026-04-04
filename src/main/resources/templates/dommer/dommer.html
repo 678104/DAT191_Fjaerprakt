@@ -11,10 +11,45 @@
 </header>
 <main class="container">
     <section>
-        <h1>Dommer due liste</h1>
-        <div id="content">
-            <th:block th:replace="~{dommer/dommer_fragments :: dueliste}"></th:block>
+        <h1>Dine dommerutstillinger</h1>
+        <div th:if="${#lists.isEmpty(dommerPaameldinger)}">
+            <p>Du er ikke tildelt noen utstillinger enda.</p>
         </div>
+        <th:block th:unless="${#lists.isEmpty(dommerPaameldinger)}">
+            <section>
+                <h2>Aktive og kommende utstillinger</h2>
+                <div th:if="${#lists.isEmpty(aktiveOgKommendeDommerPaameldinger)}">
+                    <p>Ingen aktive eller kommende tildelinger.</p>
+                </div>
+                <div class="utstillinger-grid" th:unless="${#lists.isEmpty(aktiveOgKommendeDommerPaameldinger)}">
+                    <article class="utstilling-card" th:each="dp : ${aktiveOgKommendeDommerPaameldinger}">
+                        <header>
+                            <h3 th:text="${dp.utstilling.tittel}">Utstilling</h3>
+                        </header>
+                        <div class="utstilling-info">
+                            <p><strong>Dato:</strong> <span th:text="${#temporals.format(dp.utstilling.datoRange.startDate, 'dd.MM.yyyy')}"></span> - <span th:text="${#temporals.format(dp.utstilling.datoRange.endDate, 'dd.MM.yyyy')}"></span></p>
+                            <p th:if="${dp.utstilling.beskrivelse}"><strong>Beskrivelse:</strong> <span th:text="${dp.utstilling.beskrivelse}"></span></p>
+                        </div>
+                        <footer>
+                            <a th:href="@{/dommer/utstilling/{id}(id=${dp.utstilling.id})}" role="button">Gå til utstilling</a>
+                        </footer>
+                    </article>
+                </div>
+            </section>
+
+            <section>
+                <h2>Historiske utstillinger</h2>
+                <div th:if="${#lists.isEmpty(historiskeDommerPaameldinger)}">
+                    <p>Ingen historiske tildelinger.</p>
+                </div>
+                <ul th:unless="${#lists.isEmpty(historiskeDommerPaameldinger)}">
+                    <li th:each="dp : ${historiskeDommerPaameldinger}">
+                        <a th:href="@{/dommer/utstilling/{id}(id=${dp.utstilling.id})}"
+                           th:text="${dp.utstilling.tittel + ' (' + #temporals.format(dp.utstilling.datoRange.startDate, 'dd.MM.yyyy') + ' - ' + #temporals.format(dp.utstilling.datoRange.endDate, 'dd.MM.yyyy') + ')'}">
+                        </a>
+                    </li>
+                </ul>
+            </section>
     </section>
 </main>
 <footer class="container">

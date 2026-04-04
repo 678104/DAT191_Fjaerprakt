@@ -12,17 +12,13 @@ import no.hvl.peristeri.feature.due.DueRepository;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingRepository;
 import no.hvl.peristeri.util.RaseStringHjelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class DommerServiceImpl implements DommerService {
-	private final Logger logger = LoggerFactory.getLogger(DommerServiceImpl.class);
 
 	private final DueRepository              dueRepo;
 	private final BedommelseRepository       bedommelseRepo;
@@ -39,6 +35,11 @@ public class DommerServiceImpl implements DommerService {
 
 	@Override
 	public void lagreBedommelse(Long dueId, Bedommelse nyBedommelse, Bruker dommer) {
+		lagreBedommelse(dueId, nyBedommelse, dommer, null);
+	}
+
+	@Override
+	public void lagreBedommelse(Long dueId, Bedommelse nyBedommelse, Bruker dommer, Long utstillingId) {
 		if (dueId == null) {
 			throw new InvalidParameterException("dueId", "cannot be null");
 		}
@@ -49,10 +50,16 @@ public class DommerServiceImpl implements DommerService {
 			throw new InvalidParameterException("dommer", "cannot be null");
 		}
 
-		DommerPaamelding dp = dommerPaameldingRepository.finnPaameldingForAktivUtstilling(dommer.getId())
-				.orElseThrow(() -> new ResourceNotFoundException("DommerPaamelding", "Ingen aktiv utstilling funnet for dommer"));
+		DommerPaamelding dp = finnDommerPaameldingForUtstilling(dommer, utstillingId);
 
 		Due due = hentDueMedId(dueId);
+		Long dueUtstillingId = due.getPaamelding() != null && due.getPaamelding().getUtstilling() != null
+				? due.getPaamelding().getUtstilling().getId()
+				: null;
+		if (dueUtstillingId == null || !dueUtstillingId.equals(dp.getUtstilling().getId())) {
+			throw new ResourceNotFoundException("Due",
+					"Due med id " + dueId + " er ikke paameldt valgt utstilling");
+		}
 
 		Bedommelse eksisterende = due.getBedommelse();
 
@@ -62,6 +69,7 @@ public class DommerServiceImpl implements DommerService {
 			eksisterende.setFordeler(nyBedommelse.getFordeler());
 			eksisterende.setOnsker(nyBedommelse.getOnsker());
 			eksisterende.setFeil(nyBedommelse.getFeil());
+			eksisterende.setKategorier(nyBedommelse.getKategorier());
 			eksisterende.setBedommelsesTidspunkt(nyBedommelse.getBedommelsesTidspunkt());
 			eksisterende.setBedomtAv(dp);
 
@@ -127,25 +135,92 @@ public class DommerServiceImpl implements DommerService {
 	}
 
 	@Override
+	public Due tilordneDueTilDommer(Long dommerPaameldingId, Long dueId) {
+		if (dommerPaameldingId == null) {
+			throw new InvalidParameterException("dommerPaameldingId", "cannot be null");
+		}
+		if (dueId == null) {
+			throw new InvalidParameterException("dueId", "cannot be null");
+		}
+
+		DommerPaamelding dp = dommerPaameldingRepository.findById(dommerPaameldingId)
+				.orElseThrow(() -> new ResourceNotFoundException("DommerPaamelding", dommerPaameldingId));
+		Due due = hentDueMedId(dueId);
+
+		if (due.getPaamelding() == null || due.getPaamelding().getUtstilling() == null
+				|| !due.getPaamelding().getUtstilling().getId().equals(dp.getUtstilling().getId())) {
+			throw new ResourceNotFoundException("Due", "Due med id " + dueId + " er ikke paameldt denne utstillingen");
+		}
+
+		due.setTildeltDommer(dp);
+		return dueRepo.save(due);
+	}
+
+	@Override
+	public List<Due> tilordneDuerTilDommer(Long dommerPaameldingId, List<Long> dueIder) {
+		if (dueIder == null || dueIder.isEmpty()) {
+			throw new InvalidParameterException("dueIder", "cannot be null or empty");
+		}
+		return dueIder.stream()
+				.distinct()
+				.map(dueId -> tilordneDueTilDommer(dommerPaameldingId, dueId))
+				.toList();
+	}
+
+	@Override
+	public List<Due> tilordneDuerTilDommerEtterRaser(Long dommerPaameldingId, Long utstillingId, List<String> raser) {
+		if (utstillingId == null) {
+			throw new InvalidParameterException("utstillingId", "cannot be null");
+		}
+		if (raser == null || raser.isEmpty()) {
+			throw new InvalidParameterException("raser", "cannot be null or empty");
+		}
+
+		DommerPaamelding dp = dommerPaameldingRepository.findById(dommerPaameldingId)
+				.orElseThrow(() -> new ResourceNotFoundException("DommerPaamelding", dommerPaameldingId));
+
+		List<Due> duer = dueRepo.findByPaamelding_Utstilling_IdOrderByBurnummerAsc(utstillingId).stream()
+				.filter(due -> due.getRase() != null)
+				.filter(due -> raser.stream().anyMatch(rase -> rase.equalsIgnoreCase(due.getRase())))
+				.toList();
+
+		duer.forEach(due -> due.setTildeltDommer(dp));
+		return dueRepo.saveAll(duer);
+	}
+
+	@Override
 	public Due hentDueMedId(Long dueId) {
 		return dueRepo.findById(dueId).orElseThrow(() -> new DueNotFoundException(dueId));
 	}
 
 	@Override
-	public List<Due> finnDuerDommerSkalBedomme(Bruker dommer) {
+	public List<DommerPaamelding> finnDommerPaameldinger(Bruker dommer) {
 		if (dommer == null) {
 			throw new InvalidParameterException("dommer", "cannot be null");
 		}
+		return dommerPaameldingRepository.finnPaameldingerEtterDommerId(dommer.getId());
+	}
 
-		Optional<DommerPaamelding> dpOpt = dommerPaameldingRepository.finnPaameldingForAktivUtstilling(dommer.getId());
-		if (dpOpt.isEmpty()) {
+	@Override
+	public List<Due> finnDuerDommerSkalBedomme(Bruker dommer) {
+		DommerPaamelding paamelding;
+		try {
+			paamelding = finnDommerPaameldingForUtstilling(dommer, null);
+		} catch (ResourceNotFoundException ignored) {
 			return List.of();
 		}
-
-		DommerPaamelding paamelding = dpOpt.get();
-
 		List<String> raser = RaseStringHjelper.hentUtRaser(paamelding);
+		return dueRepo.findByPaamelding_Utstilling_IdAndRaseInIgnoreCaseOrderByBurnummerAsc(
+				paamelding.getUtstilling().getId(), raser);
+	}
 
+	@Override
+	public List<Due> finnDuerDommerSkalBedomme(Bruker dommer, Long utstillingId) {
+		if (utstillingId == null) {
+			throw new InvalidParameterException("utstillingId", "cannot be null");
+		}
+		DommerPaamelding paamelding = finnDommerPaameldingForUtstilling(dommer, utstillingId);
+		List<String> raser = RaseStringHjelper.hentUtRaser(paamelding);
 		return dueRepo.findByPaamelding_Utstilling_IdAndRaseInIgnoreCaseOrderByBurnummerAsc(
 				paamelding.getUtstilling().getId(), raser);
 	}
@@ -170,26 +245,48 @@ public class DommerServiceImpl implements DommerService {
 
 	@Override
 	public Due finnDueDommerSkalBedommeMedBurnummer(Bruker dommer, Integer burnummer) {
-		if (dommer == null) {
-			throw new InvalidParameterException("dommer", "cannot be null");
-		}
 		if (burnummer == null) {
 			throw new InvalidParameterException("burnummer", "cannot be null");
 		}
-
-		Optional<DommerPaamelding> dpOpt = dommerPaameldingRepository.finnPaameldingForAktivUtstilling(dommer.getId());
-		if (dpOpt.isEmpty()) {
-			throw new ResourceNotFoundException("DommerPaamelding", "for dommer with id " + dommer.getId());
-		}
-
-		DommerPaamelding paamelding = dpOpt.get();
-
+		DommerPaamelding paamelding = finnDommerPaameldingForUtstilling(dommer, null);
 		List<String> raser = RaseStringHjelper.hentUtRaser(paamelding);
-
 		Due due = dueRepo.finnDuePaameldtUtstillingMedBurnummerOgRiktigRase(paamelding.getUtstilling().getId(), burnummer, raser);
 		if (due == null) {
 			throw new ResourceNotFoundException("Due", "with burnummer " + burnummer);
 		}
 		return due;
+	}
+
+	@Override
+	public Due finnDueDommerSkalBedommeMedBurnummer(Bruker dommer, Integer burnummer, Long utstillingId) {
+		if (burnummer == null) {
+			throw new InvalidParameterException("burnummer", "cannot be null");
+		}
+		if (utstillingId == null) {
+			throw new InvalidParameterException("utstillingId", "cannot be null");
+		}
+		DommerPaamelding paamelding = finnDommerPaameldingForUtstilling(dommer, utstillingId);
+		List<String> raser = RaseStringHjelper.hentUtRaser(paamelding);
+		Due due = dueRepo.finnDuePaameldtUtstillingMedBurnummerOgRiktigRase(paamelding.getUtstilling().getId(), burnummer, raser);
+		if (due == null) {
+			throw new ResourceNotFoundException("Due", "with burnummer " + burnummer);
+		}
+		return due;
+	}
+
+	private DommerPaamelding finnDommerPaameldingForUtstilling(Bruker dommer, Long utstillingId) {
+		if (dommer == null) {
+			throw new InvalidParameterException("dommer", "cannot be null");
+		}
+		if (utstillingId == null) {
+			return dommerPaameldingRepository.finnPaameldingForAktivUtstilling(dommer.getId())
+					.orElseThrow(() -> new ResourceNotFoundException("DommerPaamelding", "Ingen aktiv utstilling funnet for dommer"));
+		}
+		List<DommerPaamelding> treff = dommerPaameldingRepository.findByDommer_IdAndUtstilling_IdOrderByIdAsc(dommer.getId(), utstillingId);
+		if (treff.isEmpty()) {
+			throw new ResourceNotFoundException("DommerPaamelding",
+					"Dommer er ikke tildelt utstilling med id " + utstillingId);
+		}
+		return treff.getFirst();
 	}
 }

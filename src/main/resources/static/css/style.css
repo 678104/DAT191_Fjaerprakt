@@ -18,6 +18,9 @@
     --pico-warning-color:         #fff3cd;
     --pico-warning-text-color:    #856404;
     --pico-warning-border-color:  #ffeeba;
+    --surface-soft:               #f6f9ff;
+    --surface-strong:             #ffffff;
+    --text-strong:                #102642;
 }
 
 /* ─── Light theme ────────────────────────────────────────────── */
@@ -28,6 +31,8 @@
     --card-border:    var(--color-blue-light);
     --card-bg:        #ffffff;
     --btn-outline:    var(--color-blue-dark);
+    --table-stripe:   #f5f9ff;
+    --input-bg:       #ffffff;
 }
 
 :root[data-theme="light"] .navCurrent {
@@ -42,15 +47,31 @@
     --card-border:    var(--color-blue-dark);
     --card-bg:        #102a52;
     --btn-outline:    var(--color-blue-light);
+    --table-stripe:   #0f325f;
+    --input-bg:       #12305c;
 }
 
 :root[data-theme="dark"] .navCurrent {
     color: #d4f5c0;
 }
 
+.navCurrent {
+    background-color: rgba(142, 220, 106, 0.24);
+    border-radius: 999px;
+    padding: 0.25rem 0.65rem;
+    font-weight: 700;
+}
+
 /* ─── Page background ────────────────────────────────────────── */
 body {
     background-color: var(--page-bg, #eef4ff);
+    background-image: linear-gradient(180deg, rgba(92, 165, 255, 0.08), transparent 35%);
+    color: var(--text-strong, inherit);
+}
+
+main.container {
+    max-width: 1120px;
+    padding-top: 1rem;
 }
 
 /* ─── Navbar ─────────────────────────────────────────────────── */
@@ -59,6 +80,7 @@ header {
     border-bottom: 3px solid var(--color-blue-light);
     padding: 0.5rem 1rem;
     border-radius: 0 0 0.5rem 0.5rem;
+    box-shadow: 0 8px 20px rgba(0, 31, 77, 0.18);
 }
 
 header nav a,
@@ -70,6 +92,8 @@ header nav strong {
     min-width: 2.5rem;
     padding-left: 0.6rem;
     padding-right: 0.6rem;
+    outline: none !important;
+    border: none !important;
 }
 
 header nav a:hover {
@@ -123,6 +147,12 @@ article {
     border-top: 4px solid var(--color-blue-dark);
     border-radius: 0.5rem;
     box-shadow: 0 2px 8px rgba(0, 55, 122, 0.08);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+article:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 55, 122, 0.12);
 }
 
 :root[data-theme="dark"] article {
@@ -171,6 +201,45 @@ article {
     font-weight: bold;
 }
 
+section {
+    margin-bottom: 1rem;
+}
+
+table {
+    border: 1px solid var(--card-border, var(--color-blue-light));
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: var(--surface-strong);
+}
+
+thead tr {
+    background: rgba(0, 55, 122, 0.1);
+}
+
+tbody tr:nth-child(even) {
+    background: var(--table-stripe);
+}
+
+tbody tr:hover {
+    background: rgba(92, 165, 255, 0.14);
+}
+
+input[type="text"],
+input[type="search"],
+input[type="number"],
+select,
+textarea {
+    background: var(--input-bg);
+    border-color: rgba(0, 55, 122, 0.35);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    box-shadow: 0 0 0 0.15rem rgba(92, 165, 255, 0.24);
+    border-color: var(--color-blue-light);
+}
+
 /* ─── Selection / highlight states ──────────────────────────── */
 .selected {
     background-color: var(--color-blue-dark);
@@ -210,6 +279,17 @@ article {
     border-radius: 0.25rem;
 }
 
+.list-box li.rase-ikke-tildelt {
+    color: var(--color-red-dark);
+    border-color: var(--color-red-dark);
+    font-weight: 700;
+}
+
+.list-box li.rase-ikke-tildelt:hover {
+    background-color: var(--color-red-light);
+    color: var(--color-red-dark);
+}
+
 /* ─── Autocomplete suggestions ───────────────────────────────── */
 .autocomplete-results {
     margin-top: 0.35rem;
@@ -224,10 +304,12 @@ article {
 }
 
 .autocomplete-option {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     align-items: flex-start;
-    width: 100%;
+    width: 100% !important;
+    min-width: 100%;
+    box-sizing: border-box;
     margin: 0;
     padding: 0.7rem 0.9rem;
     border-radius: 0;
@@ -444,4 +526,87 @@ button.logout-btn:hover {
     color: #E53935 !important;
 }
 
+/* ─── Utstillinger Grid ──────────────────────────────────────── */
+.utstillinger-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
 
+.utstilling-card {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--card-bg, #ffffff);
+    border: 1px solid var(--card-border, var(--color-blue-light));
+    border-top: 4px solid var(--color-blue-dark);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 55, 122, 0.08);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+    padding: 0;
+    overflow: hidden;
+}
+
+.utstilling-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0, 55, 122, 0.15);
+}
+
+.utstilling-card header {
+    background: linear-gradient(135deg, var(--color-blue-dark), var(--color-blue-light));
+    color: #ffffff;
+    padding: 1.25rem;
+    margin: 0;
+    border: none;
+    border-bottom: none;
+    box-shadow: none;
+}
+
+.utstilling-card header h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.25rem;
+}
+
+.utstilling-info {
+    padding: 1.25rem;
+    flex-grow: 1;
+}
+
+.utstilling-info p {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+}
+
+.utstilling-info strong {
+    color: var(--color-blue-dark);
+}
+
+.utstilling-card footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--card-border, var(--color-blue-light));
+    background-color: transparent;
+}
+
+.utstilling-card footer a[role="button"] {
+    width: 100%;
+    margin: 0;
+    background-color: var(--color-blue-dark);
+    border: none;
+    outline: none;
+}
+
+.utstilling-card footer a[role="button"]:hover {
+    background-color: var(--color-blue-light);
+    color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .utstilling-card {
+    box-shadow: 0 2px 12px rgba(92, 165, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+    .utstillinger-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -2,14 +2,15 @@ package no.hvl.peristeri.feature.dommer;
 
 import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.due.Due;
+import no.hvl.peristeri.feature.utstilling.Utstilling;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -24,9 +25,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Integration tests for DommerController.
- * 
- * Note: Using @MockBean despite deprecation warnings in Spring Boot 3.4.0+
- * as it's the most straightforward way to set up the test for now.
  */
 @WebMvcTest(DommerController.class)
 @ActiveProfiles({"prod","test"})
@@ -35,12 +33,14 @@ public class DommerControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+      @MockitoBean
     private DommerService dommerService;
 
     private Due testDue;
     private Bruker testBruker;
     private Bedommelse testBedommelse;
+    private DommerPaamelding testDommerPaamelding;
+    private Utstilling testUtstilling;
 
     @BeforeEach
     void setUp() {
@@ -70,14 +70,22 @@ public class DommerControllerIntegrationTest {
         testBedommelse.setFeil("Litt svak i vingene");
         testBedommelse.setBedommelsesTidspunkt(LocalDateTime.now());
         testBedommelse.setDue(testDue);
+
+        // Set up assigned exhibition
+        testUtstilling = new Utstilling();
+        testUtstilling.setId(10L);
+        testUtstilling.setTittel("Testutstilling");
+
+        testDommerPaamelding = new DommerPaamelding();
+        testDommerPaamelding.setDommer(testBruker);
+        testDommerPaamelding.setUtstilling(testUtstilling);
     }
 
     @Test
     @WithMockUser
     void dommer_shouldReturnDommerPage() throws Exception {
         // Arrange
-        List<Due> duerForDommer = Collections.singletonList(testDue);
-        when(dommerService.finnDuerDommerSkalBedomme(any(Bruker.class))).thenReturn(duerForDommer);
+        when(dommerService.finnDommerPaameldinger(any(Bruker.class))).thenReturn(List.of(testDommerPaamelding));
 
         // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.get("/dommer"))
@@ -88,13 +96,28 @@ public class DommerControllerIntegrationTest {
 
     @Test
     @WithMockUser
+    void dommerUtstilling_shouldReturnUtstillingPage() throws Exception {
+        // Arrange
+        when(dommerService.finnDommerPaameldingerTilUtstilling(any(Long.class))).thenReturn(List.of(testDommerPaamelding));
+        when(dommerService.finnDuerDommerSkalBedomme(any(Bruker.class), any(Long.class)))
+                .thenReturn(Collections.singletonList(testDue));
+
+        // Act & Assert
+        mockMvc.perform(MockMvcRequestBuilders.get("/dommer/utstilling/10"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("dommer/dommer_utstilling"));
+    }
+
+    @Test
+    @WithMockUser
     void dommerListeHtmx_withoutFilter_shouldReturnAllDuerForDommer() throws Exception {
         // Arrange
-        List<Due> duerForDommer = Collections.singletonList(testDue);
-        when(dommerService.finnDuerDommerSkalBedomme(any(Bruker.class))).thenReturn(duerForDommer);
+        when(dommerService.finnDuerDommerSkalBedomme(any(Bruker.class), any(Long.class)))
+                .thenReturn(Collections.singletonList(testDue));
 
         // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.get("/dommer/liste")
+                .param("utstillingId", "10")
                 .header("HX-Request", "true"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("dommer/dommer_fragments :: dueliste"));
@@ -103,7 +126,7 @@ public class DommerControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    void dommerListeHtmx_withFilter_shouldReturnFilteredDuerForDommer() throws Exception {
+      void dommerListeHtmx_withFilter_shouldReturnFilteredDuerForDommer() {
         // Skip this test for now as it requires more complex mocking
         // The issue is that the controller uses List.of() which throws NullPointerException if the input is null
         // We would need to ensure the mock never returns null, which is challenging in this context
@@ -118,6 +141,7 @@ public class DommerControllerIntegrationTest {
         // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.get("/dommer/bedom")
                 .param("dueId", "1")
+                .param("utstillingId", "10")
                 .header("HX-Request", "true"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("dommer/dommer_fragments :: dommerBedommelse"))
@@ -135,6 +159,7 @@ public class DommerControllerIntegrationTest {
         // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.get("/dommer/bedom")
                 .param("dueId", "1")
+                .param("utstillingId", "10")
                 .header("HX-Request", "true"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("dommer/dommer_fragments :: dommerBedommelse"))
@@ -146,13 +171,16 @@ public class DommerControllerIntegrationTest {
     @WithMockUser
     void lagreBedomming_shouldSaveBedommingAndRedirect() throws Exception {
         // Arrange
-        List<Due> alleDuer = Collections.singletonList(testDue);
-        when(dommerService.hentAlleDuer()).thenReturn(alleDuer);
+        when(dommerService.finnDuerDommerSkalBedomme(any(Bruker.class), any(Long.class)))
+                .thenReturn(Collections.singletonList(testDue));
 
         // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.post("/dommer/bedom")
                 .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .param("dueId", "1")
+                .param("utstillingId", "10")
+                .param("standardKommentar", "God fjorkvalitet")
+                .param("fritekstKommentar", "Fin helhet")
                 .param("poeng", "95")
                 .param("fordeler", "God form")
                 .param("onsker", "Bedre holdning")

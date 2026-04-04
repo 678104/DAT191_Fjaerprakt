@@ -10,6 +10,8 @@ public interface DommerService {
 
 	void lagreBedommelse(Long dueId, Bedommelse nyBedommelse, Bruker dommer);
 
+	void lagreBedommelse(Long dueId, Bedommelse nyBedommelse, Bruker dommer, Long utstillingId);
+
 	List<Due> finnDuerEtterBurnummer(Integer burnummer);
 
 	List<DommerPaamelding> finnDommerPaameldingerTilUtstilling(Long utstillingId);
@@ -22,9 +24,21 @@ public interface DommerService {
 
 	DommerPaamelding fordelRaserTilDommer(Long dommerPaameldingId, List<String> raser);
 
+	Due tilordneDueTilDommer(Long dommerPaameldingId, Long dueId);
+
+	List<Due> tilordneDuerTilDommer(Long dommerPaameldingId, List<Long> dueIder);
+
+	List<Due> tilordneDuerTilDommerEtterRaser(Long dommerPaameldingId, Long utstillingId, List<String> raser);
+
 	Due hentDueMedId(Long dueId);
+
+	List<DommerPaamelding> finnDommerPaameldinger(Bruker dommer);
 
 	List<Due> finnDuerDommerSkalBedomme(Bruker dommer);
 
+	List<Due> finnDuerDommerSkalBedomme(Bruker dommer, Long utstillingId);
+
 	Due finnDueDommerSkalBedommeMedBurnummer(Bruker dommer, Integer burnummer);
+
+	Due finnDueDommerSkalBedommeMedBurnummer(Bruker dommer, Integer burnummer, Long utstillingId);
 }

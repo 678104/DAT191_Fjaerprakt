@@ -8,6 +8,8 @@ import lombok.Setter;
 import no.hvl.peristeri.feature.due.Due;
 
 import java.time.LocalDateTime;
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * En bedømmelse av en due
@@ -25,10 +27,17 @@ public class Bedommelse {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long      id;
     private Integer poeng;
+    @Column(length = 1000)
     private String fordeler;
     private String onsker;
     private String    feil;
     private LocalDateTime bedommelsesTidspunkt;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "bedommelse_kategorier", joinColumns = @JoinColumn(name = "bedommelse_id"))
+    @MapKeyEnumerated(EnumType.STRING)
+    @MapKeyColumn(name = "kategori")
+    private Map<BedommingsKategori, KategoriKommentar> kategorier = new EnumMap<>(BedommingsKategori.class);
 
     /**
      * Due som bedømmelsen gjelder
