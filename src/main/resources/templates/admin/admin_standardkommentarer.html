@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Admin - Bedømmingsoppsett</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section>
+        <h1>Oppsett for bedømming av due</h1>
+        <div class="admin-action-buttons">
+            <a href="/admin" role="button" class="secondary">Tilbake til admin</a>
+        </div>
+    </section>
+
+    <section th:each="kategori : ${hovedkategorier}">
+        <article>
+            <header>
+                <h2 th:text="${kategori.visningsnavn}">Kategori</h2>
+            </header>
+
+            <div class="grid">
+                <div>
+                    <h3>Fordeler</h3>
+                    <div th:if="${#lists.isEmpty(fordelerKommentarer[kategori.name()])}">Ingen fordeler-kommentarer lagt inn.</div>
+                    <table th:unless="${#lists.isEmpty(fordelerKommentarer[kategori.name()])}">
+                        <tbody>
+                        <tr th:each="kommentar : ${fordelerKommentarer[kategori.name()]}">
+                            <td th:text="${kommentar.tekst}">Kommentar</td>
+                            <td style="width: 8rem;">
+                                <form th:action="@{/admin/bedomming-oppsett/{id}/slett(id=${kommentar.id})}" method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <button type="submit" class="secondary">Slett</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <form action="/admin/bedomming-oppsett/legg-til" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="kategori" th:value="${kategori.name()}">
+                        <input type="hidden" name="type" value="STANDARD">
+                        <label th:for="${'nyFordel_' + kategori.name()}">Skriv inn tekst til fordel</label>
+                        <input type="text" th:id="${'nyFordel_' + kategori.name()}" name="tekst" required>
+                        <button type="submit">Legg til</button>
+                    </form>
+                </div>
+
+                <div>
+                    <h3>Ønsker</h3>
+                    <div th:if="${#lists.isEmpty(onskerKommentarer[kategori.name()])}">Ingen ønsker-kommentarer lagt inn.</div>
+                    <table th:unless="${#lists.isEmpty(onskerKommentarer[kategori.name()])}">
+                        <tbody>
+                        <tr th:each="kommentar : ${onskerKommentarer[kategori.name()]}">
+                            <td th:text="${kommentar.tekst}">Kommentar</td>
+                            <td style="width: 8rem;">
+                                <form th:action="@{/admin/bedomming-oppsett/{id}/slett(id=${kommentar.id})}" method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <button type="submit" class="secondary">Slett</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <form action="/admin/bedomming-oppsett/legg-til" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="kategori" th:value="${kategori.name()}">
+                        <input type="hidden" name="type" value="ONSKER">
+                        <label th:for="${'nyOnske_' + kategori.name()}">Skriv inn tekst til ønske</label>
+                        <input type="text" th:id="${'nyOnske_' + kategori.name()}" name="tekst" required>
+                        <button type="submit">Legg til</button>
+                    </form>
+                </div>
+
+                <div>
+                    <h3>Feil</h3>
+                    <div th:if="${#lists.isEmpty(feilKommentarer[kategori.name()])}">Ingen feilkommentarer lagt inn.</div>
+                    <table th:unless="${#lists.isEmpty(feilKommentarer[kategori.name()])}">
+                        <tbody>
+                        <tr th:each="kommentar : ${feilKommentarer[kategori.name()]}">
+                            <td th:text="${kommentar.tekst}">Kommentar</td>
+                            <td style="width: 8rem;">
+                                <form th:action="@{/admin/bedomming-oppsett/{id}/slett(id=${kommentar.id})}" method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <button type="submit" class="secondary">Slett</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <form action="/admin/bedomming-oppsett/legg-til" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="kategori" th:value="${kategori.name()}">
+                        <input type="hidden" name="type" value="FEIL">
+                        <label th:for="${'nyFeil_' + kategori.name()}">Skriv inn tekst for feil</label>
+                        <input type="text" th:id="${'nyFeil_' + kategori.name()}" name="tekst" required>
+                        <button type="submit">Legg til</button>
+                    </form>
+                </div>
+            </div>
+        </article>
+    </section>
+</main>
+<footer class="container">
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>
+
