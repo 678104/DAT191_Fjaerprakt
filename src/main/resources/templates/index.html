@@ -18,19 +18,22 @@
         <th:block th:if="${aktivUtstilling}">
             <article th:object="${aktivUtstilling}" th:fragment="aktivUtstilling">
                 <header>
-                    <h1>Pågående Utstilling</h1>
+                    <h1>Pågående utstilling</h1>
                 </header>
                 <h2 th:text="*{tittel}"></h2>
-                <p th:text="*{arrangoer}"></p>
-                <p th:text="*{adresse}"></p>
+                <div class="grid">
+                    <p><strong>Arrangør:</strong> <span th:text="*{arrangoer}"></span></p>
+                    <p><strong>Sted:</strong> <span th:text="*{adresse}"></span></p>
+                </div>
                 <p>
-                    <span th:text="*{datoRange.startDate}"></span> - <span th:text="*{datoRange.endDate}"></span>
+                    <strong>Dato:</strong>
+                    <span th:text="${#temporals.format(aktivUtstilling.datoRange.startDate, 'dd.MM.yyyy')}"></span>
+                    -
+                    <span th:text="${#temporals.format(aktivUtstilling.datoRange.endDate, 'dd.MM.yyyy')}"></span>
                 </p>
-                <p>
-                    <span th:text="*{beskrivelse}"></span>
-                </p>
+                <p th:text="*{beskrivelse}"></p>
                 <footer>
-                    <a th:href="@{/utstilling/{id}(id=*{id})}">Trykk her for å se mer info</a><br/>
+                    <a th:href="@{/utstilling/{id}(id=*{id})}" role="button" class="secondary">Trykk her for å se mer info</a>
                 </footer>
             </article>
         </th:block>

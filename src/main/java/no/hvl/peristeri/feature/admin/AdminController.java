@@ -10,6 +10,9 @@ import no.hvl.peristeri.feature.bruker.BrukerService;
 import no.hvl.peristeri.feature.bruker.Rolle;
 import no.hvl.peristeri.feature.dommer.DommerPaamelding;
 import no.hvl.peristeri.feature.dommer.DommerService;
+import no.hvl.peristeri.feature.dommer.BedommingsKategori;
+import no.hvl.peristeri.feature.dommer.StandardKommentarService;
+import no.hvl.peristeri.feature.dommer.StandardKommentarType;
 import no.hvl.peristeri.feature.due.Due;
 import no.hvl.peristeri.feature.due.DueService;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
@@ -39,6 +42,7 @@ public class AdminController {
 	private final UtstillingService utstillingService;
 	private final DommerService     dommerService;
 	private final DueService        dueService;
+	private final StandardKommentarService standardKommentarService;
 
 	@GetMapping
 	public String getAdmin(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
@@ -61,6 +65,29 @@ public class AdminController {
 		model.addAttribute("kommendeUtstillinger", utstillingService.finnIkkeTidligereUtstillinger());
 		model.addAttribute("fragment", "tildelDommerRolleListe");
 		return "admin/admin";
+	}
+
+	@GetMapping("/bedomming-oppsett")
+	public String getBedommingOppsett(Model model) {
+		model.addAttribute("hovedkategorier", BedommingsKategori.values());
+		model.addAttribute("fordelerKommentarer", standardKommentarService.hentKommentarerPerKategori(StandardKommentarType.STANDARD));
+		model.addAttribute("onskerKommentarer", standardKommentarService.hentKommentarerPerKategori(StandardKommentarType.ONSKER));
+		model.addAttribute("feilKommentarer", standardKommentarService.hentKommentarerPerKategori(StandardKommentarType.FEIL));
+		return "admin/admin_standardkommentarer";
+	}
+
+	@PostMapping("/bedomming-oppsett/legg-til")
+	public String postLeggTilStandardKommentar(@RequestParam BedommingsKategori kategori,
+	                                          @RequestParam StandardKommentarType type,
+	                                          @RequestParam String tekst) {
+		standardKommentarService.leggTilKommentar(kategori, type, tekst);
+		return "redirect:/admin/bedomming-oppsett";
+	}
+
+	@PostMapping("/bedomming-oppsett/{id}/slett")
+	public String postSlettStandardKommentar(@PathVariable Long id) {
+		standardKommentarService.slettKommentar(id);
+		return "redirect:/admin/bedomming-oppsett";
 	}
 
 	@HxRequest

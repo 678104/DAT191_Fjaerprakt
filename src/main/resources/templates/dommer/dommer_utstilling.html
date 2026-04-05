@@ -10,8 +10,6 @@
 </header>
 <main class="container">
     <section>
-        <h1>Duer du skal bedømme</h1>
-        <p>Søk etter burnummer eller trykk på due for å starte bedømming</p>
         <div id="content">
             <th:block th:replace="~{dommer/dommer_fragments :: dueliste}"></th:block>
         </div>
@@ -36,24 +34,24 @@
                         <thead>
                         <tr>
                             <th>Burnummer</th>
+                            <th>Ringnummer</th>
                             <th>Rase</th>
                             <th>Farge</th>
-                            <th>Status</th>
                             <th>Poeng</th>
-                            <th>Ferdig bedømt</th>
+                            <th>Status</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr th:each="due : ${raseEntry.value}">
                             <td th:text="${due.burnummer}"></td>
+                            <td th:text="${due.ringnummer}"></td>
                             <td th:text="${due.rase}"></td>
                             <td th:text="${due.farge}"></td>
-                            <td th:text="${due.bedommelse != null ? 'Bedømt' : 'Mangler bedømming'}"></td>
                             <td th:text="${due.bedommelse != null ? due.bedommelse?.poeng : 'Ikke dømt'}"></td>
                             <td th:if="${due.bedommelse != null && due.bedommelse.poeng != null}">
-                              <span style="color: green; font-size: 1.2em; font-weight: bold;">✓</span>
+                              <span style="color: green; font-weight: bold;">Bedømt ✓</span>
                             </td>
-                            <td th:unless="${due.bedommelse != null && due.bedommelse.poeng != null}"></td>
+                            <td th:unless="${due.bedommelse != null && due.bedommelse.poeng != null}">Ikke bedømt</td>
                         </tr>
                         </tbody>
                     </table>

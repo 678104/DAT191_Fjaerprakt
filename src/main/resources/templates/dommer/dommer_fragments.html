@@ -9,6 +9,8 @@
 <!-- ✅ Due List Fragment -->
 <div id="dueliste" th:fragment="dueliste">
   <!--/*@thymesVar id="duerPerRase" type="java.util.Map<java.lang.String, java.util.List<no.hvl.peristeri.feature.due.Due>>"*/-->
+  <h1>Duer du skal bedømme</h1>
+  <p>Søk etter burnummer eller trykk på due for å starte bedømming</p>
   <div th:if="${#maps.isEmpty(duerPerRase)}">
         <p>Du har ikke blitt tildelt duer</p>
     </div>
@@ -42,25 +44,25 @@
                           <thead>
                           <tr>
                             <th>Burnummer</th>
+                            <th>Ringnummer</th>
                             <th>Rase</th>
                             <th>Farge</th>
-                            <th>Status</th>
                             <th>Poeng</th>
-                            <th>Ferdig bedømt</th>
+                            <th>Status</th>
                             <th>Bedøm</th>
                           </tr>
                           </thead>
                           <tbody>
                           <tr th:each="due: ${entry.value}">
                             <td th:text="${due.burnummer}"></td>
+                            <td th:text="${due.ringnummer}"></td>
                             <td th:text="${due.rase}"></td>
                             <td th:text="${due.farge}"></td>
-                            <td th:text="${due.bedommelse != null ? 'Bedømt' : 'Mangler bedømming'}"></td>
                             <td th:text="${due.bedommelse != null ? due.bedommelse?.poeng : 'Ikke dømt'}"></td>
                             <td th:if="${due.bedommelse != null && due.bedommelse.poeng != null}">
-                              <span style="color: green; font-size: 1.2em; font-weight: bold;">✓</span>
+                              <span style="color: green; font-weight: bold;">Bedømt ✓</span>
                             </td>
-                            <td th:unless="${due.bedommelse != null && due.bedommelse.poeng != null}"></td>
+                            <td th:unless="${due.bedommelse != null && due.bedommelse.poeng != null}">Ikke bedømt</td>
                             <td>
                               <button
                                   th:attr="hx-get='/dommer/bedom?dueId=' + ${due.id} + '&utstillingId=' + ${valgtUtstillingId},hx-push-url='/dommer/utstilling/' + ${valgtUtstillingId}"
@@ -107,29 +109,85 @@
 
             <h3>Hovedkategorier</h3>
             <th:block th:each="kategori : ${hovedkategorier}">
-                <label th:text="${kategori.visningsnavn}"></label>
-                <div>
-                    <label th:each="kommentar, iter : ${standardKommentarerPerKategori[kategori.name()]}"
-                           th:for="${'standard_' + kategori.name() + '_' + iter.index}"
-                           style="display: block; margin-bottom: 0.2rem;">
-                        <input type="checkbox"
-                               th:id="${'standard_' + kategori.name() + '_' + iter.index}"
-                               th:name="${'standardKommentar_' + kategori.name()}"
-                               th:value="${kommentar}"
-                               th:checked="${eksisterendeStandardKommentarer[kategori.name()] != null and #lists.contains(eksisterendeStandardKommentarer[kategori.name()], kommentar)}">
-                        <span th:text="${kommentar}"></span>
-                    </label>
-                </div>
+                <article>
+                    <header>
+                        <h4 th:text="${kategori.visningsnavn}">Kategori</h4>
+                    </header>
 
-                <label th:for="${'fritekst_' + kategori.name()}"
-                       th:text="'Fritekst'"></label>
-                <textarea th:id="${'fritekst_' + kategori.name()}"
-                          th:name="${'fritekstKommentar_' + kategori.name()}"
-                          th:text="${eksisterendeKategorier[kategori.name()] != null ? eksisterendeKategorier[kategori.name()].fritekstKommentar : ''}"></textarea>
+                    <div class="grid">
+                        <div>
+                            <h5>Fordeler</h5>
+                            <div>
+                                <label th:each="kommentar, iter : ${standardKommentarerPerKategori[kategori.name()]}"
+                                       th:for="${'fordeler_standard_' + kategori.name() + '_' + iter.index}"
+                                       style="display: block; margin-bottom: 0.2rem;">
+                                    <input type="checkbox"
+                                           th:id="${'fordeler_standard_' + kategori.name() + '_' + iter.index}"
+                                           th:name="${'standardKommentarFordeler_' + kategori.name()}"
+                                           th:value="${kommentar}"
+                                           th:checked="${eksisterendeFordelerStandardKommentarer[kategori.name()] != null and #lists.contains(eksisterendeFordelerStandardKommentarer[kategori.name()], kommentar)}">
+                                    <span th:text="${kommentar}"></span>
+                                </label>
+                            </div>
+
+                            <label th:for="${'fordeler_fritekst_' + kategori.name()}">Fritekst</label>
+                            <textarea th:id="${'fordeler_fritekst_' + kategori.name()}"
+                                      th:name="${'fritekstKommentarFordeler_' + kategori.name()}"
+                                      th:text="${eksisterendeFordelerKategorier[kategori.name()] != null ? eksisterendeFordelerKategorier[kategori.name()].fritekstKommentar : ''}"></textarea>
+                        </div>
+
+                        <div>
+                            <h5>Ønsker</h5>
+                            <div>
+                                <label th:each="kommentar, iter : ${standardOnskerKommentarerPerKategori[kategori.name()]}"
+                                       th:for="${'onsker_standard_' + kategori.name() + '_' + iter.index}"
+                                       style="display: block; margin-bottom: 0.2rem;">
+                                    <input type="checkbox"
+                                           th:id="${'onsker_standard_' + kategori.name() + '_' + iter.index}"
+                                           th:name="${'standardKommentarOnsker_' + kategori.name()}"
+                                           th:value="${kommentar}"
+                                           th:checked="${eksisterendeOnskerStandardKommentarer[kategori.name()] != null and #lists.contains(eksisterendeOnskerStandardKommentarer[kategori.name()], kommentar)}">
+                                    <span th:text="${kommentar}"></span>
+                                </label>
+                            </div>
+
+                            <label th:for="${'onsker_fritekst_' + kategori.name()}">Fritekst</label>
+                            <textarea th:id="${'onsker_fritekst_' + kategori.name()}"
+                                      th:name="${'fritekstKommentarOnsker_' + kategori.name()}"
+                                      th:text="${eksisterendeOnskerKategorier[kategori.name()] != null ? eksisterendeOnskerKategorier[kategori.name()].fritekstKommentar : ''}"></textarea>
+                        </div>
+
+                        <div>
+                            <h5>Feil</h5>
+                            <div>
+                                <label th:each="kommentar, iter : ${standardFeilKommentarerPerKategori[kategori.name()]}"
+                                       th:for="${'feil_standard_' + kategori.name() + '_' + iter.index}"
+                                       style="display: block; margin-bottom: 0.2rem;">
+                                    <input type="checkbox"
+                                           th:id="${'feil_standard_' + kategori.name() + '_' + iter.index}"
+                                           th:name="${'standardKommentarFeil_' + kategori.name()}"
+                                           th:value="${kommentar}"
+                                           th:checked="${eksisterendeFeilStandardKommentarer[kategori.name()] != null and #lists.contains(eksisterendeFeilStandardKommentarer[kategori.name()], kommentar)}">
+                                    <span th:text="${kommentar}"></span>
+                                </label>
+                            </div>
+
+                            <label th:for="${'feil_fritekst_' + kategori.name()}">Fritekst</label>
+                            <textarea th:id="${'feil_fritekst_' + kategori.name()}"
+                                      th:name="${'fritekstKommentarFeil_' + kategori.name()}"
+                                      th:text="${eksisterendeFeilKategorier[kategori.name()] != null ? eksisterendeFeilKategorier[kategori.name()].fritekstKommentar : ''}"></textarea>
+                        </div>
+                    </div>
+                </article>
             </th:block>
 
-            <input type="hidden" name="onsker" th:value="${bedommelse.onsker}">
-            <input type="hidden" name="feil" th:value="${bedommelse.feil}">
+
+            <p class="warning" style="margin-top: 1rem; margin-bottom: 0.75rem;">
+                97 poeng = fremragende på alle vesentlige punkter ift nåværende alvsnivå.<br>
+                96 poeng = under fordeler som 97p. Under ønsker kun et enkelt ønske.<br>
+                93-95 poeng = tildeles duer med fordeler og ønsker.<br>
+                90-92 poeng = tildeles duer med fordeler, ønsker og feil.
+            </p>
 
             <label for="poeng">Poeng:</label>
             <input type="number" id="poeng" name="poeng" min="90" max="100" th:value="${bedommelse.poeng}" required>

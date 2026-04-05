@@ -16,8 +16,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -36,6 +38,9 @@ public class DommerControllerIntegrationTest {
       @MockitoBean
     private DommerService dommerService;
 
+    @MockitoBean
+    private StandardKommentarService standardKommentarService;
+
     private Due testDue;
     private Bruker testBruker;
     private Bedommelse testBedommelse;
@@ -44,6 +49,11 @@ public class DommerControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        Map<String, List<String>> tommeKommentarer = tomKategoriMap();
+        when(standardKommentarService.hentKommentarTeksterPerKategori(StandardKommentarType.STANDARD)).thenReturn(tommeKommentarer);
+        when(standardKommentarService.hentKommentarTeksterPerKategori(StandardKommentarType.ONSKER)).thenReturn(tommeKommentarer);
+        when(standardKommentarService.hentKommentarTeksterPerKategori(StandardKommentarType.FEIL)).thenReturn(tommeKommentarer);
+
         // Set up test user
         testBruker = new Bruker();
         testBruker.setId(1L);
@@ -79,6 +89,14 @@ public class DommerControllerIntegrationTest {
         testDommerPaamelding = new DommerPaamelding();
         testDommerPaamelding.setDommer(testBruker);
         testDommerPaamelding.setUtstilling(testUtstilling);
+    }
+
+    private Map<String, List<String>> tomKategoriMap() {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+        for (BedommingsKategori kategori : BedommingsKategori.values()) {
+            map.put(kategori.name(), List.of());
+        }
+        return map;
     }
 
     @Test

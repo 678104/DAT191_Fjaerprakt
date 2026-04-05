@@ -27,6 +27,7 @@ public class DommerController {
 
 
 	private final DommerService dommerService;
+	private final StandardKommentarService standardKommentarService;
 
 	@GetMapping
 	public String dommer(@AuthenticationPrincipal Bruker bruker,
@@ -77,13 +78,24 @@ public class DommerController {
 		if(bedommelse == null) {
 			bedommelse = new Bedommelse();
 		}
+		Map<String, List<String>> standardFordelerKommentarer = standardFordelerKommentarerPerKategori();
+		Map<String, List<String>> standardOnskerKommentarer = standardOnskerKommentarerPerKategori();
+		Map<String, List<String>> standardFeilKommentarer = standardFeilKommentarerPerKategori();
+		Map<String, KategoriKommentar> eksisterendeOnskerKategorier = eksisterendeKategorierFraTekst(bedommelse.getOnsker(), standardOnskerKommentarer);
+		Map<String, KategoriKommentar> eksisterendeFeilKategorier = eksisterendeKategorierFraTekst(bedommelse.getFeil(), standardFeilKommentarer);
 		model.addAttribute("due", due);
 		model.addAttribute("bedommelse", bedommelse);
 		model.addAttribute("valgtUtstillingId", utstillingId);
 		model.addAttribute("hovedkategorier", Arrays.asList(BedommingsKategori.values()));
-		model.addAttribute("standardKommentarerPerKategori", standardKommentarerPerKategori());
-		model.addAttribute("eksisterendeKategorier", eksisterendeKategorierPerKategori(bedommelse));
-		model.addAttribute("eksisterendeStandardKommentarer", eksisterendeStandardKommentarerPerKategori(bedommelse));
+		model.addAttribute("standardKommentarerPerKategori", standardFordelerKommentarer);
+		model.addAttribute("standardOnskerKommentarerPerKategori", standardOnskerKommentarer);
+		model.addAttribute("standardFeilKommentarerPerKategori", standardFeilKommentarer);
+		model.addAttribute("eksisterendeFordelerKategorier", eksisterendeKategorierPerKategori(bedommelse));
+		model.addAttribute("eksisterendeFordelerStandardKommentarer", eksisterendeStandardKommentarerPerKategori(bedommelse));
+		model.addAttribute("eksisterendeOnskerKategorier", eksisterendeOnskerKategorier);
+		model.addAttribute("eksisterendeOnskerStandardKommentarer", eksisterendeStandardKommentarerPerKategori(eksisterendeOnskerKategorier));
+		model.addAttribute("eksisterendeFeilKategorier", eksisterendeFeilKategorier);
+		model.addAttribute("eksisterendeFeilStandardKommentarer", eksisterendeStandardKommentarerPerKategori(eksisterendeFeilKategorier));
 
 		return "dommer/dommer_fragments :: dommerBedommelse";
 	}
@@ -97,9 +109,13 @@ public class DommerController {
 	                             Model model,
 	                             @AuthenticationPrincipal Bruker bruker) {
 		bruker = sikkerBruker(bruker);
-		Map<BedommingsKategori, KategoriKommentar> kategorier = byggKategoriKommentarer(skjemaData);
-		bedommelse.setKategorier(kategorier);
-		bedommelse.setFordeler(oppsummerKategorierTilFordeler(kategorier));
+		Map<BedommingsKategori, KategoriKommentar> fordeler = byggKategoriKommentarer(skjemaData, "standardKommentarFordeler_", "fritekstKommentarFordeler_");
+		Map<BedommingsKategori, KategoriKommentar> onsker = byggKategoriKommentarer(skjemaData, "standardKommentarOnsker_", "fritekstKommentarOnsker_");
+		Map<BedommingsKategori, KategoriKommentar> feil = byggKategoriKommentarer(skjemaData, "standardKommentarFeil_", "fritekstKommentarFeil_");
+		bedommelse.setKategorier(fordeler);
+		bedommelse.setFordeler(oppsummerKategorierTilTekst(fordeler));
+		bedommelse.setOnsker(oppsummerKategorierTilTekst(onsker));
+		bedommelse.setFeil(oppsummerKategorierTilTekst(feil));
 		dommerService.lagreBedommelse(dueId, bedommelse, bruker, utstillingId);
 		model.addAttribute("valgtUtstillingId", utstillingId);
 		model.addAttribute("duerPerRase", hentDuerPerRase(bruker, utstillingId, null));
@@ -140,133 +156,57 @@ public class DommerController {
 	}
 
 
-	private Map<String, List<String>> standardKommentarerPerKategori() {
-		Map<String, List<String>> standarder = new LinkedHashMap<>();
-		standarder.put(BedommingsKategori.HOLDNING.name(), List.of(
-				"Bedre holdning",
-				"Bedre balanse",
-				"Bedre burtrening",
-				"Bedre strekk",
-				"Mer vannrett holdning",
-				"Mer avfallende holdning"
-		));
-		standarder.put(BedommingsKategori.FIGUR.name(), List.of(
-				"Kraftigere figur",
-				"Kortere figur",
-				"Lengre figur",
-				"Smalere figur",
-				"Bredere bryst",
-				"Mer brystfylde",
-				"Mer brystfylde",
-				"Bredere bakkropp",
-				"Bedre avrunding bak bein"
-		));
-		standarder.put(BedommingsKategori.HODE.name(), List.of(
-				"Bredere panne",
-				"Mer markant panne",
-				"Mer panne fylde",
-				"Mer avrundet hode",
-				"Mer høyde over øyet",
-				"Bedre overgang til nakke",
-				"Mindre bakhode",
-				"Større hode",
-				"Mer markerte kinn"
-		));
-		standarder.put(BedommingsKategori.NEBB.name(), List.of(
-				"Kraftigere nebb",
-				"Kraftigere under nebb",
-				"Bedre nebbvinkel",
-				"Bedre nebb farge",
-				"Finere nebbvorter",
-				"Bedre pusset nebbvorter",
-				"Mer markerte nebbvorter",
-				"Kortere nebb",
-				"Lengre nebb"
-		));
-		standarder.put(BedommingsKategori.OYNE.name(), List.of(
-				"Renere iris",
-				"Bedre øyenfarge",
-				"Finere øyenrand",
-				"Rundere øyenrand",
-				"Mer utbygd øyenrand",
-				"Rødere øyenrand",
-				"Mørkere øyenrand",
-				"Lysere øyenrand",
-				"Smalere øyenrand"
-		));
-		standarder.put(BedommingsKategori.HALS_NAKKE.name(), List.of(
-				"Smalere hals",
-				"Kraftigere hals",
-				"Lengre hals",
-				"Kortere hals",
-				"Mer innskåren strupe",
-				"Bedre overgang hode/nakke",
-				"Kraftigere nakke"
-		));
-		standarder.put(BedommingsKategori.VINGER.name(), List.of(
-				"Kortere Vinger",
-				"Lengre Vinger",
-				"Bedre vingeføring",
-				"Bedre samlede Vinger",
-				"Bedre overgang vingeskjold til slagfjær",
-				"Bedre vingelukning",
-				"Bedre rygglukning"
-		));
-		standarder.put(BedommingsKategori.HALE.name(), List.of(
-				"Kortere hale",
-				"Lengre hale",
-				"Smalere hale",
-				"Mer samlet hale"
-		));
-		standarder.put(BedommingsKategori.BEIN.name(), List.of(
-				"Kraftigere bein",
-				"Kortere bein",
-				"Lengre bein",
-				"Bredere beinstilling",
-				"Bedre strekk i bein",
-				"Mer markerte lår",
-				"Mindre markerte lår",
-				"Rett neglfarge"
-		));
-		standarder.put(BedommingsKategori.FARGE.name(), List.of(
-				"Bedre farge",
-				"Lysere farge",
-				"Jevnere farge",
-				"Bedre grunnfarge",
-				"Bedre skjold farge",
-				"Mer glans i fargen",
-				"Renere farge"
-		));
-		standarder.put(BedommingsKategori.TEGNING.name(), List.of(
-				"Bedre tegning",
-				"Jevnere tegning",
-				"Åpnere tegning",
-				"Tettere tegning",
-				"Smalere bånd",
-				"Jevnere bånd",
-				"Lengre bånd",
-				"Renere bånd",
-				"Bedre brekning i tegning"
-		));
-		standarder.put(BedommingsKategori.FJAER_STRUKTUR.name(), List.of(
-				"Fyldigere krone",
-				"Fastere krone",
-				"Fastere nakke",
-				"Mer symmetriske rosetter",
-				"Jevnere rosetter",
-				"Tydligere rosetter",
-				"Fyldigere sokker",
-				"Bedre inner sokker",
-				"Jevnere sokker",
-				"Bedre gribbfjær",
-				"Fyldigere kappe",
-				"Mer oval nebbrosett",
-				"Rundere nebbrosett",
-				"Bedre kryss",
-				"Bedre frisering",
-				"Jevnere parykk"
-		));
-		return standarder;
+	private Map<String, List<String>> standardFordelerKommentarerPerKategori() {
+		return standardKommentarService.hentKommentarTeksterPerKategori(StandardKommentarType.STANDARD);
+	}
+
+	private Map<String, List<String>> standardOnskerKommentarerPerKategori() {
+		return standardKommentarService.hentKommentarTeksterPerKategori(StandardKommentarType.ONSKER);
+	}
+
+	private Map<String, List<String>> standardFeilKommentarerPerKategori() {
+		return standardKommentarService.hentKommentarTeksterPerKategori(StandardKommentarType.FEIL);
+	}
+
+	private Map<String, KategoriKommentar> eksisterendeKategorierFraTekst(String lagret,
+	                                                                     Map<String, List<String>> standardKommentarerPerKategori) {
+		Map<String, KategoriKommentar> eksisterende = new LinkedHashMap<>();
+		if (lagret == null || lagret.isBlank()) {
+			return eksisterende;
+		}
+		for (String linje : lagret.split("\\n")) {
+			String tekst = trimTilTomTekst(linje);
+			if (tekst.isBlank()) {
+				continue;
+			}
+			int skilletegn = tekst.indexOf(':');
+			if (skilletegn < 0) {
+				continue;
+			}
+			String visningsnavn = trimTilTomTekst(tekst.substring(0, skilletegn));
+			BedommingsKategori kategori = finnKategoriFraVisningsnavn(visningsnavn);
+			if (kategori == null) {
+				continue;
+			}
+			String verdi = trimTilTomTekst(tekst.substring(skilletegn + 1));
+			String standardKommentar = "";
+			String fritekstKommentar = "";
+			if (standardKommentarerPerKategori != null) {
+				if (verdi.contains(" / ")) {
+					String[] deler = verdi.split(" / ", 2);
+					standardKommentar = trimTilTomTekst(deler[0]);
+					fritekstKommentar = trimTilTomTekst(deler[1]);
+				} else if (erStandardKommentarTekst(kategori, verdi, standardKommentarerPerKategori)) {
+					standardKommentar = verdi;
+				} else {
+					fritekstKommentar = verdi;
+				}
+			} else {
+				fritekstKommentar = verdi;
+			}
+			eksisterende.put(kategori.name(), new KategoriKommentar(standardKommentar, fritekstKommentar));
+		}
+		return eksisterende;
 	}
 
 	private Map<String, KategoriKommentar> eksisterendeKategorierPerKategori(Bedommelse bedommelse) {
@@ -281,22 +221,28 @@ public class DommerController {
 	}
 
 	private Map<String, List<String>> eksisterendeStandardKommentarerPerKategori(Bedommelse bedommelse) {
+		return eksisterendeStandardKommentarerPerKategori(eksisterendeKategorierPerKategori(bedommelse));
+	}
+
+	private Map<String, List<String>> eksisterendeStandardKommentarerPerKategori(Map<String, KategoriKommentar> kategorier) {
 		Map<String, List<String>> eksisterende = new LinkedHashMap<>();
-		if (bedommelse == null || bedommelse.getKategorier() == null) {
+		if (kategorier == null || kategorier.isEmpty()) {
 			return eksisterende;
 		}
-		for (Map.Entry<BedommingsKategori, KategoriKommentar> entry : bedommelse.getKategorier().entrySet()) {
-			eksisterende.put(entry.getKey().name(), splittStandardKommentarer(entry.getValue().getStandardKommentar()));
+		for (Map.Entry<String, KategoriKommentar> entry : kategorier.entrySet()) {
+			eksisterende.put(entry.getKey(), splittStandardKommentarer(entry.getValue().getStandardKommentar()));
 		}
 		return eksisterende;
 	}
 
-	private Map<BedommingsKategori, KategoriKommentar> byggKategoriKommentarer(MultiValueMap<String, String> skjemaData) {
+	private Map<BedommingsKategori, KategoriKommentar> byggKategoriKommentarer(MultiValueMap<String, String> skjemaData,
+	                                                                           String standardPrefix,
+	                                                                           String fritekstPrefix) {
 		Map<BedommingsKategori, KategoriKommentar> kategorier = new EnumMap<>(BedommingsKategori.class);
 		for (BedommingsKategori kategori : BedommingsKategori.values()) {
-			List<String> valgteStandarder = skjemaData.get("standardKommentar_" + kategori.name());
-			String standard = joinStandardKommentarer(valgteStandarder);
-			String fritekst = trimTilTomTekst(skjemaData.getFirst("fritekstKommentar_" + kategori.name()));
+			List<String> valgteStandarder = standardPrefix == null ? List.of() : skjemaData.get(standardPrefix + kategori.name());
+			String standard = standardPrefix == null ? "" : joinStandardKommentarer(valgteStandarder);
+			String fritekst = fritekstPrefix == null ? "" : trimTilTomTekst(skjemaData.getFirst(fritekstPrefix + kategori.name()));
 			if (!standard.isBlank() || !fritekst.isBlank()) {
 				kategorier.put(kategori, new KategoriKommentar(standard, fritekst));
 			}
@@ -304,7 +250,7 @@ public class DommerController {
 		return kategorier;
 	}
 
-	private String oppsummerKategorierTilFordeler(Map<BedommingsKategori, KategoriKommentar> kategorier) {
+	private String oppsummerKategorierTilTekst(Map<BedommingsKategori, KategoriKommentar> kategorier) {
 		return kategorier.entrySet().stream()
 				.map(entry -> {
 					KategoriKommentar kommentar = entry.getValue();
@@ -323,6 +269,31 @@ public class DommerController {
 				})
 				.filter(tekst -> !tekst.isBlank())
 				.collect(Collectors.joining("\n"));
+	}
+
+	private BedommingsKategori finnKategoriFraVisningsnavn(String visningsnavn) {
+		return Arrays.stream(BedommingsKategori.values())
+				.filter(kategori -> kategori.getVisningsnavn().equals(visningsnavn))
+				.findFirst()
+				.orElse(null);
+	}
+
+	private boolean erStandardKommentarTekst(BedommingsKategori kategori,
+	                                        String verdi,
+	                                        Map<String, List<String>> standardKommentarerPerKategori) {
+		String tekst = trimTilTomTekst(verdi);
+		if (tekst.isBlank()) {
+			return false;
+		}
+		List<String> standardKommentarer = standardKommentarerPerKategori.get(kategori.name());
+		if (standardKommentarer == null || standardKommentarer.isEmpty()) {
+			return false;
+		}
+		List<String> deler = Arrays.stream(tekst.split(","))
+				.map(this::trimTilTomTekst)
+				.filter(verdiDel -> !verdiDel.isBlank())
+				.toList();
+		return !deler.isEmpty() && standardKommentarer.containsAll(deler);
 	}
 
 	private String trimTilTomTekst(String tekst) {
