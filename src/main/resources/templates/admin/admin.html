@@ -14,8 +14,8 @@
         <h1>Admin panel</h1>
         <div class="admin-action-buttons">
             <a href="/admin/panel" role="button" class="secondary">Admin panel</a>
-            <a href="/utstilling/registrer" role="button" class="secondary">Registrer ny utstilling</a>
-            <a href="/admin/tildel-dommer-rolle-liste" role="button" class="secondary">Tildel dommerrolle</a>
+            <a href="/admin/dommere" role="button" class="secondary">Dommere</a>
+            <a href="/utstilling/registrer" role="button" class="secondary">Registrer utstilling</a>
             <a href="/admin/bedomming-oppsett" role="button" class="secondary">Oppsett bedømming</a>
         </div>
     </section>
@@ -93,7 +93,7 @@
             form.dataset.valgtBrukerId = brukerId;
             form.dataset.valgtBrukerNavn = brukerNavn;
             hidden.value = brukerId;
-            fjernAktivBrukerForslag();
+            lukkBrukerForslag();
             skjulBrukerFeil();
         }
     }
@@ -110,6 +110,14 @@
         const input = document.getElementById('brukerSok');
         if (input) {
             input.removeAttribute('aria-activedescendant');
+        }
+    }
+
+    function lukkBrukerForslag() {
+        fjernAktivBrukerForslag();
+        const container = document.getElementById('brukerForslagContainer');
+        if (container) {
+            container.innerHTML = '';
         }
     }
 
@@ -195,6 +203,7 @@
             delete form.dataset.valgtBrukerId;
             delete form.dataset.valgtBrukerNavn;
         }
+        lukkBrukerForslag();
         skjulBrukerFeil();
     }
 
@@ -224,6 +233,68 @@
         if (input) {
             input.removeAttribute('aria-invalid');
         }
+    }
+
+    function bindBrukerAutocomplete(input) {
+        if (!input || input.dataset.autocompleteBound === 'true') {
+            return;
+        }
+
+        input.dataset.autocompleteBound = 'true';
+        const containerId = input.getAttribute('aria-controls');
+        let debounceTimer = null;
+        let abortController = null;
+
+        const updateForslag = async () => {
+            const query = (input.value || '').trim();
+            const container = containerId ? document.getElementById(containerId) : null;
+
+            if (!container) {
+                return;
+            }
+
+            if (abortController) {
+                abortController.abort();
+            }
+
+            if (!query) {
+                container.innerHTML = '';
+                return;
+            }
+
+            abortController = new AbortController();
+
+            try {
+                const response = await fetch(`/admin/brukere?sok=${encodeURIComponent(query)}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                    signal: abortController.signal
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const html = await response.text();
+                const target = document.getElementById(containerId);
+                if (target) {
+                    target.outerHTML = html;
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Kunne ikke hente brukerforslag', error);
+                }
+            }
+        };
+
+        input.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(updateForslag, 250);
+        });
+    }
+
+    function initBrukerAutocomplete(root = document) {
+        root.querySelectorAll('input[data-autocomplete-url="/admin/brukere"]').forEach(bindBrukerAutocomplete);
     }
 
     function sjekkBrukerValgt() {
@@ -284,6 +355,8 @@
     });
 
     htmx.onLoad(function (content) {
+        initBrukerAutocomplete(content);
+
         if (content.querySelector('#brukerForslagContainer')) {
             fjernAktivBrukerForslag();
         }
@@ -294,6 +367,7 @@
     });
 
     document.addEventListener('DOMContentLoaded', function () {
+        initBrukerAutocomplete(document);
         oppdaterRaseMarkering();
     });
 

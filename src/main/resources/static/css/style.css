@@ -368,6 +368,37 @@ textarea:focus {
     width: 100%;
 }
 
+.bedomming-kategori-collapse {
+    margin-bottom: 1rem;
+}
+
+.bedomming-kategori-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    list-style: none;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(0, 55, 122, 0.18);
+    border-radius: 0.5rem;
+    background: rgba(0, 55, 122, 0.04);
+}
+
+.bedomming-kategori-summary::-webkit-details-marker {
+    display: none;
+}
+
+.bedomming-kategori-summary h2 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+
+.bedomming-kategori-collapse article {
+    margin-top: 0.75rem;
+}
+
+
 /* ─── Sortable list ──────────────────────────────────────────── */
 .sortable-list {
     list-style: none;

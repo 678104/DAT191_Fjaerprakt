@@ -13,8 +13,12 @@ import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingRepository;
 import no.hvl.peristeri.util.RaseStringHjelper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -113,10 +117,86 @@ public class DommerServiceImpl implements DommerService {
 
 		dommer.leggTilRolle(Rolle.DOMMER);
 		Bruker saved = brukerService.lagreBrukerMedPassord(dommer, passord);
+		if (dommerPaameldingRepository.existsByDommer_IdAndUtstilling_Id(saved.getId(), utstillingId)) {
+			return dommerPaameldingRepository.findByDommer_IdAndUtstilling_IdOrderByIdAsc(saved.getId(), utstillingId)
+					.getFirst();
+		}
 		Utstilling utstilling = utstillingRepo.findById(utstillingId)
 		                                      .orElseThrow(() -> new ResourceNotFoundException("Utstilling", utstillingId));
 		DommerPaamelding dommerPaamelding = new DommerPaamelding(utstilling, saved);
 		return dommerPaameldingRepository.save(dommerPaamelding);
+	}
+
+	@Override
+	public List<Bruker> hentDommere() {
+		return brukerService.hentBrukereMedRolle(Rolle.DOMMER);
+	}
+
+	@Override
+	@Transactional
+	public Bruker tildelDommerRolle(Long brukerId) {
+		return brukerService.leggTilRolle(brukerId, Rolle.DOMMER);
+	}
+
+	@Override
+	@Transactional
+	public void fjernDommerRolle(Long brukerId) {
+		if (brukerId == null) {
+			throw new InvalidParameterException("brukerId", "cannot be null");
+		}
+
+		List<DommerPaamelding> paameldinger = dommerPaameldingRepository.finnPaameldingerEtterDommerId(brukerId);
+		for (DommerPaamelding dp : paameldinger) {
+			List<Due> duer = dueRepo.findByTildeltDommer_Id(dp.getId());
+			for (Due due : duer) {
+				due.setTildeltDommer(null);
+			}
+			if (!duer.isEmpty()) {
+				dueRepo.saveAll(duer);
+			}
+
+			List<Bedommelse> bedommelser = bedommelseRepo.findByBedomtAv_Id(dp.getId());
+			for (Bedommelse bedommelse : bedommelser) {
+				bedommelse.setBedomtAv(null);
+			}
+			if (!bedommelser.isEmpty()) {
+				bedommelseRepo.saveAll(bedommelser);
+			}
+
+			dommerPaameldingRepository.delete(dp);
+		}
+
+		brukerService.fjernRolle(brukerId, Rolle.DOMMER);
+	}
+
+	@Override
+	@Transactional
+	public void tildelDommerTilUtstillinger(Long brukerId, List<Long> utstillingIder) {
+		if (brukerId == null) {
+			throw new InvalidParameterException("brukerId", "cannot be null");
+		}
+		Bruker dommer = brukerService.leggTilRolle(brukerId, Rolle.DOMMER);
+		Set<Long> valgteUtstillinger = utstillingIder == null
+				? Set.of()
+				: utstillingIder.stream().filter(java.util.Objects::nonNull).collect(Collectors.toCollection(HashSet::new));
+
+		for (Long utstillingId : valgteUtstillinger) {
+			if (!dommerPaameldingRepository.existsByDommer_IdAndUtstilling_Id(dommer.getId(), utstillingId)) {
+				Utstilling utstilling = utstillingRepo.findById(utstillingId)
+						.orElseThrow(() -> new ResourceNotFoundException("Utstilling", utstillingId));
+				dommerPaameldingRepository.save(new DommerPaamelding(utstilling, dommer));
+			}
+		}
+	}
+
+	@Override
+	public List<Utstilling> hentUtstillingerForDommer(Long brukerId) {
+		if (brukerId == null) {
+			throw new InvalidParameterException("brukerId", "cannot be null");
+		}
+		return dommerPaameldingRepository.finnPaameldingerEtterDommerId(brukerId).stream()
+				.map(DommerPaamelding::getUtstilling)
+				.toList();
 	}
 
 	@Override
@@ -240,6 +320,20 @@ public class DommerServiceImpl implements DommerService {
 		}
 		DommerPaamelding dp = dommerPaameldingRepository.findById(dommerPaameldingId)
 				.orElseThrow(() -> new ResourceNotFoundException("DommerPaamelding", dommerPaameldingId));
+		List<Due> duer = dueRepo.findByTildeltDommer_Id(dp.getId());
+		for (Due due : duer) {
+			due.setTildeltDommer(null);
+		}
+		if (!duer.isEmpty()) {
+			dueRepo.saveAll(duer);
+		}
+		List<Bedommelse> bedommelser = bedommelseRepo.findByBedomtAv_Id(dp.getId());
+		for (Bedommelse bedommelse : bedommelser) {
+			bedommelse.setBedomtAv(null);
+		}
+		if (!bedommelser.isEmpty()) {
+			bedommelseRepo.saveAll(bedommelser);
+		}
 		dommerPaameldingRepository.delete(dp);
 	}
 
@@ -289,4 +383,5 @@ public class DommerServiceImpl implements DommerService {
 		}
 		return treff.getFirst();
 	}
+
 }

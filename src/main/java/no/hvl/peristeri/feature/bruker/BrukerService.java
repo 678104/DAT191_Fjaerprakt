@@ -12,6 +12,8 @@ public interface BrukerService {
 
 	List<Bruker> finnBrukere(String sok);
 
+	List<Bruker> finnBrukereForDommerAutocomplete(String sok, int maksAntall);
+
 	Optional<Bruker> getBruker(String fornavn, String etternavn);
 
 	/**
@@ -60,4 +62,12 @@ public interface BrukerService {
 	boolean sjekkOmEpostErBrukt(@Email @NotBlank String epost);
 
 	Optional<Bruker> findByEpost(String email);
+
+	List<Bruker> hentBrukereMedRolle(Rolle rolle);
+
+	Bruker leggTilRolle(Long brukerId, Rolle rolle);
+
+	Bruker fjernRolle(Long brukerId, Rolle rolle);
+
+	boolean harRolle(Long brukerId, Rolle rolle);
 }
