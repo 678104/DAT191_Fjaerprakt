@@ -25,10 +25,6 @@
                 <a href="/utstilling" class=""
                    th:classappend="${navLocation == 'utstilling'} ? 'navCurrent' : ''">Utstillinger</a>
             </li>
-            <li th:unless="${#authorization.expression('hasRole(''DOMMER'')')}">
-                <a href="/paamelding" class=""
-                   th:classappend="${navLocation == 'paamelding'} ? 'navCurrent' : ''">Påmelding</a>
-            </li>
             <li th:if="${#authorization.expression('hasRole(''DOMMER'')')}">
                 <a href="/dommer" class=""
                    th:classappend="${navLocation == 'dommer'} ? 'navCurrent' : ''">Dommer</a>
