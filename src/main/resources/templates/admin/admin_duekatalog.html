@@ -26,17 +26,11 @@
                 <thead>
                 <tr>
                     <th>Navn</th>
-                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="gruppe : ${grupper}">
                     <td th:text="${gruppe.navn}"></td>
-                    <td>
-                        <form method="post" th:action="@{/admin/duekatalog/gruppe/{id}/slett(id=${gruppe.id})}">
-                            <button type="submit" class="secondary" hx-confirm="Slette gruppen?">Slett</button>
-                        </form>
-                    </td>
                 </tr>
                 </tbody>
             </table>
@@ -59,18 +53,12 @@
                 <tr>
                     <th>Rase</th>
                     <th>Gruppe</th>
-                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="rase : ${raser}">
                     <td th:text="${rase.navn}"></td>
                     <td th:text="${rase.gruppe.navn}"></td>
-                    <td>
-                        <form method="post" th:action="@{/admin/duekatalog/rase/{id}/slett(id=${rase.id})}">
-                            <button type="submit" class="secondary" hx-confirm="Slette rasen?">Slett</button>
-                        </form>
-                    </td>
                 </tr>
                 </tbody>
             </table>
@@ -89,17 +77,11 @@
                 <thead>
                 <tr>
                     <th>Farge</th>
-                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="farge : ${farger}">
                     <td th:text="${farge.navn}"></td>
-                    <td>
-                        <form method="post" th:action="@{/admin/duekatalog/farge/{id}/slett(id=${farge.id})}">
-                            <button type="submit" class="secondary" hx-confirm="Slette fargen?">Slett</button>
-                        </form>
-                    </td>
                 </tr>
                 </tbody>
             </table>
@@ -116,17 +98,11 @@
                 <thead>
                 <tr>
                     <th>Variant</th>
-                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="variant : ${varianter}">
                     <td th:text="${variant.navn}"></td>
-                    <td>
-                        <form method="post" th:action="@{/admin/duekatalog/variant/{id}/slett(id=${variant.id})}">
-                            <button type="submit" class="secondary" hx-confirm="Slette varianten?">Slett</button>
-                        </form>
-                    </td>
                 </tr>
                 </tbody>
             </table>

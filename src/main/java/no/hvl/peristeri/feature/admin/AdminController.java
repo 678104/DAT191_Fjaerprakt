@@ -464,30 +464,6 @@ public class AdminController {
 		return "redirect:/admin/duekatalog";
 	}
 
-	@PostMapping("/duekatalog/gruppe/{id}/slett")
-	public String postSlettGruppe(@PathVariable Long id) {
-		dueKatalogService.slettGruppe(id);
-		return "redirect:/admin/duekatalog";
-	}
-
-	@PostMapping("/duekatalog/rase/{id}/slett")
-	public String postSlettRase(@PathVariable Long id) {
-		dueKatalogService.slettRase(id);
-		return "redirect:/admin/duekatalog";
-	}
-
-	@PostMapping("/duekatalog/farge/{id}/slett")
-	public String postSlettFarge(@PathVariable Long id) {
-		dueKatalogService.slettFarge(id);
-		return "redirect:/admin/duekatalog";
-	}
-
-	@PostMapping("/duekatalog/variant/{id}/slett")
-	public String postSlettVariant(@PathVariable Long id) {
-		dueKatalogService.slettVariant(id);
-		return "redirect:/admin/duekatalog";
-	}
-
 	@ModelAttribute("navLocation")
 	public String navLocation() {
 		return navLocation;
