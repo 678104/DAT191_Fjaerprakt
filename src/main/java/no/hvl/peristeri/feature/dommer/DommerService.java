@@ -52,4 +52,17 @@ public interface DommerService {
 	void tildelDommerTilUtstillinger(Long brukerId, List<Long> utstillingIder);
 
 	List<Utstilling> hentUtstillingerForDommer(Long brukerId);
+
+	DommerVinnerData hentVinnerData(Bruker dommer, Long utstillingId);
+
+	void lagreVinnere(Bruker dommer,
+	                 Long utstillingId,
+	                 List<String> raseNavn,
+	                 List<Long> raseVinnerDueId,
+	                 List<String> gruppeNavn,
+	                 List<Long> gruppeVinnerDueId,
+	                 Long bisVinnerDueId,
+	                 Long norgesmesterOppdrett1DueId,
+	                 Long norgesmesterOppdrett2DueId,
+	                 Long norgesmesterOppdrett3DueId);
 }

@@ -17,11 +17,11 @@
         </ul>
         <ul>
             <!--/*@thymesVar id="navLocation" type="String"*/-->
-            <li th:unless="${#authorization.expression('hasRole(''DOMMER'')')}">
+            <li>
                 <a href="/" class=""
                    th:classappend="${navLocation == 'home'} ? 'navCurrent' : ''">Hjem</a>
             </li>
-            <li th:unless="${#authorization.expression('hasRole(''DOMMER'')')}">
+            <li>
                 <a href="/utstilling" class=""
                    th:classappend="${navLocation == 'utstilling'} ? 'navCurrent' : ''">Utstillinger</a>
             </li>
