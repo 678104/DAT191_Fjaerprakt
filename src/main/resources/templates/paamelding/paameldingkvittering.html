@@ -68,6 +68,7 @@
                 <table>
                     <thead>
                     <tr>
+                        <th>Gruppe</th>
                         <th>Rase</th>
                         <th>Farge</th>
                         <th>Variant</th>
@@ -81,16 +82,42 @@
                     <tbody id="rase-tabell">
                     <tr>
                         <td>
+                            <label for="ny-due-gruppe" style="position:absolute;left:-10000px;">Gruppe</label>
+                            <select id="ny-due-gruppe"
+                                    name="gruppeId"
+                                    required
+                                    th:hx-get="@{/paamelding/raser}"
+                                    hx-target="#ny-due-rase"
+                                    hx-swap="outerHTML"
+                                    hx-trigger="change"
+                                    hx-include="this">
+                                <option value="">Velg gruppe</option>
+                                <option th:each="gruppe : ${dueGrupper}"
+                                        th:value="${gruppe.id}"
+                                        th:text="${gruppe.navn}"
+                                        th:selected="${gruppe.id == valgtGruppeId}"></option>
+                            </select>
+                        </td>
+                        <td>
                             <label for="ny-due-rase" style="position:absolute;left:-10000px;">Rase</label>
-                            <input id="ny-due-rase" type="text" name="rase" placeholder="Rase" required>
+                            <select id="ny-due-rase" name="rase" required th:fragment="ny-due-rase-select">
+                                <option value="">Velg rase</option>
+                                <option th:each="rase : ${dueRaser}" th:value="${rase.navn}" th:text="${rase.navn}"></option>
+                            </select>
                         </td>
                         <td>
                             <label for="ny-due-farge" style="position:absolute;left:-10000px;">Farge</label>
-                            <input id="ny-due-farge" type="text" name="farge" placeholder="Farge" required>
+                            <select id="ny-due-farge" name="farge" required>
+                                <option value="">Velg farge</option>
+                                <option th:each="farge : ${dueFarger}" th:value="${farge.navn}" th:text="${farge.navn}"></option>
+                            </select>
                         </td>
                         <td>
                             <label for="ny-due-variant" style="position:absolute;left:-10000px;">Variant</label>
-                            <input id="ny-due-variant" type="text" name="variant" placeholder="Variant" required>
+                            <select id="ny-due-variant" name="variant" required>
+                                <option value="">Velg variant</option>
+                                <option th:each="variant : ${dueVarianter}" th:value="${variant.navn}" th:text="${variant.navn}"></option>
+                            </select>
                         </td>
                         <td>
                             <label for="ny-due-hanner-ung" style="position:absolute;left:-10000px;">Hanner ung</label>

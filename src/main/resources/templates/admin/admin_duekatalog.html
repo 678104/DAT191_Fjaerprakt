@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Admin - Duekatalog</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section>
+        <h1>Administrer duekatalog</h1>
+        <p>Legg til og vedlikehold grupper, raser, farger og varianter som brukes i pameldingen.</p>
+    </section>
+
+    <section class="grid">
+        <article>
+            <header><b>Grupper</b></header>
+            <form method="post" action="/admin/duekatalog/gruppe">
+                <label for="gruppe-navn">Nytt gruppenavn</label>
+                <input id="gruppe-navn" name="navn" type="text" required>
+                <button type="submit">Legg til gruppe</button>
+            </form>
+            <table>
+                <thead>
+                <tr>
+                    <th>Navn</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="gruppe : ${grupper}">
+                    <td th:text="${gruppe.navn}"></td>
+                    <td>
+                        <form method="post" th:action="@{/admin/duekatalog/gruppe/{id}/slett(id=${gruppe.id})}">
+                            <button type="submit" class="secondary" hx-confirm="Slette gruppen?">Slett</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+
+        <article>
+            <header><b>Raser</b></header>
+            <form method="post" action="/admin/duekatalog/rase">
+                <label for="rase-gruppe">Gruppe</label>
+                <select id="rase-gruppe" name="gruppeId" required>
+                    <option value="">Velg gruppe</option>
+                    <option th:each="gruppe : ${grupper}" th:value="${gruppe.id}" th:text="${gruppe.navn}"></option>
+                </select>
+                <label for="rase-navn">Nytt rasenavn</label>
+                <input id="rase-navn" name="navn" type="text" required>
+                <button type="submit">Legg til rase</button>
+            </form>
+            <table>
+                <thead>
+                <tr>
+                    <th>Rase</th>
+                    <th>Gruppe</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="rase : ${raser}">
+                    <td th:text="${rase.navn}"></td>
+                    <td th:text="${rase.gruppe.navn}"></td>
+                    <td>
+                        <form method="post" th:action="@{/admin/duekatalog/rase/{id}/slett(id=${rase.id})}">
+                            <button type="submit" class="secondary" hx-confirm="Slette rasen?">Slett</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+    </section>
+
+    <section class="grid">
+        <article>
+            <header><b>Farger</b></header>
+            <form method="post" action="/admin/duekatalog/farge">
+                <label for="farge-navn">Ny farge</label>
+                <input id="farge-navn" name="navn" type="text" required>
+                <button type="submit">Legg til farge</button>
+            </form>
+            <table>
+                <thead>
+                <tr>
+                    <th>Farge</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="farge : ${farger}">
+                    <td th:text="${farge.navn}"></td>
+                    <td>
+                        <form method="post" th:action="@{/admin/duekatalog/farge/{id}/slett(id=${farge.id})}">
+                            <button type="submit" class="secondary" hx-confirm="Slette fargen?">Slett</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+
+        <article>
+            <header><b>Varianter</b></header>
+            <form method="post" action="/admin/duekatalog/variant">
+                <label for="variant-navn">Ny variant</label>
+                <input id="variant-navn" name="navn" type="text" required>
+                <button type="submit">Legg til variant</button>
+            </form>
+            <table>
+                <thead>
+                <tr>
+                    <th>Variant</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="variant : ${varianter}">
+                    <td th:text="${variant.navn}"></td>
+                    <td>
+                        <form method="post" th:action="@{/admin/duekatalog/variant/{id}/slett(id=${variant.id})}">
+                            <button type="submit" class="secondary" hx-confirm="Slette varianten?">Slett</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+    </section>
+
+    <a href="/admin" role="button" class="secondary">Tilbake til admin</a>
+</main>
+<footer class="container">
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>
+

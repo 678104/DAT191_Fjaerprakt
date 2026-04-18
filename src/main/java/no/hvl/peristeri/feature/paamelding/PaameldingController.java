@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import no.hvl.peristeri.common.exception.BusinessRuleViolationException;
 import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.due.DueService;
+import no.hvl.peristeri.feature.duekatalog.DueGruppe;
+import no.hvl.peristeri.feature.duekatalog.DueKatalogService;
+import no.hvl.peristeri.feature.duekatalog.DueRase;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
 import org.slf4j.Logger;
@@ -29,6 +32,7 @@ public class PaameldingController {
 	private final PaameldingService paameldingService;
 	private final DueService        dueService;
 	private final UtstillingService utstillingService;
+	private final DueKatalogService dueKatalogService;
 
 	@GetMapping
 	public String paamelding(@AuthenticationPrincipal Bruker bruker, Model model, HttpSession session) {
@@ -61,13 +65,23 @@ public class PaameldingController {
 
 		logger.info("Påmelding startet for utstilling: {} ({})", utstilling.getTittel(), utstillingId);
 		model.addAttribute("radId", 1);
+		leggTilDueKatalogModel(model, null);
 
 		return "paamelding/paameldingkvittering :: kvittering";
 	}
 
 	@PostMapping("/duekvittering")
-	public String duekvittering(@ModelAttribute DueDTO dueDTO, Model model, HttpSession session) {
+	public String duekvittering(@ModelAttribute DueDTO dueDTO,
+	                            @RequestParam(required = false) Long gruppeId,
+	                            Model model,
+	                            HttpSession session) {
 		logger.info("PaameldingDTO: {}", dueDTO);
+
+		if (!dueKatalogService.erRaseGyldigForGruppe(gruppeId, dueDTO.rase())
+		    || !dueKatalogService.finnesFarge(dueDTO.farge())
+		    || !dueKatalogService.finnesVariant(dueDTO.variant())) {
+			throw new BusinessRuleViolationException("Ugyldig valg for rase, farge eller variant.");
+		}
 
 		if (dueDTO.hunnerUng() == 0 && dueDTO.hunnerEldre() == 0 && dueDTO.hannerUng() == 0 &&
 		    dueDTO.hannerEldre() == 0) {
@@ -130,6 +144,14 @@ public class PaameldingController {
 		return "paamelding/paamelding";
 	}
 
+	@GetMapping("/raser")
+	public String hentRaserForGruppe(@RequestParam(required = false) Long gruppeId, Model model) {
+		Long valgtGruppeId = finnValgtEllerForsteGruppeId(gruppeId);
+		List<DueRase> raser = valgtGruppeId == null ? List.of() : dueKatalogService.finnRaserForGruppe(valgtGruppeId);
+		model.addAttribute("dueRaser", raser);
+		return "paamelding/paameldingkvittering :: ny-due-rase-select";
+	}
+
 	@ModelAttribute("navLocation")
 	public String navLocation() {
 		return navLocation;
@@ -142,5 +164,26 @@ public class PaameldingController {
 			session.setAttribute("dueDTOListe", duerDTO);
 		}
 		return duerDTO;
+	}
+
+	private void leggTilDueKatalogModel(Model model, Long gruppeId) {
+		Long valgtGruppeId = finnValgtEllerForsteGruppeId(gruppeId);
+		List<DueGruppe> grupper = dueKatalogService.finnAlleGrupper();
+		List<DueRase> raser = valgtGruppeId == null ? List.of() : dueKatalogService.finnRaserForGruppe(valgtGruppeId);
+		model.addAttribute("dueGrupper", grupper);
+		model.addAttribute("valgtGruppeId", valgtGruppeId);
+		model.addAttribute("dueRaser", raser);
+		model.addAttribute("dueFarger", dueKatalogService.finnAlleFarger());
+		model.addAttribute("dueVarianter", dueKatalogService.finnAlleVarianter());
+	}
+
+	private Long finnValgtEllerForsteGruppeId(Long gruppeId) {
+		if (gruppeId != null) {
+			return gruppeId;
+		}
+		return dueKatalogService.finnAlleGrupper().stream()
+				.findFirst()
+				.map(DueGruppe::getId)
+				.orElse(null);
 	}
 }

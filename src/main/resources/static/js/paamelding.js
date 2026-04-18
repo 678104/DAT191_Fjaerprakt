@@ -63,6 +63,11 @@ function initPaameldingHtmxHandlers() {
                 form.reset();
                 const id = parseInt(radId.value || '0', 10);
                 radId.value = Number.isNaN(id) ? '1' : String(id + 1);
+
+                const gruppeSelect = document.getElementById('ny-due-gruppe');
+                if (gruppeSelect && window.htmx) {
+                    window.htmx.trigger(gruppeSelect, 'change');
+                }
             }
         }
 

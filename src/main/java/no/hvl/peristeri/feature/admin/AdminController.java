@@ -15,6 +15,7 @@ import no.hvl.peristeri.feature.dommer.StandardKommentarService;
 import no.hvl.peristeri.feature.dommer.StandardKommentarType;
 import no.hvl.peristeri.feature.due.Due;
 import no.hvl.peristeri.feature.due.DueService;
+import no.hvl.peristeri.feature.duekatalog.DueKatalogService;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
 import no.hvl.peristeri.util.RaseStringHjelper;
@@ -43,6 +44,7 @@ public class AdminController {
 	private final DommerService     dommerService;
 	private final DueService        dueService;
 	private final StandardKommentarService standardKommentarService;
+	private final DueKatalogService dueKatalogService;
 
 	@GetMapping
 	public String getAdmin(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
@@ -432,8 +434,69 @@ public class AdminController {
 		return "admin/admin_fragments :: adminUtstilling";
 	}
 
+	@GetMapping("/duekatalog")
+	public String getDuekatalog(Model model) {
+		leggTilDuekatalogModel(model);
+		return "admin/admin_duekatalog";
+	}
+
+	@PostMapping("/duekatalog/gruppe")
+	public String postLeggTilGruppe(@RequestParam String navn) {
+		dueKatalogService.opprettGruppe(navn);
+		return "redirect:/admin/duekatalog";
+	}
+
+	@PostMapping("/duekatalog/rase")
+	public String postLeggTilRase(@RequestParam Long gruppeId, @RequestParam String navn) {
+		dueKatalogService.opprettRase(gruppeId, navn);
+		return "redirect:/admin/duekatalog";
+	}
+
+	@PostMapping("/duekatalog/farge")
+	public String postLeggTilFarge(@RequestParam String navn) {
+		dueKatalogService.opprettFarge(navn);
+		return "redirect:/admin/duekatalog";
+	}
+
+	@PostMapping("/duekatalog/variant")
+	public String postLeggTilVariant(@RequestParam String navn) {
+		dueKatalogService.opprettVariant(navn);
+		return "redirect:/admin/duekatalog";
+	}
+
+	@PostMapping("/duekatalog/gruppe/{id}/slett")
+	public String postSlettGruppe(@PathVariable Long id) {
+		dueKatalogService.slettGruppe(id);
+		return "redirect:/admin/duekatalog";
+	}
+
+	@PostMapping("/duekatalog/rase/{id}/slett")
+	public String postSlettRase(@PathVariable Long id) {
+		dueKatalogService.slettRase(id);
+		return "redirect:/admin/duekatalog";
+	}
+
+	@PostMapping("/duekatalog/farge/{id}/slett")
+	public String postSlettFarge(@PathVariable Long id) {
+		dueKatalogService.slettFarge(id);
+		return "redirect:/admin/duekatalog";
+	}
+
+	@PostMapping("/duekatalog/variant/{id}/slett")
+	public String postSlettVariant(@PathVariable Long id) {
+		dueKatalogService.slettVariant(id);
+		return "redirect:/admin/duekatalog";
+	}
+
 	@ModelAttribute("navLocation")
 	public String navLocation() {
 		return navLocation;
+	}
+
+	private void leggTilDuekatalogModel(Model model) {
+		model.addAttribute("grupper", dueKatalogService.finnAlleGrupper());
+		model.addAttribute("raser", dueKatalogService.finnAlleRaser());
+		model.addAttribute("farger", dueKatalogService.finnAlleFarger());
+		model.addAttribute("varianter", dueKatalogService.finnAlleVarianter());
 	}
 }
