@@ -77,9 +77,11 @@ public class PaameldingController {
 	                            HttpSession session) {
 		logger.info("PaameldingDTO: {}", dueDTO);
 
-		if (!dueKatalogService.erRaseGyldigForGruppe(gruppeId, dueDTO.rase())
-		    || !dueKatalogService.finnesFarge(dueDTO.farge())
-		    || !dueKatalogService.finnesVariant(dueDTO.variant())) {
+		boolean ugyldigRase = !dueKatalogService.erRaseGyldigForGruppe(gruppeId, dueDTO.rase());
+		boolean ugyldigFarge = !erTom(dueDTO.farge()) && !dueKatalogService.finnesFarge(dueDTO.farge());
+		boolean ugyldigVariant = !erTom(dueDTO.variant()) && !dueKatalogService.finnesVariant(dueDTO.variant());
+
+		if (ugyldigRase || ugyldigFarge || ugyldigVariant) {
 			throw new BusinessRuleViolationException("Ugyldig valg for rase, farge eller variant.");
 		}
 
@@ -185,5 +187,9 @@ public class PaameldingController {
 				.findFirst()
 				.map(DueGruppe::getId)
 				.orElse(null);
+	}
+
+	private boolean erTom(String verdi) {
+		return verdi == null || verdi.isBlank();
 	}
 }
