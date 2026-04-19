@@ -86,6 +86,7 @@
             <h2>Bedømmelse av due</h2>
         </header>
         <form id="bedomDue"
+              data-dommer-bilde-form
               hx-post="/dommer/bedom"
               enctype="multipart/form-data"
               hx-encoding="multipart/form-data"
@@ -187,8 +188,24 @@
             </th:block>
 
             <label for="bilde">Bilde (valgfritt)</label>
-            <input type="file" id="bilde" name="bildeFil" accept="image/png,image/jpeg,image/webp">
+            <input type="file"
+                   id="bilde"
+                   name="bildeFil"
+                   accept="image/*"
+                   capture="environment"
+                   data-dommer-bilde-input>
             <small>Støttede format: JPEG, PNG, WEBP. Maks 5 MB.</small>
+
+            <div class="grid" style="margin-top: 0.5rem;">
+                <button type="button" class="secondary" data-dommer-bilde-start>Ta bilde med kamera</button>
+                <button type="button" class="secondary outline" data-dommer-bilde-capture hidden>Ta bilde nå</button>
+                <button type="button" class="secondary outline" data-dommer-bilde-cancel hidden>Avbryt kamera</button>
+            </div>
+
+            <p data-dommer-bilde-status aria-live="polite" style="margin-top: 0.5rem;"></p>
+
+            <video data-dommer-bilde-video hidden playsinline style="width: 100%; max-width: 420px; border-radius: 8px; background: #000;"></video>
+            <img data-dommer-bilde-preview hidden alt="Forhåndsvisning av tatt bilde" style="display: block; width: 100%; max-width: 420px; margin-top: 0.75rem; border-radius: 8px;">
 
             <div th:if="${harBilde}">
                 <img th:src="@{/due/{id}/bedommelse/bilde(id=${due.id})}" alt="Bilde av bedomt due" style="max-width: 280px; border-radius: 8px;">
