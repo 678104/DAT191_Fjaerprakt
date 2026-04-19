@@ -108,7 +108,7 @@ public class DommerController {
 	@PostMapping("/bedom")
 	public String lagreBedomming(@RequestParam Long dueId,
 	                             @RequestParam Long utstillingId,
-	                             @RequestParam(name = "bilde", required = false) MultipartFile bilde,
+	                             @RequestParam(name = "bildeFil", required = false) MultipartFile bilde,
 	                             @RequestParam MultiValueMap<String, String> skjemaData,
 	                             @ModelAttribute Bedommelse bedommelse,
 	                             Model model,
