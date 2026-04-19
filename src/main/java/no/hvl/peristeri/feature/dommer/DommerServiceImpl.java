@@ -72,6 +72,11 @@ public class DommerServiceImpl implements DommerService {
 			eksisterende.setKategorier(nyBedommelse.getKategorier());
 			eksisterende.setBedommelsesTidspunkt(nyBedommelse.getBedommelsesTidspunkt());
 			eksisterende.setBedomtAv(dp);
+			if (nyBedommelse.isFjernBilde()) {
+				eksisterende.setBilde(null);
+			} else if (nyBedommelse.getBilde() != null) {
+				eksisterende.setBilde(nyBedommelse.getBilde());
+			}
 
 			bedommelseRepo.save(eksisterende);
 		} else {
@@ -80,6 +85,9 @@ public class DommerServiceImpl implements DommerService {
 			due.setBedommelse(nyBedommelse);
 
 			nyBedommelse.setBedomtAv(dp);
+			if (nyBedommelse.isFjernBilde()) {
+				nyBedommelse.setBilde(null);
+			}
 
 			bedommelseRepo.save(nyBedommelse);
 			dueRepo.save(due);

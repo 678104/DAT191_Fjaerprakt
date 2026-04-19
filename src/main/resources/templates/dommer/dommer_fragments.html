@@ -87,6 +87,8 @@
         </header>
         <form id="bedomDue"
               hx-post="/dommer/bedom"
+              enctype="multipart/form-data"
+              hx-encoding="multipart/form-data"
               hx-target="#content"
               hx-swap="innerHTML">
             <!--/*@thymesVar id="bedommelse" type="no.hvl.peristeri.feature.dommer.Bedommelse"*/-->
@@ -183,6 +185,19 @@
                     </article>
                 </details>
             </th:block>
+
+            <label for="bilde">Bilde (valgfritt)</label>
+            <input type="file" id="bilde" name="bilde" accept="image/png,image/jpeg,image/webp">
+            <small>Stottede format: JPEG, PNG, WEBP. Maks 5 MB.</small>
+
+            <div th:if="${harBilde}">
+                <p><strong>Eksisterende bilde:</strong></p>
+                <img th:src="@{/due/{id}/bedommelse/bilde(id=${due.id})}" alt="Bilde av bedomt due" style="max-width: 280px; border-radius: 8px;">
+                <label for="fjernBilde">
+                    <input type="checkbox" id="fjernBilde" name="fjernBilde" value="true">
+                    Fjern eksisterende bilde ved lagring
+                </label>
+            </div>
 
 
             <p class="warning" style="margin-top: 1rem; margin-bottom: 0.75rem;">

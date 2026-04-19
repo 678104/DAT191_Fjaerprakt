@@ -50,6 +50,12 @@ public class Bedommelse {
     @JoinColumn(name = "bedomt_av", referencedColumnName = "ID")
     private DommerPaamelding bedomtAv;
 
+    @OneToOne(mappedBy = "bedommelse", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private BedommelseBilde bilde;
+
+    @Transient
+    private boolean fjernBilde;
+
     public Bedommelse(Integer poeng, String fordeler, String onsker, String feil) {
         this.poeng = poeng;
         this.fordeler = fordeler;
@@ -68,5 +74,12 @@ public class Bedommelse {
     @PreUpdate
     protected void onUpdate() {
         bedommelsesTidspunkt = LocalDateTime.now();
+    }
+
+    public void setBilde(BedommelseBilde bilde) {
+        this.bilde = bilde;
+        if (bilde != null) {
+            bilde.setBedommelse(this);
+        }
     }
 }

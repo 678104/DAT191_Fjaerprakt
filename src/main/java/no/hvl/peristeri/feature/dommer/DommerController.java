@@ -7,9 +7,11 @@ import no.hvl.peristeri.feature.due.Due;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.util.MultiValueMap;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DommerController {
 	private static final String navLocation = "dommer";
+	private static final long MAKS_BILDESTORRELSE_BYTES = 5L * 1024 * 1024;
 
 
 	private final DommerService dommerService;
@@ -96,6 +99,7 @@ public class DommerController {
 		model.addAttribute("eksisterendeOnskerStandardKommentarer", eksisterendeStandardKommentarerPerKategori(eksisterendeOnskerKategorier));
 		model.addAttribute("eksisterendeFeilKategorier", eksisterendeFeilKategorier);
 		model.addAttribute("eksisterendeFeilStandardKommentarer", eksisterendeStandardKommentarerPerKategori(eksisterendeFeilKategorier));
+		model.addAttribute("harBilde", bedommelse.getBilde() != null);
 
 		return "dommer/dommer_fragments :: dommerBedommelse";
 	}
@@ -104,6 +108,7 @@ public class DommerController {
 	@PostMapping("/bedom")
 	public String lagreBedomming(@RequestParam Long dueId,
 	                             @RequestParam Long utstillingId,
+	                             @RequestParam(name = "bilde", required = false) MultipartFile bilde,
 	                             @RequestParam MultiValueMap<String, String> skjemaData,
 	                             @ModelAttribute Bedommelse bedommelse,
 	                             Model model,
@@ -116,10 +121,35 @@ public class DommerController {
 		bedommelse.setFordeler(oppsummerKategorierTilTekst(fordeler));
 		bedommelse.setOnsker(oppsummerKategorierTilTekst(onsker));
 		bedommelse.setFeil(oppsummerKategorierTilTekst(feil));
+		bedommelse.setBilde(opprettBilde(bilde));
 		dommerService.lagreBedommelse(dueId, bedommelse, bruker, utstillingId);
 		model.addAttribute("valgtUtstillingId", utstillingId);
 		model.addAttribute("duerPerRase", hentDuerPerRase(bruker, utstillingId, null));
 		return "dommer/dommer_fragments :: dueliste";
+	}
+
+	private BedommelseBilde opprettBilde(MultipartFile bilde) {
+		if (bilde == null || bilde.isEmpty()) {
+			return null;
+		}
+		if (bilde.getSize() > MAKS_BILDESTORRELSE_BYTES) {
+			throw new IllegalArgumentException("Bilde kan maksimalt vaere 5 MB");
+		}
+		String contentType = bilde.getContentType();
+		if (contentType == null || !(contentType.equals("image/jpeg") || contentType.equals("image/png") || contentType.equals("image/webp"))) {
+			throw new IllegalArgumentException("Kun JPEG, PNG eller WEBP er tillatt");
+		}
+
+		try {
+			BedommelseBilde bedommelseBilde = new BedommelseBilde();
+			bedommelseBilde.setContentType(contentType);
+			bedommelseBilde.setFilnavn(bilde.getOriginalFilename() == null ? "ukjent" : bilde.getOriginalFilename());
+			bedommelseBilde.setSizeBytes(bilde.getSize());
+			bedommelseBilde.setData(bilde.getBytes());
+			return bedommelseBilde;
+		} catch (IOException e) {
+			throw new IllegalArgumentException("Klarte ikke lese opp lastet bilde", e);
+		}
 	}
 
 	private List<DommerPaamelding> finnHistoriskeDommerPaameldinger(List<DommerPaamelding> dommerPaameldinger) {

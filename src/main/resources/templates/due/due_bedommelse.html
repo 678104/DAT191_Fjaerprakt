@@ -28,6 +28,10 @@
             <label>Poeng:
                 <input th:value="*{bedommelse.poeng}" readonly/>
             </label>
+            <div th:if="*{bedommelse != null and bedommelse.bilde != null}">
+                <p><strong>Bilde:</strong></p>
+                <img th:src="@{/due/{id}/bedommelse/bilde(id=*{id})}" alt="Bedommelsesbilde" style="max-width: 320px; border-radius: 8px;"/>
+            </div>
             <div th:if="*{bedommelse != null and !#maps.isEmpty(bedommelse.kategorier)}">
                 <h4>Hovedkategorier</h4>
                 <article th:each="entry : *{bedommelse.kategorier}">
