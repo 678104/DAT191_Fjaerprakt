@@ -109,10 +109,12 @@
 
             <h3>Hovedkategorier</h3>
             <th:block th:each="kategori : ${hovedkategorier}">
-                <article>
-                    <header>
-                        <h4 th:text="${kategori.visningsnavn}">Kategori</h4>
-                    </header>
+                <details>
+                    <summary>
+                        <strong th:text="${kategori.visningsnavn}">Kategori</strong>
+                    </summary>
+
+                    <article>
 
                     <div class="grid">
                         <div>
@@ -178,7 +180,8 @@
                                       th:text="${eksisterendeFeilKategorier[kategori.name()] != null ? eksisterendeFeilKategorier[kategori.name()].fritekstKommentar : ''}"></textarea>
                         </div>
                     </div>
-                </article>
+                    </article>
+                </details>
             </th:block>
 
 
