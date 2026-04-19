@@ -13,6 +13,7 @@ import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingRepository;
 import no.hvl.peristeri.util.RaseStringHjelper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class DommerServiceImpl implements DommerService {
 
 	private final DueRepository              dueRepo;
 	private final BedommelseRepository       bedommelseRepo;
+	private final BedommelseBildeRepository  bedommelseBildeRepository;
 	private final UtstillingRepository       utstillingRepo;
 	private final DommerPaameldingRepository dommerPaameldingRepository;
 	private final BrukerService              brukerService;
@@ -34,12 +36,18 @@ public class DommerServiceImpl implements DommerService {
 	}
 
 	@Override
+	@Transactional
 	public void lagreBedommelse(Long dueId, Bedommelse nyBedommelse, Bruker dommer) {
-		lagreBedommelse(dueId, nyBedommelse, dommer, null);
+		lagreBedommelseIntern(dueId, nyBedommelse, dommer, null);
 	}
 
 	@Override
+	@Transactional
 	public void lagreBedommelse(Long dueId, Bedommelse nyBedommelse, Bruker dommer, Long utstillingId) {
+		lagreBedommelseIntern(dueId, nyBedommelse, dommer, utstillingId);
+	}
+
+	private void lagreBedommelseIntern(Long dueId, Bedommelse nyBedommelse, Bruker dommer, Long utstillingId) {
 		if (dueId == null) {
 			throw new InvalidParameterException("dueId", "cannot be null");
 		}
@@ -72,11 +80,7 @@ public class DommerServiceImpl implements DommerService {
 			eksisterende.setKategorier(nyBedommelse.getKategorier());
 			eksisterende.setBedommelsesTidspunkt(nyBedommelse.getBedommelsesTidspunkt());
 			eksisterende.setBedomtAv(dp);
-			if (nyBedommelse.isFjernBilde()) {
-				eksisterende.setBilde(null);
-			} else if (nyBedommelse.getBilde() != null) {
-				eksisterende.setBilde(nyBedommelse.getBilde());
-			}
+			handterBildeOppdatering(due, eksisterende, nyBedommelse);
 
 			bedommelseRepo.save(eksisterende);
 		} else {
@@ -85,13 +89,39 @@ public class DommerServiceImpl implements DommerService {
 			due.setBedommelse(nyBedommelse);
 
 			nyBedommelse.setBedomtAv(dp);
-			if (nyBedommelse.isFjernBilde()) {
-				nyBedommelse.setBilde(null);
-			}
+			handterBildeOppdatering(due, nyBedommelse, nyBedommelse);
 
 			bedommelseRepo.save(nyBedommelse);
 			dueRepo.save(due);
 		}
+	}
+
+	private void handterBildeOppdatering(Due due, Bedommelse target, Bedommelse incoming) {
+		if (incoming.isFjernBilde()) {
+			BedommelseBilde eksisterendeBilde = bedommelseBildeRepository.findByBedommelse_Due_Id(due.getId()).orElse(null);
+			if (eksisterendeBilde != null) {
+				bedommelseBildeRepository.delete(eksisterendeBilde);
+			}
+			target.setBilde(null);
+			return;
+		}
+
+		BedommelseBilde nyttBilde = incoming.getBilde();
+		if (nyttBilde == null) {
+			return;
+		}
+
+		BedommelseBilde eksisterendeBilde = bedommelseBildeRepository.findByBedommelse_Due_Id(due.getId()).orElse(null);
+		if (eksisterendeBilde != null) {
+			eksisterendeBilde.setContentType(nyttBilde.getContentType());
+			eksisterendeBilde.setFilnavn(nyttBilde.getFilnavn());
+			eksisterendeBilde.setSizeBytes(nyttBilde.getSizeBytes());
+			eksisterendeBilde.setData(nyttBilde.getData());
+			bedommelseBildeRepository.save(eksisterendeBilde);
+			return;
+		}
+
+		target.setBilde(nyttBilde);
 	}
 
 	@Override
