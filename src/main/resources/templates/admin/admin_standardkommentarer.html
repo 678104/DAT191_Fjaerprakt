@@ -11,17 +11,15 @@
 <main class="container">
     <section>
         <h1>Oppsett for bedømming av due</h1>
-        <div class="admin-action-buttons">
-            <a href="/admin" role="button" class="secondary">Tilbake til admin</a>
-        </div>
     </section>
 
     <section th:each="kategori : ${hovedkategorier}">
-        <article>
-            <header>
+        <details class="bedomming-kategori-collapse">
+            <summary class="bedomming-kategori-summary">
                 <h2 th:text="${kategori.visningsnavn}">Kategori</h2>
-            </header>
+            </summary>
 
+            <article>
             <div class="grid">
                 <div>
                     <h3>Fordeler</h3>
@@ -104,7 +102,14 @@
                     </form>
                 </div>
             </div>
-        </article>
+            </article>
+        </details>
+    </section>
+
+    <section>
+        <div class="admin-action-buttons">
+            <a href="/admin" role="button" class="secondary">Tilbake til admin</a>
+        </div>
     </section>
 </main>
 <footer class="container">

@@ -57,6 +57,7 @@ public class DommerController {
 		model.addAttribute("duerPerRase", hentDuerPerRase(bruker, utstillingId, null));
 		model.addAttribute("andreDommereMedDuer", hentAndreDommereMedDuer(bruker, utstillingId, dommereForValgtUtstilling));
 		model.addAttribute("innloggetDommerId", bruker.getId());
+		leggTilVinnerData(model, bruker, utstillingId);
 		return "dommer/dommer_utstilling";
 	}
 
@@ -69,6 +70,7 @@ public class DommerController {
 		bruker = sikkerBruker(bruker);
 		model.addAttribute("valgtUtstillingId", utstillingId);
 		model.addAttribute("duerPerRase", hentDuerPerRase(bruker, utstillingId, filter));
+		leggTilVinnerData(model, bruker, utstillingId);
 		return "dommer/dommer_fragments :: dueliste";
 	}
 
@@ -125,6 +127,44 @@ public class DommerController {
 		dommerService.lagreBedommelse(dueId, bedommelse, bruker, utstillingId);
 		model.addAttribute("valgtUtstillingId", utstillingId);
 		model.addAttribute("duerPerRase", hentDuerPerRase(bruker, utstillingId, null));
+		leggTilVinnerData(model, bruker, utstillingId);
+		return "dommer/dommer_fragments :: dueliste";
+	}
+
+	@HxRequest
+	@PostMapping("/vinnere")
+	public String lagreVinnere(@RequestParam Long utstillingId,
+	                          @RequestParam(required = false) List<String> raseNavn,
+	                          @RequestParam(required = false) List<Long> raseVinnerDueId,
+	                          @RequestParam(required = false) List<String> gruppeNavn,
+	                          @RequestParam(required = false) List<Long> gruppeVinnerDueId,
+	                          @RequestParam(required = false) Long bisVinnerDueId,
+	                          @RequestParam(required = false) Long norgesmesterOppdrett1DueId,
+	                          @RequestParam(required = false) Long norgesmesterOppdrett2DueId,
+	                          @RequestParam(required = false) Long norgesmesterOppdrett3DueId,
+	                          @AuthenticationPrincipal Bruker bruker,
+	                          Model model) {
+		bruker = sikkerBruker(bruker);
+		model.addAttribute("valgtUtstillingId", utstillingId);
+		model.addAttribute("duerPerRase", hentDuerPerRase(bruker, utstillingId, null));
+		try {
+			dommerService.lagreVinnere(
+					bruker,
+					utstillingId,
+					raseNavn,
+					raseVinnerDueId,
+					gruppeNavn,
+					gruppeVinnerDueId,
+					bisVinnerDueId,
+					norgesmesterOppdrett1DueId,
+					norgesmesterOppdrett2DueId,
+					norgesmesterOppdrett3DueId
+			);
+			model.addAttribute("vinnerMelding", "Vinnere er lagret.");
+		} catch (RuntimeException e) {
+			model.addAttribute("vinnerFeilMelding", e.getMessage());
+		}
+		leggTilVinnerData(model, bruker, utstillingId);
 		return "dommer/dommer_fragments :: dueliste";
 	}
 
@@ -382,6 +422,33 @@ public class DommerController {
 				LinkedHashMap::new,
 				Collectors.toList()
 		));
+	}
+
+	private void leggTilVinnerData(Model model, Bruker bruker, Long utstillingId) {
+		try {
+			DommerVinnerData vinnerData = dommerService.hentVinnerData(bruker, utstillingId);
+			model.addAttribute("klarForVinnerkaring", vinnerData.isKlarForVinnerkaring());
+			model.addAttribute("vinnerKandidaterPerRase", vinnerData.getKandidaterPerRase());
+			model.addAttribute("vinnerKandidaterPerGruppe", vinnerData.getKandidaterPerGruppe());
+			model.addAttribute("alleVinnerKandidater", vinnerData.getAlleKandidater());
+			model.addAttribute("valgteRasevinnere", vinnerData.getValgteRasevinnere());
+			model.addAttribute("valgteGruppevinnere", vinnerData.getValgteGruppevinnere());
+			model.addAttribute("valgtBisVinnerId", vinnerData.getValgtBisVinnerId());
+			model.addAttribute("valgtNorgesmesterOppdrett1Id", vinnerData.getValgtNorgesmesterOppdrett1Id());
+			model.addAttribute("valgtNorgesmesterOppdrett2Id", vinnerData.getValgtNorgesmesterOppdrett2Id());
+			model.addAttribute("valgtNorgesmesterOppdrett3Id", vinnerData.getValgtNorgesmesterOppdrett3Id());
+		} catch (RuntimeException e) {
+			model.addAttribute("klarForVinnerkaring", false);
+			model.addAttribute("vinnerKandidaterPerRase", Map.of());
+			model.addAttribute("vinnerKandidaterPerGruppe", Map.of());
+			model.addAttribute("alleVinnerKandidater", List.of());
+			model.addAttribute("valgteRasevinnere", Map.of());
+			model.addAttribute("valgteGruppevinnere", Map.of());
+			model.addAttribute("valgtBisVinnerId", null);
+			model.addAttribute("valgtNorgesmesterOppdrett1Id", null);
+			model.addAttribute("valgtNorgesmesterOppdrett2Id", null);
+			model.addAttribute("valgtNorgesmesterOppdrett3Id", null);
+		}
 	}
 
 	@ModelAttribute("navLocation")

@@ -246,7 +246,7 @@
             </div>
             <footer>
                 <th:block th:if="*{paameldingAApnet}">
-                    <a th:href="@{/paamelding/{id}(id=*{id})}"
+                    <a th:href="@{/paamelding(utstillingId=*{id})}"
                        role="button"
                        class="fill-parent">
                         Meld deg på denne utstillingen

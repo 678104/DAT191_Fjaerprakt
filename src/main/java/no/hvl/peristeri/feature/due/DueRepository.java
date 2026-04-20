@@ -30,6 +30,8 @@ public interface DueRepository extends JpaRepository<Due, Long> {
 	List<Due> findByPaamelding_Utstilling_IdAndRaseInIgnoreCaseOrderByBurnummerAsc(@NonNull Long id,
 	                                                                               @NonNull Collection<String> rases);
 
+	List<Due> findByTildeltDommer_Id(Long dommerPaameldingId);
+
 	@Modifying
 	@Query("UPDATE Due d SET d.rase = :nyRase WHERE d.id IN :idListe")
 	void updateRaseForIds(@Param("nyRase") @Nullable String nyRase, @Param("idListe") List<Long> idListe);

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -38,8 +39,35 @@ public class BrukerServiceImpl implements BrukerService {
 			return getBrukere();
 		}
 
-		return brukerRepository.findByFornavnStartingWithIgnoreCaseOrEtternavnStartingWithIgnoreCaseOrEpostStartingWithIgnoreCase(
+		return brukerRepository.findByFornavnContainingIgnoreCaseOrEtternavnContainingIgnoreCaseOrEpostStartingWithIgnoreCase(
 				filter, filter, filter);
+	}
+
+	@Override
+	public List<Bruker> finnBrukereForDommerAutocomplete(String sok, int maksAntall) {
+		if (sok == null || sok.isBlank() || maksAntall <= 0) {
+			return List.of();
+		}
+
+		String filter = sok.trim();
+		if (filter.isEmpty()) {
+			return List.of();
+		}
+
+		List<Bruker> epostTreff = brukerRepository.findByEpostStartingWithIgnoreCaseOrderByEpostAsc(filter);
+		List<Bruker> navnTreff = brukerRepository.findByFornavnContainingIgnoreCaseOrEtternavnContainingIgnoreCaseOrderByEpostAsc(filter, filter);
+
+		return java.util.stream.Stream.concat(epostTreff.stream(), navnTreff.stream())
+				.collect(Collectors.toMap(
+						Bruker::getId,
+						bruker -> bruker,
+						(first, second) -> first,
+						java.util.LinkedHashMap::new
+				))
+				.values()
+				.stream()
+				.limit(maksAntall)
+				.toList();
 	}
 
 	@Override
@@ -198,5 +226,52 @@ public class BrukerServiceImpl implements BrukerService {
 			throw new InvalidParameterException("email", "cannot be null");
 		}
 		return brukerRepository.findByEpost(email);
+	}
+
+	@Override
+	public List<Bruker> hentBrukereMedRolle(Rolle rolle) {
+		if (rolle == null) {
+			throw new InvalidParameterException("rolle", "cannot be null");
+		}
+		return brukerRepository.findByRollerContaining(rolle);
+	}
+
+	@Override
+	public Bruker leggTilRolle(Long brukerId, Rolle rolle) {
+		if (brukerId == null) {
+			throw new InvalidParameterException("brukerId", "cannot be null");
+		}
+		if (rolle == null) {
+			throw new InvalidParameterException("rolle", "cannot be null");
+		}
+
+		Bruker bruker = hentBrukerMedId(brukerId);
+		bruker.leggTilRolle(rolle);
+		return brukerRepository.save(bruker);
+	}
+
+	@Override
+	public Bruker fjernRolle(Long brukerId, Rolle rolle) {
+		if (brukerId == null) {
+			throw new InvalidParameterException("brukerId", "cannot be null");
+		}
+		if (rolle == null) {
+			throw new InvalidParameterException("rolle", "cannot be null");
+		}
+
+		Bruker bruker = hentBrukerMedId(brukerId);
+		bruker.fjernRolle(rolle);
+		return brukerRepository.save(bruker);
+	}
+
+	@Override
+	public boolean harRolle(Long brukerId, Rolle rolle) {
+		if (brukerId == null) {
+			throw new InvalidParameterException("brukerId", "cannot be null");
+		}
+		if (rolle == null) {
+			throw new InvalidParameterException("rolle", "cannot be null");
+		}
+		return brukerRepository.existsByIdAndRolle(brukerId, rolle);
 	}
 }

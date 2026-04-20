@@ -77,6 +77,100 @@
                       </article>
                     </th:block>
     </th:block>
+
+              <article style="margin-top: 1rem;">
+                <header>
+                  <h2>Vinnerkåring</h2>
+                </header>
+
+                <p th:if="${vinnerFeilMelding}" style="color: #b00020;" th:text="${vinnerFeilMelding}"></p>
+                <p th:if="${vinnerMelding}" style="color: #1b7f3a;" th:text="${vinnerMelding}"></p>
+
+                <div th:unless="${klarForVinnerkaring}">
+                  <p>Du kan kåre vinnere når alle tildelte duer er bedømt.</p>
+                </div>
+
+                <div th:if="${klarForVinnerkaring}">
+                  <form hx-post="/dommer/vinnere"
+                        hx-target="#dueliste"
+                        hx-swap="outerHTML">
+                    <input type="hidden" name="utstillingId" th:value="${valgtUtstillingId}"/>
+
+                    <h3>Rasevinner</h3>
+                    <th:block th:each="entry : ${vinnerKandidaterPerRase}">
+                      <label th:for="${'rase-vinner-' + #strings.replace(entry.key, ' ', '-') }" th:text="${entry.key}">Rase</label>
+                      <input type="hidden" name="raseNavn" th:value="${entry.key}"/>
+                      <select th:id="${'rase-vinner-' + #strings.replace(entry.key, ' ', '-') }" name="raseVinnerDueId" required>
+                        <option value="">Velg due</option>
+                        <option th:each="due : ${entry.value}"
+                                th:value="${due.id}"
+                                th:selected="${valgteRasevinnere[entry.key] != null and valgteRasevinnere[entry.key] == due.id}"
+                                th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                        </option>
+                      </select>
+                    </th:block>
+
+                    <h3>Gruppevinner</h3>
+                    <th:block th:each="entry : ${vinnerKandidaterPerGruppe}">
+                      <label th:for="${'gruppe-vinner-' + #strings.replace(entry.key, ' ', '-') }" th:text="${entry.key}">Gruppe</label>
+                      <input type="hidden" name="gruppeNavn" th:value="${entry.key}"/>
+                      <select th:id="${'gruppe-vinner-' + #strings.replace(entry.key, ' ', '-') }" name="gruppeVinnerDueId" required>
+                        <option value="">Velg due</option>
+                        <option th:each="due : ${entry.value}"
+                                th:value="${due.id}"
+                                th:selected="${valgteGruppevinnere[entry.key] != null and valgteGruppevinnere[entry.key] == due.id}"
+                                th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                        </option>
+                      </select>
+                    </th:block>
+
+                    <h3>Best in Show (BIS)</h3>
+                    <select id="bis-vinner" name="bisVinnerDueId" required>
+                      <option value="">Velg BIS</option>
+                      <option th:each="due : ${alleVinnerKandidater}"
+                              th:value="${due.id}"
+                              th:selected="${valgtBisVinnerId != null and valgtBisVinnerId == due.id}"
+                              th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                      </option>
+                    </select>
+
+                    <h3 style="margin-top: 1rem;">Norgesmester i oppdrett</h3>
+                    <label for="norgesmester-oppdrett-1">1. plass</label>
+                    <select id="norgesmester-oppdrett-1" name="norgesmesterOppdrett1DueId" required>
+                      <option value="">Velg 1. plass</option>
+                      <option th:each="due : ${alleVinnerKandidater}"
+                              th:value="${due.id}"
+                              th:selected="${valgtNorgesmesterOppdrett1Id != null and valgtNorgesmesterOppdrett1Id == due.id}"
+                              th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                      </option>
+                    </select>
+
+                    <label for="norgesmester-oppdrett-2">2. plass</label>
+                    <select id="norgesmester-oppdrett-2" name="norgesmesterOppdrett2DueId" required>
+                      <option value="">Velg 2. plass</option>
+                      <option th:each="due : ${alleVinnerKandidater}"
+                              th:value="${due.id}"
+                              th:selected="${valgtNorgesmesterOppdrett2Id != null and valgtNorgesmesterOppdrett2Id == due.id}"
+                              th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                      </option>
+                    </select>
+
+                    <label for="norgesmester-oppdrett-3">3. plass</label>
+                    <select id="norgesmester-oppdrett-3" name="norgesmesterOppdrett3DueId" required>
+                      <option value="">Velg 3. plass</option>
+                      <option th:each="due : ${alleVinnerKandidater}"
+                              th:value="${due.id}"
+                              th:selected="${valgtNorgesmesterOppdrett3Id != null and valgtNorgesmesterOppdrett3Id == due.id}"
+                              th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                      </option>
+                    </select>
+
+                    <div class="grid" style="margin-top: 0.75rem;">
+                      <button type="submit">Lagre vinnere</button>
+                    </div>
+                  </form>
+                </div>
+              </article>
 </div>
 
 <!-- ✅ Dommer Bedømmelse Fragment -->
