@@ -51,11 +51,15 @@ function initPaameldingHtmxHandlers() {
             return;
         }
 
+        const requestPath = event.detail && event.detail.requestConfig && event.detail.requestConfig.path
+            ? String(event.detail.requestConfig.path)
+            : '';
+
         if (target.classList && target.classList.contains('content')) {
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
-        if (target.id === 'duetabell') {
+        if (target.id === 'duetabell' && requestPath.includes('/duekvittering')) {
             const form = document.getElementById('duepaamelding');
             const radId = document.getElementById('radId');
 

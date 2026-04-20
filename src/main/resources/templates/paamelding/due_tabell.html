@@ -13,7 +13,13 @@
     <section>
         <h4>Påmeldte duer</h4>
         <div th:fragment="due-tabell" class="container-fluid" id="duetabell">
-            <table>
+            <div th:if="${#lists.isEmpty(session.dueDTOListe?.liste)}" class="muted-placeholder">
+                Ingen registrerte duer enda.
+            </div>
+            <article th:unless="${#lists.isEmpty(session.dueDTOListe?.liste)}">
+                <header><strong>Registrerte duer</strong></header>
+            </article>
+            <table th:unless="${#lists.isEmpty(session.dueDTOListe?.liste)}">
                 <thead>
                 <tr>
                     <th>Rase</th>
@@ -94,9 +100,18 @@
                            aria-label="Kryss av hvis duen ikke er eget avl">
                 </td>
                 <td>
-                    <button th:hx-post="@{/paamelding/oppdaterDue/{id}(id=${dueDTO.radId})}" hx-target="closest tr"
-                            hx-swap="outerHTML" hx-include="closest tr">Lagre
-                    </button>
+                    <div class="due-row-actions">
+                        <button th:hx-post="@{/paamelding/oppdaterDue/{id}(id=${dueDTO.radId})}" hx-target="closest tr"
+                                hx-swap="outerHTML" hx-include="closest tr">Lagre
+                        </button>
+                        <button type="button"
+                                class="due-delete-button"
+                                th:hx-post="@{/paamelding/fjernDue/{id}(id=${dueDTO.radId})}"
+                                hx-target="#duetabell"
+                                hx-swap="outerHTML"
+                                hx-confirm="Vil du slette denne duen fra påmeldingen?">Slett
+                        </button>
+                    </div>
                     <input type="hidden" id="radId" name="radId" th:value="${dueDTO.radId}">
                 </td>
             </tr>

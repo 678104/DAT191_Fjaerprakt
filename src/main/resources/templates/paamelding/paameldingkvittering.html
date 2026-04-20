@@ -14,15 +14,6 @@
         <section>
             <h3>Legg til påmeldte duer</h3>
             <p>Fullfør påmeldingen ved å fylle ut informasjonen under</p>
-            <article>
-                <header><b th:text="${session.utstilling.tittel}"></b></header>
-                <p><strong>Arrangør:</strong> <span th:text="${session.utstilling.arrangoer}"></span></p>
-                <p><strong>Sted:</strong> <span th:text="${session.utstilling.adresse}"></span></p>
-                <p><strong>Startdato:</strong> <span
-                        th:text="${#temporals.format(session.utstilling.datoRange.startDate, 'dd.MM.yyyy')}"></span></p>
-                <p><strong>Sluttdato:</strong> <span
-                        th:text="${#temporals.format(session.utstilling.datoRange.endDate, 'dd.MM.yyyy')}"></span></p>
-            </article>
 
             <!--/*@thymesVar id="utstiller" type="no.hvl.peristeri.feature.bruker.Bruker"*/-->
             <div id="person-info" th:fragment="personinfo" th:object="${utstiller}">
@@ -53,14 +44,18 @@
                 </article>
             </div>
         </section>
-        <section>
-            <div id="duetabell">
-                <article class="muted-placeholder">
-                    Ingen duer er lagt til ennå.
-                </article>
-            </div>
-        </section>
 
+        <section>
+            <article>
+                <header><b th:text="${session.utstilling.tittel}"></b></header>
+                <p><strong>Arrangør:</strong> <span th:text="${session.utstilling.arrangoer}"></span></p>
+                <p><strong>Sted:</strong> <span th:text="${session.utstilling.adresse}"></span></p>
+                <p><strong>Startdato:</strong> <span
+                        th:text="${#temporals.format(session.utstilling.datoRange.startDate, 'dd.MM.yyyy')}"></span></p>
+                <p><strong>Sluttdato:</strong> <span
+                        th:text="${#temporals.format(session.utstilling.datoRange.endDate, 'dd.MM.yyyy')}"></span></p>
+            </article>
+        </section>
         <section>
             <form id="duepaamelding" class="duepaamelding-form" method="post" hx-post="/paamelding/duekvittering" hx-trigger="submit"
                   hx-target="#duetabell" hx-swap="outerHTML"
@@ -133,6 +128,15 @@
                 <input type="hidden" id="radId" name="radId" th:value="${radId}">
             </form>
         </section>
+
+        <section>
+            <div id="duetabell">
+                <article class="muted-placeholder">
+                    Ingen duer er lagt til ennå.
+                </article>
+            </div>
+        </section>
+
     </th:block>
 
 </main>

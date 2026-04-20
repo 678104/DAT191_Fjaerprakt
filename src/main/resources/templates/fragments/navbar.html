@@ -46,6 +46,9 @@
                 </a>
             </li>
             <li sec:authorize="isAuthenticated()">
+                <a href="/bruker/din-paamelding" role="button">Din påmelding</a>
+            </li>
+            <li sec:authorize="isAuthenticated()">
                 <form th:action="@{/logout}" method="post" style="display: inline;">
                     <button type="submit" role="button" class="contrast logout-btn" style="border: none; background: none; padding: 0; cursor: pointer; font-size: inherit;">Logg ut</button>
                 </form>

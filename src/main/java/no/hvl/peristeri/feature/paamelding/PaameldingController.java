@@ -29,7 +29,6 @@ public class PaameldingController {
 	private final Logger logger = LoggerFactory.getLogger(PaameldingController.class);
 
 	private final PaameldingService paameldingService;
-	private final DueService        dueService;
 	private final UtstillingService utstillingService;
 	private final DueKatalogService dueKatalogService;
 
@@ -100,11 +99,22 @@ public class PaameldingController {
 	@PostMapping("/oppdaterDue/{radId}")
 	public String oppdaterDueRad(@ModelAttribute DueDTO due, Model model, @PathVariable Integer radId,
 	                             HttpSession session) {
-		model.addAttribute("due", due);
-		getDueList(session).endreDue(due);
-		logger.info("Lagre knapp trykket: {}", due);
+		DueDTO oppdatertDue = due.radId() != null && due.radId().equals(radId)
+				? due
+				: new DueDTO(radId, due.rase(), due.farge(), due.variant(), due.hannerUng(), due.hannerEldre(),
+				due.hunnerUng(), due.hunnerEldre(), due.ikkeEget());
+		model.addAttribute("due", oppdatertDue);
+		getDueList(session).endreDue(oppdatertDue);
+		logger.info("Lagre knapp trykket: {}", oppdatertDue);
 
 		return "paamelding/due_tabell :: oppdatertDueRad";
+	}
+
+	@PostMapping("/fjernDue/{radId}")
+	public String fjernDueRad(@PathVariable Integer radId, HttpSession session) {
+		getDueList(session).fjernDueDTO(radId);
+		logger.info("Fjernet due med radId {} fra påmelding", radId);
+		return "paamelding/due_tabell :: due-tabell";
 	}
 
 	@PostMapping("/submitPaamelding")

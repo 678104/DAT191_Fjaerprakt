@@ -527,6 +527,30 @@ section {
     line-height: 1.2;
 }
 
+.due-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.due-delete-button {
+    background: #C62828;
+    border-color: #C62828;
+    color: #fff;
+    font-size: 0.78rem;
+    padding: 0.22rem 0.48rem;
+    line-height: 1.1;
+    min-height: auto;
+    margin: 0;
+}
+
+.due-delete-button:hover,
+.due-delete-button:focus {
+    background: #B71C1C;
+    border-color: #B71C1C;
+    color: #fff;
+}
+
 .admin-action-buttons {
     display: flex;
     flex-wrap: wrap;
