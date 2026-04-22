@@ -144,7 +144,7 @@ public class KatalogPdfService {
 			utstilling != null ? utstilling.getArrangoer() : "",
 			utstilling != null ? utstilling.getAdresse() : "",
 			datoTekst,
-			"Katalogen er automatisk generert basert paa registrerte bedommelser og vinnerdata i Peristeri.",
+			"Katalogen er automatisk generert basert på registrerte bedømmelser og vinnerdata.",
 			"Dommerliste og kataloginfo",
 			"Best in Show",
 			"Mestere og spesialpriser",
@@ -163,7 +163,7 @@ public class KatalogPdfService {
 			builder.run();
 			return outputStream.toByteArray();
 		} catch (Exception e) {
-			throw new IllegalStateException("Klarte ikke aa generere PDF-katalog", e);
+			throw new IllegalStateException("Klarte ikke å generere PDF-katalog", e);
 		}
 	}
 
