@@ -557,7 +557,7 @@
                 <footer>
                     <a th:href="@{/admin/katalog-pdf(utstillingId=*{id})}"
                        class="fill-parent"
-                       role="button">Aapne katalog-editor</a>
+                       role="button">Åpne katalog-editor</a>
                 </footer>
             </article>
         </div>
@@ -753,7 +753,7 @@
                 <label for="forsideTittel">Forside tittel</label>
                 <input id="forsideTittel" type="text" name="forsideTittel" th:value="${katalogRedigering.forsideTittel}">
 
-                <label for="forsideArrangor">Arrangoer</label>
+                <label for="forsideArrangor">Arrangør</label>
                 <input id="forsideArrangor" type="text" name="forsideArrangor" th:value="${katalogRedigering.forsideArrangor}">
 
                 <label for="forsideSted">Sted</label>
@@ -784,11 +784,12 @@
                 <textarea id="katalogKommentar" name="katalogKommentar" rows="4" th:text="${katalogRedigering.katalogKommentar}"></textarea>
 
                 <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <button type="submit">Oppdater forhandsvisning</button>
+                    <button type="submit">Oppdater forhåndsvisning</button>
                 </div>
             </form>
 
-            <form method="post" action="/admin/katalog-pdf/download" style="margin-top: 0.5rem;">
+            <form method="post" th:action="@{/admin/katalog-pdf/download}" style="margin-top: 0.5rem;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <input type="hidden" name="utstillingId" th:value="${katalogValgtUtstillingId}">
                 <input type="hidden" name="forsideTittel" th:value="${katalogRedigering.forsideTittel}">
                 <input type="hidden" name="forsideArrangor" th:value="${katalogRedigering.forsideArrangor}">
@@ -805,16 +806,16 @@
             </form>
 
             <article style="margin-top: 1rem;">
-                <header><strong>Forhandsvisning</strong></header>
+                <header><strong>Forhåndsvisning</strong></header>
                 <iframe th:if="${katalogPreviewHtml != null}"
                         th:attr="srcdoc=${katalogPreviewHtml}"
-                        title="Katalog forhandsvisning"
+                        title="Katalog forhåndsvisning"
                         style="width: 100%; min-height: 75vh; border: 1px solid #d8dce2;"></iframe>
             </article>
         </div>
 
         <div th:if="${katalogValgtUtstillingId == null}">
-            <p class="muted">Ingen utstillinger funnet a velge mellom.</p>
+            <p class="muted">Ingen utstillinger funnet å velge mellom.</p>
         </div>
 
         <a href="/admin" role="button" class="secondary" style="margin-top: 1rem;">Tilbake</a>
