@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <meta charset="UTF-8" />
+    <title>Katalog</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 16mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #111;
+            line-height: 1.4;
+        }
+
+        h1, h2, h3 {
+            margin: 0 0 0.4rem 0;
+        }
+
+        .page {
+            page-break-after: always;
+        }
+
+        .page:last-child {
+            page-break-after: auto;
+        }
+
+        .muted {
+            color: #555;
+        }
+
+        .hero {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .hero img {
+            max-width: 100%;
+            max-height: 380px;
+            border-radius: 8px;
+            margin-top: 0.8rem;
+        }
+
+        .bis-image {
+            max-width: 100%;
+            max-height: 520px;
+            border-radius: 8px;
+            margin-top: 0.8rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.6rem;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        th {
+            background: #f4f4f4;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        .block {
+            margin: 0.5rem 0 0.8rem 0;
+        }
+
+        .small {
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+<section class="page">
+    <h1 th:text="${forsideTittel ?: utstilling.tittel}">Utstillingskatalog</h1>
+    <p class="muted" th:text="${forsideArrangor ?: utstilling.arrangoer}">Arrangor</p>
+    <p>
+        <span class="label">Sted:</span>
+        <span th:text="${forsideSted ?: utstilling.adresse}">Sted</span>
+    </p>
+    <p>
+        <span class="label">Dato:</span>
+        <span th:text="${forsideDato != null and !#strings.isEmpty(forsideDato) ? forsideDato : #temporals.format(utstilling.datoRange.startDate, 'dd.MM.yyyy') + ' - ' + #temporals.format(utstilling.datoRange.endDate, 'dd.MM.yyyy')}">01.01.2026 - 02.01.2026</span>
+    </p>
+
+    <div class="hero">
+        <h2>Best in Show</h2>
+        <div th:if="${bisDue != null}">
+            <p th:text="${'Burnr ' + bisDue.burnummer + ' - ' + bisDue.rase}">Burnr 1 - Rase</p>
+            <img th:if="${bisImage != null}" th:src="${bisImage}" alt="BIS bilde" />
+            <p th:if="${bisImage == null}" class="muted">Bilde ikke registrert.</p>
+        </div>
+        <p th:if="${bisDue == null}" class="muted">BIS er ikke registrert enda.</p>
+    </div>
+</section>
+
+<section class="page">
+    <h2 th:text="${dommerlisteOverskrift ?: 'Dommerliste og kataloginfo'}">Dommerliste og kataloginfo</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Dommer</th>
+            <th>E-post</th>
+            <th>Telefon</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="dp : ${dommere}">
+            <td th:text="${dp.dommer.fornavn + ' ' + dp.dommer.etternavn}">Dommer Navn</td>
+            <td th:text="${dp.dommer.epost}">dommer@epost.no</td>
+            <td th:text="${dp.dommer.telefon}">12345678</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="block">
+        <h3>Kommentar</h3>
+        <p th:text="${katalogKommentar}">Automatisk generert kommentar.</p>
+        <p class="small muted" th:text="${'Generert: ' + #temporals.format(generertTidspunkt, 'dd.MM.yyyy HH:mm')}">Generert: 01.01.2026 10:00</p>
+    </div>
+</section>
+
+<section class="page">
+    <h2 th:text="${bisOverskrift ?: 'Best in Show'}">Best in Show</h2>
+    <div th:if="${bisDue != null}">
+        <img th:if="${bisImage != null}" th:src="${bisImage}" alt="Best in Show" class="bis-image" />
+        <p th:if="${bisImage == null}" class="muted">Bilde ikke registrert.</p>
+
+        <div class="block">
+            <p><span class="label">Oppdretter:</span> <span th:text="${bisDue.paamelding.utstiller.navn}">Ola Nordmann</span></p>
+            <p><span class="label">Rase:</span> <span th:text="${bisDue.rase}">Rase</span></p>
+            <p><span class="label">Farge:</span> <span th:text="${bisDue.farge}">Farge</span></p>
+            <p><span class="label">Variant:</span> <span th:text="${bisDue.variant ?: 'Standard'}">Variant</span></p>
+            <p><span class="label">Poeng:</span> <span th:text="${bisDue.bedommelse.poeng}">97</span></p>
+        </div>
+    </div>
+    <p th:if="${bisDue == null}" class="muted">BIS er ikke registrert enda.</p>
+</section>
+
+<section class="page">
+    <h2 th:text="${mestereOverskrift ?: 'Mestere og spesialpriser'}">Mestere og spesialpriser</h2>
+    <h3>Norgesmester i oppdrett</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Plassering</th>
+            <th>Burnummer</th>
+            <th>Oppdretter</th>
+            <th>Rase</th>
+            <th>Poeng</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Gull</td>
+            <td th:text="${norgesmester1 != null ? norgesmester1.burnummer : '-'}">1</td>
+            <td th:text="${norgesmester1 != null ? norgesmester1.paamelding.utstiller.navn : '-'}">Navn</td>
+            <td th:text="${norgesmester1 != null ? norgesmester1.rase : '-'}">Rase</td>
+            <td th:text="${norgesmester1 != null and norgesmester1.bedommelse != null ? norgesmester1.bedommelse.poeng : '-'}">97</td>
+        </tr>
+        <tr>
+            <td>Sølv</td>
+            <td th:text="${norgesmester2 != null ? norgesmester2.burnummer : '-'}">2</td>
+            <td th:text="${norgesmester2 != null ? norgesmester2.paamelding.utstiller.navn : '-'}">Navn</td>
+            <td th:text="${norgesmester2 != null ? norgesmester2.rase : '-'}">Rase</td>
+            <td th:text="${norgesmester2 != null and norgesmester2.bedommelse != null ? norgesmester2.bedommelse.poeng : '-'}">96</td>
+        </tr>
+        <tr>
+            <td>Bronse</td>
+            <td th:text="${norgesmester3 != null ? norgesmester3.burnummer : '-'}">3</td>
+            <td th:text="${norgesmester3 != null ? norgesmester3.paamelding.utstiller.navn : '-'}">Navn</td>
+            <td th:text="${norgesmester3 != null ? norgesmester3.rase : '-'}">Rase</td>
+            <td th:text="${norgesmester3 != null and norgesmester3.bedommelse != null ? norgesmester3.bedommelse.poeng : '-'}">95</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>Beste trio og beste par</h3>
+    <p class="muted" th:if="${!harTrioOgParData}">Denne versjonen har ikke egne registrerte data for beste trio/par enda.</p>
+</section>
+
+<section class="page">
+    <h2 th:text="${gruppevinnereOverskrift ?: 'Gruppevinnere og gullmedaljer'}">Gruppevinnere og gullmedaljer</h2>
+
+    <h3>Gruppevinnere</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Gruppe</th>
+            <th>Burnummer</th>
+            <th>Rase</th>
+            <th>Dommer</th>
+            <th>Poeng</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="vinner : ${gruppevinnere}">
+            <td th:text="${vinner.kategori}">Gruppe</td>
+            <td th:text="${vinner.due.burnummer}">1</td>
+            <td th:text="${vinner.due.rase}">Rase</td>
+            <td th:text="${vinner.dommerNavn}">Dommer</td>
+            <td th:text="${vinner.due.bedommelse != null ? vinner.due.bedommelse.poeng : '-'}">97</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(gruppevinnere)}">
+            <td colspan="5">Ingen gruppevinnere registrert.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>Gullmedaljer (97+ poeng)</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Burnummer</th>
+            <th>Rase</th>
+            <th>Oppdretter</th>
+            <th>Poeng</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="due : ${gullmedaljer}">
+            <td th:text="${due.burnummer}">1</td>
+            <td th:text="${due.rase}">Rase</td>
+            <td th:text="${due.paamelding.utstiller.navn}">Navn</td>
+            <td th:text="${due.bedommelse.poeng}">97</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(gullmedaljer)}">
+            <td colspan="4">Ingen gullmedaljer registrert.</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+
+<section class="page">
+    <h2 th:text="${championsOverskrift ?: 'Champions'}">Champions</h2>
+    <p class="small muted">Viser duer med 96 poeng eller mer.</p>
+    <table>
+        <thead>
+        <tr>
+            <th>Burnummer</th>
+            <th>Rase</th>
+            <th>Farge</th>
+            <th>Variant</th>
+            <th>Oppdretter</th>
+            <th>Poeng</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="due : ${champions}">
+            <td th:text="${due.burnummer}">1</td>
+            <td th:text="${due.rase}">Rase</td>
+            <td th:text="${due.farge}">Farge</td>
+            <td th:text="${due.variant ?: 'Standard'}">Standard</td>
+            <td th:text="${due.paamelding.utstiller.navn}">Navn</td>
+            <td th:text="${due.bedommelse.poeng}">96</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(champions)}">
+            <td colspan="6">Ingen champions registrert.</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+
+<section class="page" th:each="entry : ${duerPerRase}">
+    <h2 th:text="${'Rase: ' + entry.key}">Rase</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Nr</th>
+            <th>Burnr</th>
+            <th>Ringnummer</th>
+            <th>Farge</th>
+            <th>Variant</th>
+            <th>Kjonn</th>
+            <th>Alder</th>
+            <th>Oppdretter</th>
+            <th>Poeng</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="nd : ${nummererteDuer}" th:if="${nd.due.rase == entry.key}">
+            <td th:text="${nd.nummer}">1</td>
+            <td th:text="${nd.due.burnummer ?: '-'}">1</td>
+            <td th:text="${nd.due.ringnummer ?: '-'}">100-25</td>
+            <td th:text="${nd.due.farge ?: '-'}">Farge</td>
+            <td th:text="${nd.due.variant ?: 'Standard'}">Standard</td>
+            <td th:text="${nd.due.kjonn} ? '1,0' : '0,1'">1,0</td>
+            <td th:text="${nd.due.alder} ? 'Eldre' : 'Ung'">Ung</td>
+            <td th:text="${nd.due.paamelding.utstiller.navn}">Navn</td>
+            <td th:text="${nd.due.bedommelse != null ? nd.due.bedommelse.poeng : '-'}">96</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h2 th:text="${utstillereOverskrift ?: 'Utstillere'}">Utstillere</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Navn</th>
+            <th>E-post</th>
+            <th>Telefon</th>
+            <th>Forening</th>
+            <th>Raser</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="u : ${utstillere}">
+            <td th:text="${u.etternavn + ', ' + u.fornavn}">Nordmann, Ola</td>
+            <td th:text="${u.epost}">ola@epost.no</td>
+            <td th:text="${u.telefon}">12345678</td>
+            <td th:text="${u.forening ?: '-'}">Forening</td>
+            <td th:text="${utstillerRaser != null and utstillerRaser.get(u.id) != null ? #strings.listJoin(utstillerRaser.get(u.id), ', ') : '-'}">Raser</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>
+
+

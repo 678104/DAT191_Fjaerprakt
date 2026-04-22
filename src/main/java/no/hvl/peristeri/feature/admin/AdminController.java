@@ -17,15 +17,21 @@ import no.hvl.peristeri.feature.dommer.StandardKommentarType;
 import no.hvl.peristeri.feature.due.Due;
 import no.hvl.peristeri.feature.due.DueService;
 import no.hvl.peristeri.feature.duekatalog.DueKatalogService;
+import no.hvl.peristeri.feature.utstilling.KatalogPdfService;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
 import no.hvl.peristeri.util.RaseStringHjelper;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,6 +52,7 @@ public class AdminController {
 	private final DueService        dueService;
 	private final StandardKommentarService standardKommentarService;
 	private final DueKatalogService dueKatalogService;
+	private final KatalogPdfService katalogPdfService;
 
 	@GetMapping
 	public String getAdmin(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
@@ -533,6 +540,144 @@ public class AdminController {
 		model.addAttribute("raseVarianter", raseVarianter);
 		model.addAttribute("variantFarger", variantFarger);
 		return "admin/admin_fragments :: genererkatalogdata";
+	}
+
+	@GetMapping("/{utstillingId}/katalog-pdf")
+	public ResponseEntity<byte[]> hentKatalogPdf(@PathVariable Long utstillingId) {
+		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
+		byte[] pdf = katalogPdfService.genererKatalogPdf(utstillingId);
+
+		String filnavn = "katalog-" + lagFilnavn(utstilling.getTittel()) + ".pdf";
+		ContentDisposition disposition = ContentDisposition.attachment().filename(filnavn).build();
+
+		return ResponseEntity.ok()
+		                     .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+		                     .contentType(MediaType.APPLICATION_PDF)
+		                     .body(pdf);
+	}
+
+	@GetMapping("/katalog-pdf")
+	public String getKatalogPdfBuilder(@RequestParam(required = false) Long utstillingId,
+	                                  @RequestParam(required = false) String forsideTittel,
+	                                  @RequestParam(required = false) String forsideArrangor,
+	                                  @RequestParam(required = false) String forsideSted,
+	                                  @RequestParam(required = false) String forsideDato,
+	                                  @RequestParam(required = false) String katalogKommentar,
+	                                  @RequestParam(required = false) String dommerlisteOverskrift,
+	                                  @RequestParam(required = false) String bisOverskrift,
+	                                  @RequestParam(required = false) String mestereOverskrift,
+	                                  @RequestParam(required = false) String gruppevinnereOverskrift,
+	                                  @RequestParam(required = false) String championsOverskrift,
+	                                  @RequestParam(required = false) String utstillereOverskrift,
+	                                  Model model) {
+		List<Utstilling> tilgjengeligeUtstillinger = hentUtstillingerForKatalogvalg();
+		model.addAttribute("katalogUtstillinger", tilgjengeligeUtstillinger);
+
+		Long valgtUtstillingId = finnValgtUtstillingId(tilgjengeligeUtstillinger, utstillingId);
+		model.addAttribute("katalogValgtUtstillingId", valgtUtstillingId);
+
+		if (valgtUtstillingId != null) {
+			Utstilling valgtUtstilling = utstillingService.finnUtstillingMedId(valgtUtstillingId);
+			KatalogPdfService.KatalogPdfRedigering standard = katalogPdfService.standardRedigering(valgtUtstilling);
+			KatalogPdfService.KatalogPdfRedigering redigering = new KatalogPdfService.KatalogPdfRedigering(
+				verdiEllerStandard(forsideTittel, standard.forsideTittel()),
+				verdiEllerStandard(forsideArrangor, standard.forsideArrangor()),
+				verdiEllerStandard(forsideSted, standard.forsideSted()),
+				verdiEllerStandard(forsideDato, standard.forsideDato()),
+				verdiEllerStandard(katalogKommentar, standard.katalogKommentar()),
+				verdiEllerStandard(dommerlisteOverskrift, standard.dommerlisteOverskrift()),
+				verdiEllerStandard(bisOverskrift, standard.bisOverskrift()),
+				verdiEllerStandard(mestereOverskrift, standard.mestereOverskrift()),
+				verdiEllerStandard(gruppevinnereOverskrift, standard.gruppevinnereOverskrift()),
+				verdiEllerStandard(championsOverskrift, standard.championsOverskrift()),
+				verdiEllerStandard(utstillereOverskrift, standard.utstillereOverskrift())
+			);
+
+			model.addAttribute("katalogRedigering", redigering);
+			model.addAttribute("katalogPreviewHtml", katalogPdfService.genererKatalogHtml(valgtUtstillingId, redigering));
+		}
+
+		model.addAttribute("fragment", "katalogPdfBuilder");
+		return "admin/admin";
+	}
+
+	@PostMapping("/katalog-pdf/download")
+	public ResponseEntity<byte[]> postKatalogPdfDownload(@RequestParam Long utstillingId,
+	                                                    @RequestParam String forsideTittel,
+	                                                    @RequestParam String forsideArrangor,
+	                                                    @RequestParam String forsideSted,
+	                                                    @RequestParam String forsideDato,
+	                                                    @RequestParam String katalogKommentar,
+	                                                    @RequestParam String dommerlisteOverskrift,
+	                                                    @RequestParam String bisOverskrift,
+	                                                    @RequestParam String mestereOverskrift,
+	                                                    @RequestParam String gruppevinnereOverskrift,
+	                                                    @RequestParam String championsOverskrift,
+	                                                    @RequestParam String utstillereOverskrift) {
+		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
+		KatalogPdfService.KatalogPdfRedigering redigering = new KatalogPdfService.KatalogPdfRedigering(
+			forsideTittel,
+			forsideArrangor,
+			forsideSted,
+			forsideDato,
+			katalogKommentar,
+			dommerlisteOverskrift,
+			bisOverskrift,
+			mestereOverskrift,
+			gruppevinnereOverskrift,
+			championsOverskrift,
+			utstillereOverskrift
+		);
+		byte[] pdf = katalogPdfService.genererKatalogPdf(utstillingId, redigering);
+
+		String filnavn = "katalog-" + lagFilnavn(utstilling.getTittel()) + ".pdf";
+		ContentDisposition disposition = ContentDisposition.attachment().filename(filnavn).build();
+
+		return ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+				.contentType(MediaType.APPLICATION_PDF)
+				.body(pdf);
+	}
+
+	private String lagFilnavn(String tittel) {
+		if (tittel == null || tittel.isBlank()) {
+			return "utstilling";
+		}
+		return tittel
+				.trim()
+				.toLowerCase()
+				.replaceAll("[^a-z0-9-\\s]", "")
+				.replaceAll("\\s+", "-");
+	}
+
+	private Long finnValgtUtstillingId(List<Utstilling> utstillinger, Long utstillingId) {
+		if (utstillingId != null) {
+			return utstillingId;
+		}
+		if (utstillinger.isEmpty()) {
+			return null;
+		}
+		return utstillinger.get(0).getId();
+	}
+
+	private List<Utstilling> hentUtstillingerForKatalogvalg() {
+		return java.util.stream.Stream.concat(
+				utstillingService.finnTidligereUtstillinger().stream(),
+				utstillingService.finnIkkeTidligereUtstillinger().stream()
+		)
+		.distinct()
+		.sorted(Comparator.comparing(
+				(Utstilling u) -> u.getDatoRange() != null ? u.getDatoRange().getStartDate() : null,
+				Comparator.nullsLast(Comparator.naturalOrder())
+		).reversed())
+		.toList();
+	}
+
+	private String verdiEllerStandard(String verdi, String standard) {
+		if (verdi == null || verdi.isBlank()) {
+			return standard;
+		}
+		return verdi.trim();
 	}
 
 	@HxRequest
