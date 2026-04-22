@@ -70,7 +70,7 @@ class BrukerServiceImplTest {
     void finnBrukere_withSearchTerm_shouldSearchForFornavnEtternavnAndEpost() {
         // Arrange
         List<Bruker> expectedBrukere = List.of(testBruker);
-        when(brukerRepository.findByFornavnStartingWithIgnoreCaseOrEtternavnStartingWithIgnoreCaseOrEpostStartingWithIgnoreCase(
+            when(brukerRepository.findByFornavnContainingIgnoreCaseOrEtternavnContainingIgnoreCaseOrEpostStartingWithIgnoreCase(
                 "Test", "Test", "Test")).thenReturn(expectedBrukere);
 
         // Act
@@ -78,7 +78,7 @@ class BrukerServiceImplTest {
 
         // Assert
         assertEquals(expectedBrukere, actualBrukere);
-        verify(brukerRepository).findByFornavnStartingWithIgnoreCaseOrEtternavnStartingWithIgnoreCaseOrEpostStartingWithIgnoreCase(
+            verify(brukerRepository).findByFornavnContainingIgnoreCaseOrEtternavnContainingIgnoreCaseOrEpostStartingWithIgnoreCase(
                 "Test", "Test", "Test");
     }
 
@@ -94,7 +94,7 @@ class BrukerServiceImplTest {
         // Assert
         assertEquals(expectedBrukere, actualBrukere);
         verify(brukerRepository).findAll();
-        verify(brukerRepository, never()).findByFornavnStartingWithIgnoreCaseOrEtternavnStartingWithIgnoreCaseOrEpostStartingWithIgnoreCase(
+            verify(brukerRepository, never()).findByFornavnContainingIgnoreCaseOrEtternavnContainingIgnoreCaseOrEpostStartingWithIgnoreCase(
                 any(), any(), any());
     }
 

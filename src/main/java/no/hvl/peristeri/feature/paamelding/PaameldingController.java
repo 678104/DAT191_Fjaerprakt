@@ -16,7 +16,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,44 +29,32 @@ public class PaameldingController {
 	private final Logger logger = LoggerFactory.getLogger(PaameldingController.class);
 
 	private final PaameldingService paameldingService;
-	private final DueService        dueService;
 	private final UtstillingService utstillingService;
 	private final DueKatalogService dueKatalogService;
 
 	@GetMapping
-	public String paamelding(@AuthenticationPrincipal Bruker bruker, Model model, HttpSession session) {
-		model.addAttribute("utstiller", bruker);
-		List<Utstilling> utstillinger = utstillingService.finnUtstillingerMedMulighetForPaamelding();
-		model.addAttribute("utstillinger", utstillinger);
-		return "paamelding/paamelding";
+	public String paamelding(@AuthenticationPrincipal Bruker bruker,
+	                        @RequestParam(required = false) Long utstillingId,
+	                        Model model,
+	                        HttpSession session) {
+		if (utstillingId == null) {
+			return visUtstillingsvalg(model, bruker, null, null);
+		}
+		return visDirektePaamelding(model, bruker, session, utstillingId);
 	}
 
 	@PostMapping("/paameldingskvittering")
 	public String utstillerKvittering(Model model, @AuthenticationPrincipal Bruker bruker, HttpSession session,
-	                                  Long utstillingId, RedirectAttributes ra) {
-		model.addAttribute("utstiller", bruker);
-
+	                                  Long utstillingId) {
 		if (utstillingId == null) {
-			model.addAttribute("ingenUtstilling", "Du må velge en utstilling før du kan melde deg på.");
-			List<Utstilling> utstillinger = utstillingService.finnUtstillingerMedMulighetForPaamelding();
-			model.addAttribute("utstillinger", utstillinger);
-			return "paamelding/paamelding";
+			return visUtstillingsvalg(model, bruker, null,
+					"Du må velge en utstilling før du kan melde deg på.");
 		}
-
-		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
-
-		if (paameldingService.sjekkOmBrukerAlleredeErPaameldt(bruker, utstilling)) {
-			throw new BusinessRuleViolationException("Du er allerede påmeldt til denne utstillingen.");
+		String view = visDirektePaamelding(model, bruker, session, utstillingId);
+		if ("paamelding/paameldingkvittering".equals(view)) {
+			return "paamelding/paameldingkvittering :: kvittering";
 		}
-
-		session.setAttribute("utstilling", utstilling);
-		session.setAttribute("dueDTOListe", new DueDTOList());
-
-		logger.info("Påmelding startet for utstilling: {} ({})", utstilling.getTittel(), utstillingId);
-		model.addAttribute("radId", 1);
-		leggTilDueKatalogModel(model, null);
-
-		return "paamelding/paameldingkvittering :: kvittering";
+		return view;
 	}
 
 	@PostMapping("/duekvittering")
@@ -112,11 +99,22 @@ public class PaameldingController {
 	@PostMapping("/oppdaterDue/{radId}")
 	public String oppdaterDueRad(@ModelAttribute DueDTO due, Model model, @PathVariable Integer radId,
 	                             HttpSession session) {
-		model.addAttribute("due", due);
-		getDueList(session).endreDue(due);
-		logger.info("Lagre knapp trykket: {}", due);
+		DueDTO oppdatertDue = due.radId() != null && due.radId().equals(radId)
+				? due
+				: new DueDTO(radId, due.rase(), due.farge(), due.variant(), due.hannerUng(), due.hannerEldre(),
+				due.hunnerUng(), due.hunnerEldre(), due.ikkeEget());
+		model.addAttribute("due", oppdatertDue);
+		getDueList(session).endreDue(oppdatertDue);
+		logger.info("Lagre knapp trykket: {}", oppdatertDue);
 
 		return "paamelding/due_tabell :: oppdatertDueRad";
+	}
+
+	@PostMapping("/fjernDue/{radId}")
+	public String fjernDueRad(@PathVariable Integer radId, HttpSession session) {
+		getDueList(session).fjernDueDTO(radId);
+		logger.info("Fjernet due med radId {} fra påmelding", radId);
+		return "paamelding/due_tabell :: due-tabell";
 	}
 
 	@PostMapping("/submitPaamelding")
@@ -138,9 +136,46 @@ public class PaameldingController {
 	}
 
 	@GetMapping("/{utstillingId}")
-	public String meldPaaMedValgtUtstillingFraFoer(@AuthenticationPrincipal Bruker bruker, @PathVariable Long utstillingId, Model model) {
-		model.addAttribute("forhandsvalgtUtstillingId", utstillingId);
+	public String meldPaaMedValgtUtstillingFraFoer(@PathVariable Long utstillingId) {
+		return "redirect:/paamelding?utstillingId=" + utstillingId;
+	}
+
+	private String visDirektePaamelding(Model model,
+	                                   Bruker bruker,
+	                                   HttpSession session,
+	                                   Long utstillingId) {
 		model.addAttribute("utstiller", bruker);
+
+		List<Utstilling> utstillinger = utstillingService.finnUtstillingerMedMulighetForPaamelding();
+		Utstilling utstilling = finnGyldigUtstilling(utstillinger, utstillingId);
+		if (utstilling == null) {
+			return visUtstillingsvalg(model, bruker, utstillingId,
+					"Fant ikke valgt utstilling, eller påmelding er stengt.");
+		}
+
+		if (paameldingService.sjekkOmBrukerAlleredeErPaameldt(bruker, utstilling)) {
+			return visUtstillingsvalg(model, bruker, utstillingId,
+					"Du er allerede påmeldt denne utstillingen.");
+		}
+
+		session.setAttribute("utstilling", utstilling);
+		session.setAttribute("dueDTOListe", new DueDTOList());
+
+		logger.info("Påmelding startet for utstilling: {} ({})", utstilling.getTittel(), utstillingId);
+		model.addAttribute("radId", 1);
+		leggTilDueKatalogModel(model, null);
+		return "paamelding/paameldingkvittering";
+	}
+
+	private String visUtstillingsvalg(Model model,
+	                                 Bruker bruker,
+	                                 Long forhandsvalgtUtstillingId,
+	                                 String feilmelding) {
+		model.addAttribute("utstiller", bruker);
+		model.addAttribute("forhandsvalgtUtstillingId", forhandsvalgtUtstillingId);
+		if (feilmelding != null && !feilmelding.isBlank()) {
+			model.addAttribute("ingenUtstilling", feilmelding);
+		}
 		List<Utstilling> utstillinger = utstillingService.finnUtstillingerMedMulighetForPaamelding();
 		model.addAttribute("utstillinger", utstillinger);
 		return "paamelding/paamelding";
@@ -152,6 +187,16 @@ public class PaameldingController {
 		List<DueRase> raser = valgtGruppeId == null ? List.of() : dueKatalogService.finnRaserForGruppe(valgtGruppeId);
 		model.addAttribute("dueRaser", raser);
 		return "paamelding/paameldingkvittering :: ny-due-rase-select";
+}
+
+	private Utstilling finnGyldigUtstilling(List<Utstilling> tilgjengeligeUtstillinger, Long utstillingId) {
+		if (utstillingId == null || tilgjengeligeUtstillinger == null) {
+			return null;
+		}
+		return tilgjengeligeUtstillinger.stream()
+				.filter(u -> u.getId() != null && u.getId().equals(utstillingId))
+				.findFirst()
+				.orElse(null);
 	}
 
 	@ModelAttribute("navLocation")

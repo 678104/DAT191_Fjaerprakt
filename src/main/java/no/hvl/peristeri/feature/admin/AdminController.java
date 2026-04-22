@@ -5,6 +5,7 @@ import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HtmxResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import no.hvl.peristeri.common.exception.ResourceNotFoundException;
 import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.bruker.BrukerService;
 import no.hvl.peristeri.feature.bruker.Rolle;
@@ -62,10 +63,10 @@ public class AdminController {
 		return "redirect:/admin";
 	}
 
-	@GetMapping("/tildel-dommer-rolle-liste")
-	public String getTildelDommerRolleListe(Model model) {
-		model.addAttribute("kommendeUtstillinger", utstillingService.finnIkkeTidligereUtstillinger());
-		model.addAttribute("fragment", "tildelDommerRolleListe");
+	@GetMapping("/dommere")
+	public String getDommereAdmin(Model model) {
+		settDommerAdminModel(model);
+		model.addAttribute("fragment", "dommerAdministrasjon");
 		return "admin/admin";
 	}
 
@@ -116,15 +117,36 @@ public class AdminController {
 		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(id));
 		model.addAttribute("brukere", List.of());
 		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(id));
+		model.addAttribute("dommere", dommerService.hentDommere());
 		return "admin/admin_fragments :: tildelDommerRolle";
+	}
+
+	@GetMapping("/brukere")
+	public String getBrukereAutocompleteHtmx(@RequestParam(name = "søk", required = false) String soek,
+	                                        @RequestParam(name = "sok", required = false) String sok,
+	                                        Model model) {
+		String filter = hentSoketekst(soek, sok);
+		model.addAttribute("brukere", brukerService.finnBrukereForDommerAutocomplete(filter, 10));
+		model.addAttribute("sok", filter);
+		return "admin/admin_fragments :: brukerForslag";
+	}
+
+	@HxRequest
+	@GetMapping("/dommere/brukere")
+	public String getDommereBrukereHtmx(@RequestParam(required = false) String sok, Model model) {
+		String filter = hentSoketekst(null, sok);
+		model.addAttribute("brukere", filter.isBlank() ? List.of() : brukerService.finnBrukere(filter).stream().limit(10).toList());
+		model.addAttribute("sok", filter);
+		return "admin/admin_fragments :: brukerForslag";
 	}
 
 	@HxRequest
 	@GetMapping("/{id}/tildel-dommer-rolle/brukere")
 	public String getTildelDommerRolleBrukereHtmx(@PathVariable Long id, @RequestParam(required = false) String sok,
 	                                             Model model) {
-		model.addAttribute("brukere", sok == null || sok.isBlank() ? List.of() : brukerService.finnBrukere(sok));
-		model.addAttribute("sok", sok);
+		String filter = hentSoketekst(null, sok);
+		model.addAttribute("brukere", filter.isBlank() ? List.of() : brukerService.finnBrukere(filter).stream().limit(10).toList());
+		model.addAttribute("sok", filter);
 		return "admin/admin_fragments :: brukerForslag";
 	}
 
@@ -137,6 +159,7 @@ public class AdminController {
 		model.addAttribute("utstilling", utstilling);
 		model.addAttribute("brukere", List.of());
 		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
+		model.addAttribute("dommere", dommerService.hentDommere());
 
 		if (brukerId == null) {
 			model.addAttribute("brukerFeil", "Velg bruker å tildele rolle");
@@ -145,31 +168,190 @@ public class AdminController {
 			return "admin/admin_fragments :: tildelDommerRolle";
 		}
 
-		Bruker bruker = brukerService.hentBrukerMedId(brukerId);
-		bruker.leggTilRolle(Rolle.DOMMER);
-		brukerService.lagreBruker(bruker);
-		List<DommerPaamelding> eksisterende = dommerService.finnDommerPaameldingerTilUtstilling(utstillingId).stream()
-				.filter(dp -> dp.getDommer() != null && dp.getDommer().getId().equals(brukerId))
-				.toList();
-		if (eksisterende.isEmpty()) {
-			DommerPaamelding dommerPaamelding = new DommerPaamelding(utstilling, bruker);
-			dommerService.lagreDommerPaaMelding(dommerPaamelding);
-		}
+		dommerService.tildelDommerTilUtstillinger(brukerId, List.of(utstillingId));
 		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
+		model.addAttribute("dommere", dommerService.hentDommere());
 		return "admin/admin_fragments :: tildelDommerRolle";
+	}
+
+	@HxRequest
+	@PostMapping("/dommere/rolle")
+	public String postLeggTilDommerRolleFraSkjema(@RequestParam(required = false) Long brukerId, Model model, HtmxResponse htmxResponse) {
+		if (brukerId == null) {
+			model.addAttribute("alleDommereFeil", "Velg bruker å tildele rolle");
+		} else {
+			try {
+				brukerService.hentBrukerMedId(brukerId);
+				if (brukerService.harRolle(brukerId, Rolle.DOMMER)) {
+					model.addAttribute("alleDommereFeil", "Brukeren har allerede dommerrolle.");
+				} else {
+					dommerService.tildelDommerRolle(brukerId);
+				}
+			} catch (ResourceNotFoundException ex) {
+				model.addAttribute("alleDommereFeil", "Fant ikke brukeren du prøvde å gi dommerrolle.");
+			}
+		}
+
+		settAlleDommereListeModel(model);
+		htmxResponse.setReswap(HtmxReswap.outerHtml());
+		htmxResponse.setRetarget("#main-content");
+		settDommerAdminModel(model);
+		return "admin/admin_fragments :: dommerAdministrasjon";
+	}
+
+	@HxRequest
+	@PostMapping("/dommere/{brukerId}/rolle")
+	public String postLeggTilDommerRolle(@PathVariable Long brukerId, Model model, HtmxResponse htmxResponse) {
+		try {
+			brukerService.hentBrukerMedId(brukerId);
+			if (brukerService.harRolle(brukerId, Rolle.DOMMER)) {
+				model.addAttribute("alleDommereFeil", "Brukeren har allerede dommerrolle.");
+			} else {
+				dommerService.tildelDommerRolle(brukerId);
+			}
+		} catch (ResourceNotFoundException ex) {
+			model.addAttribute("alleDommereFeil", "Fant ikke brukeren du prøvde å gi dommerrolle.");
+		}
+
+		settAlleDommereListeModel(model);
+		htmxResponse.setReswap(HtmxReswap.outerHtml());
+		htmxResponse.setRetarget("#main-content");
+		settDommerAdminModel(model);
+		return "admin/admin_fragments :: dommerAdministrasjon";
+	}
+
+	@HxRequest
+	@DeleteMapping("/dommere/{brukerId}/rolle")
+	public String deleteDommerRolle(@PathVariable Long brukerId, Model model, HtmxResponse htmxResponse) {
+		try {
+			brukerService.hentBrukerMedId(brukerId);
+			List<Utstilling> aktiveUtstillinger = dommerService.hentUtstillingerForDommer(brukerId).stream()
+					.filter(utstilling -> utstilling.getAktiv() != null && utstilling.getAktiv())
+					.toList();
+
+			if (!aktiveUtstillinger.isEmpty()) {
+				model.addAttribute("alleDommereFeil", "Brukeren er tilknyttet aktive utstillinger og kan ikke få fjernet dommerrollen.");
+			} else {
+				dommerService.fjernDommerRolle(brukerId);
+			}
+		} catch (ResourceNotFoundException ex) {
+			model.addAttribute("alleDommereFeil", "Fant ikke brukeren du prøvde å fjerne dommerrolle fra.");
+		}
+
+		settAlleDommereListeModel(model);
+		htmxResponse.setReswap(HtmxReswap.outerHtml());
+		htmxResponse.setRetarget("#main-content");
+		settDommerAdminModel(model);
+		return "admin/admin_fragments :: dommerAdministrasjon";
+	}
+
+	@HxRequest
+	@PostMapping("/dommere/tildel-utstillinger")
+	public String postTildelUtstillingerTilDommer(@RequestParam(required = false) Long brukerId,
+	                                            @RequestParam(required = false) List<Long> utstillingIder,
+	                                            Model model,
+	                                            HtmxResponse htmxResponse) {
+		if (brukerId == null) {
+			model.addAttribute("dommerTildelingFeil", "Velg dommer å tildele utstillinger");
+			settDommerTildelingModel(model);
+			htmxResponse.setReswap(HtmxReswap.outerHtml());
+			htmxResponse.setRetarget("#dommerTildelingListe");
+			return "admin/admin_fragments :: dommerTildelingListe";
+		}
+
+		dommerService.tildelDommerTilUtstillinger(brukerId, utstillingIder == null ? List.of() : utstillingIder);
+		settDommerTildelingModel(model);
+		htmxResponse.setReswap(HtmxReswap.outerHtml());
+		htmxResponse.setRetarget("#dommerTildelingListe");
+		return "admin/admin_fragments :: dommerTildelingListe";
+	}
+
+	@HxRequest
+	@PostMapping("/dommere/tildelinger/{dommerPaameldingId}/fjern")
+	public String postFjernDommerFraUtstilling(@PathVariable Long dommerPaameldingId,
+	                                           Model model,
+	                                           HtmxResponse htmxResponse) {
+		DommerPaamelding tildeling = hentAlleDommerTildelinger().stream()
+				.filter(dp -> dp.getId().equals(dommerPaameldingId))
+				.findFirst()
+				.orElse(null);
+
+		if (tildeling == null) {
+			model.addAttribute("dommerTildelingFeil", "Fant ikke dommertildelingen du prøvde å fjerne.");
+		} else {
+			try {
+				dommerService.fjernDommerPaamelding(dommerPaameldingId);
+			} catch (ResourceNotFoundException ex) {
+				model.addAttribute("dommerTildelingFeil", "Dommertildelingen finnes ikke lenger.");
+			}
+		}
+
+		settDommerTildelingModel(model);
+		htmxResponse.setReswap(HtmxReswap.outerHtml());
+		htmxResponse.setRetarget("#dommerTildelingListe");
+		return "admin/admin_fragments :: dommerTildelingListe";
 	}
 
 	@HxRequest
 	@PostMapping("/{utstillingId}/fjern-dommer/{dommerPaameldingId}")
 	public String postFjernDommer(@PathVariable Long utstillingId, @PathVariable Long dommerPaameldingId, 
 	                               Model model, HttpSession session, RedirectAttributes redirectAttributes) {
-		dommerService.fjernDommerPaamelding(dommerPaameldingId);
-		
+		List<DommerPaamelding> dommerePaameldtUtstilling = dommerService.finnDommerPaameldingerTilUtstilling(utstillingId);
+		boolean erKnyttetTilUtstilling = dommerePaameldtUtstilling.stream()
+				.anyMatch(dp -> dp.getId().equals(dommerPaameldingId));
+
+		if (!erKnyttetTilUtstilling) {
+			model.addAttribute("dommerListeFeil", "Dommeren er ikke tilknyttet denne utstillingen.");
+		} else {
+			try {
+				dommerService.fjernDommerPaamelding(dommerPaameldingId);
+			} catch (ResourceNotFoundException ex) {
+				model.addAttribute("dommerListeFeil", "Dommeren finnes ikke lenger.");
+			}
+		}
+
 		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
 		model.addAttribute("utstilling", utstilling);
-		model.addAttribute("brukere", List.of());
 		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(utstillingId));
-		return "admin/admin_fragments :: tildelDommerRolle";
+		return "admin/admin_fragments :: dommerListe";
+	}
+
+	private void settDommerAdminModel(Model model) {
+		settAlleDommereListeModel(model);
+		model.addAttribute("utstillinger", utstillingService.finnIkkeTidligereUtstillinger());
+		settDommerTildelingModel(model);
+		model.addAttribute("brukere", List.of());
+		model.addAttribute("fragment", "dommerAdministrasjon");
+	}
+
+	private void settAlleDommereListeModel(Model model) {
+		List<Bruker> dommere = dommerService.hentDommere();
+		model.addAttribute("dommere", dommere);
+		Map<Long, List<Utstilling>> utstillingerPerDommer = new LinkedHashMap<>();
+		for (Bruker dommer : dommere) {
+			utstillingerPerDommer.put(dommer.getId(), dommerService.hentUtstillingerForDommer(dommer.getId()));
+		}
+		model.addAttribute("utstillingerPerDommer", utstillingerPerDommer);
+	}
+
+	private void settDommerTildelingModel(Model model) {
+		model.addAttribute("dommerTildelinger", hentAlleDommerTildelinger());
+	}
+
+	private List<DommerPaamelding> hentAlleDommerTildelinger() {
+		return dommerService.hentDommere().stream()
+				.flatMap(dommer -> dommerService.finnDommerPaameldinger(dommer).stream())
+				.toList();
+	}
+
+	private String hentSoketekst(String soek, String sok) {
+		if (soek != null && !soek.isBlank()) {
+			return soek.trim();
+		}
+		if (sok != null && !sok.isBlank()) {
+			return sok.trim();
+		}
+		return "";
 	}
 
 	@HxRequest

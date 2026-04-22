@@ -2,6 +2,7 @@ package no.hvl.peristeri.feature.dommer;
 
 import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.due.Due;
+import no.hvl.peristeri.feature.utstilling.Utstilling;
 
 import java.util.List;
 
@@ -41,4 +42,27 @@ public interface DommerService {
 	Due finnDueDommerSkalBedommeMedBurnummer(Bruker dommer, Integer burnummer);
 
 	Due finnDueDommerSkalBedommeMedBurnummer(Bruker dommer, Integer burnummer, Long utstillingId);
+
+	List<Bruker> hentDommere();
+
+	Bruker tildelDommerRolle(Long brukerId);
+
+	void fjernDommerRolle(Long brukerId);
+
+	void tildelDommerTilUtstillinger(Long brukerId, List<Long> utstillingIder);
+
+	List<Utstilling> hentUtstillingerForDommer(Long brukerId);
+
+	DommerVinnerData hentVinnerData(Bruker dommer, Long utstillingId);
+
+	void lagreVinnere(Bruker dommer,
+	                 Long utstillingId,
+	                 List<String> raseNavn,
+	                 List<Long> raseVinnerDueId,
+	                 List<String> gruppeNavn,
+	                 List<Long> gruppeVinnerDueId,
+	                 Long bisVinnerDueId,
+	                 Long norgesmesterOppdrett1DueId,
+	                 Long norgesmesterOppdrett2DueId,
+	                 Long norgesmesterOppdrett3DueId);
 }

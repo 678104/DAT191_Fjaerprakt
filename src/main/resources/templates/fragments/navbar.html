@@ -17,17 +17,13 @@
         </ul>
         <ul>
             <!--/*@thymesVar id="navLocation" type="String"*/-->
-            <li th:unless="${#authorization.expression('hasRole(''DOMMER'')')}">
+            <li>
                 <a href="/" class=""
                    th:classappend="${navLocation == 'home'} ? 'navCurrent' : ''">Hjem</a>
             </li>
-            <li th:unless="${#authorization.expression('hasRole(''DOMMER'')')}">
+            <li>
                 <a href="/utstilling" class=""
                    th:classappend="${navLocation == 'utstilling'} ? 'navCurrent' : ''">Utstillinger</a>
-            </li>
-            <li th:unless="${#authorization.expression('hasRole(''DOMMER'')')}">
-                <a href="/paamelding" class=""
-                   th:classappend="${navLocation == 'paamelding'} ? 'navCurrent' : ''">Påmelding</a>
             </li>
             <li th:if="${#authorization.expression('hasRole(''DOMMER'')')}">
                 <a href="/dommer" class=""
@@ -48,6 +44,9 @@
                     <span th:if="${#authorization.expression('hasRole(''DOMMER'') and not hasRole(''ADMIN'')')}">Din bruker: Dommer</span>
                     <span th:if="${not #authorization.expression('hasRole(''ADMIN'') or hasRole(''DOMMER'')')}">Din bruker</span>
                 </a>
+            </li>
+            <li sec:authorize="isAuthenticated()">
+                <a href="/bruker/din-paamelding" role="button">Din påmelding</a>
             </li>
             <li sec:authorize="isAuthenticated()">
                 <form th:action="@{/logout}" method="post" style="display: inline;">

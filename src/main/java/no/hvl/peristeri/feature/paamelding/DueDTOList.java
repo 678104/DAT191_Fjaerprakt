@@ -35,4 +35,11 @@ public class DueDTOList {
         }
     }
 
+    public void fjernDueDTO(Integer radId) {
+        if (radId == null) {
+            return;
+        }
+        liste.removeIf(due -> radId.equals(due.radId()));
+    }
+
 }

@@ -50,6 +50,25 @@ public class BrukerController {
 		return "bruker/bruker_paamelding";
 	}
 
+	@GetMapping("/din-paamelding")
+	public String gaaTilDinPaamelding(@AuthenticationPrincipal Bruker bruker) {
+		Map<String, List<Paamelding>> paameldinger = paameldingService.hentBrukerSinePaameldinger(bruker);
+
+		Long paameldingId = paameldinger.getOrDefault("kommende", List.of()).stream()
+				.findFirst()
+				.map(Paamelding::getId)
+				.orElseGet(() -> paameldinger.getOrDefault("tidligere", List.of()).stream()
+						.findFirst()
+						.map(Paamelding::getId)
+						.orElse(null));
+
+		if (paameldingId == null) {
+			return "redirect:/bruker";
+		}
+
+		return "redirect:/bruker/paamelding/" + paameldingId;
+	}
+
 	@HxRequest
 	@GetMapping("/redigerBrukerInfo")
 	public String getRedigerBrukerHtmx(Model model, HttpSession session) {
