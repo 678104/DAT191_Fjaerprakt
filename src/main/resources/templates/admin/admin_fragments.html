@@ -547,6 +547,19 @@
                     </button>
                 </footer>
             </article>
+            <article>
+                <header>
+                    <b>Rediger og last ned katalog PDF</b>
+                </header>
+                <div>
+                    <p>Velg utstilling, rediger tekst/overskrifter og last ned ferdig katalog i PDF-format.</p>
+                </div>
+                <footer>
+                    <a th:href="@{/admin/katalog-pdf(utstillingId=*{id})}"
+                       class="fill-parent"
+                       role="button">Aapne katalog-editor</a>
+                </footer>
+            </article>
         </div>
         <div>
             <br>
@@ -715,6 +728,97 @@
             Tilbake til handlingsoversikt
         </button>
     </div>
+    <section th:fragment="katalogPdfBuilder" id="main-content">
+        <h2>Katalog PDF</h2>
+        <p>Velg utstilling, rediger innhold og last ned PDF.</p>
+
+        <form method="get" action="/admin/katalog-pdf">
+            <label for="katalogUtstillingId">Velg utstilling</label>
+            <select id="katalogUtstillingId" name="utstillingId" onchange="this.form.submit()" required>
+                <option value="">Velg en utstilling</option>
+                <option th:each="u : ${katalogUtstillinger}"
+                        th:value="${u.id}"
+                        th:selected="${katalogValgtUtstillingId != null and katalogValgtUtstillingId == u.id}"
+                        th:text="${u.tittel + ' (' + #temporals.format(u.datoRange.startDate, 'dd.MM.yyyy') + ')'}">Utstilling</option>
+            </select>
+            <noscript>
+                <button type="submit">Velg utstilling</button>
+            </noscript>
+        </form>
+
+        <div th:if="${katalogValgtUtstillingId != null}">
+            <form method="get" action="/admin/katalog-pdf">
+                <input type="hidden" name="utstillingId" th:value="${katalogValgtUtstillingId}">
+
+                <label for="forsideTittel">Forside tittel</label>
+                <input id="forsideTittel" type="text" name="forsideTittel" th:value="${katalogRedigering.forsideTittel}">
+
+                <label for="forsideArrangor">Arrangoer</label>
+                <input id="forsideArrangor" type="text" name="forsideArrangor" th:value="${katalogRedigering.forsideArrangor}">
+
+                <label for="forsideSted">Sted</label>
+                <input id="forsideSted" type="text" name="forsideSted" th:value="${katalogRedigering.forsideSted}">
+
+                <label for="forsideDato">Dato (fri tekst)</label>
+                <input id="forsideDato" type="text" name="forsideDato" th:value="${katalogRedigering.forsideDato}">
+
+                <label for="dommerlisteOverskrift">Overskrift side 2</label>
+                <input id="dommerlisteOverskrift" type="text" name="dommerlisteOverskrift" th:value="${katalogRedigering.dommerlisteOverskrift}">
+
+                <label for="bisOverskrift">Overskrift BIS-side</label>
+                <input id="bisOverskrift" type="text" name="bisOverskrift" th:value="${katalogRedigering.bisOverskrift}">
+
+                <label for="mestereOverskrift">Overskrift mestere-side</label>
+                <input id="mestereOverskrift" type="text" name="mestereOverskrift" th:value="${katalogRedigering.mestereOverskrift}">
+
+                <label for="gruppevinnereOverskrift">Overskrift gruppevinnere-side</label>
+                <input id="gruppevinnereOverskrift" type="text" name="gruppevinnereOverskrift" th:value="${katalogRedigering.gruppevinnereOverskrift}">
+
+                <label for="championsOverskrift">Overskrift champions-side</label>
+                <input id="championsOverskrift" type="text" name="championsOverskrift" th:value="${katalogRedigering.championsOverskrift}">
+
+                <label for="utstillereOverskrift">Overskrift utstillere-side</label>
+                <input id="utstillereOverskrift" type="text" name="utstillereOverskrift" th:value="${katalogRedigering.utstillereOverskrift}">
+
+                <label for="katalogKommentar">Kommentar i katalog</label>
+                <textarea id="katalogKommentar" name="katalogKommentar" rows="4" th:text="${katalogRedigering.katalogKommentar}"></textarea>
+
+                <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button type="submit">Oppdater forhandsvisning</button>
+                </div>
+            </form>
+
+            <form method="post" action="/admin/katalog-pdf/download" style="margin-top: 0.5rem;">
+                <input type="hidden" name="utstillingId" th:value="${katalogValgtUtstillingId}">
+                <input type="hidden" name="forsideTittel" th:value="${katalogRedigering.forsideTittel}">
+                <input type="hidden" name="forsideArrangor" th:value="${katalogRedigering.forsideArrangor}">
+                <input type="hidden" name="forsideSted" th:value="${katalogRedigering.forsideSted}">
+                <input type="hidden" name="forsideDato" th:value="${katalogRedigering.forsideDato}">
+                <input type="hidden" name="dommerlisteOverskrift" th:value="${katalogRedigering.dommerlisteOverskrift}">
+                <input type="hidden" name="bisOverskrift" th:value="${katalogRedigering.bisOverskrift}">
+                <input type="hidden" name="mestereOverskrift" th:value="${katalogRedigering.mestereOverskrift}">
+                <input type="hidden" name="gruppevinnereOverskrift" th:value="${katalogRedigering.gruppevinnereOverskrift}">
+                <input type="hidden" name="championsOverskrift" th:value="${katalogRedigering.championsOverskrift}">
+                <input type="hidden" name="utstillereOverskrift" th:value="${katalogRedigering.utstillereOverskrift}">
+                <input type="hidden" name="katalogKommentar" th:value="${katalogRedigering.katalogKommentar}">
+                <button type="submit" class="secondary">Last ned PDF</button>
+            </form>
+
+            <article style="margin-top: 1rem;">
+                <header><strong>Forhandsvisning</strong></header>
+                <iframe th:if="${katalogPreviewHtml != null}"
+                        th:attr="srcdoc=${katalogPreviewHtml}"
+                        title="Katalog forhandsvisning"
+                        style="width: 100%; min-height: 75vh; border: 1px solid #d8dce2;"></iframe>
+            </article>
+        </div>
+
+        <div th:if="${katalogValgtUtstillingId == null}">
+            <p class="muted">Ingen utstillinger funnet a velge mellom.</p>
+        </div>
+
+        <a href="/admin" role="button" class="secondary" style="margin-top: 1rem;">Tilbake</a>
+    </section>
     <section th:fragment="dommerAdministrasjon" id="main-content">
         <!--/*@thymesVar id="dommere" type="java.util.List<no.hvl.peristeri.feature.bruker.Bruker>"*/-->
         <!--/*@thymesVar id="utstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
