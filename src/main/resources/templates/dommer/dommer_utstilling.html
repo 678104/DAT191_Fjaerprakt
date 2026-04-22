@@ -15,7 +15,7 @@
         </div>
     </section>
 
-    <section>
+    <section th:if="${visAndreDommereSection == null or visAndreDommereSection}">
         <h2>Andre dommere pa utstillingen med deres duer</h2>
         <div th:if="${#maps.isEmpty(andreDommereMedDuer)}">
             <p>Ingen andre dommere med tildelte duer.</p>
@@ -59,6 +59,7 @@
             </article>
         </th:block>
     </section>
+
 </main>
 <footer class="container">
     <div th:replace="~{fragments/footer :: footer}"></div>

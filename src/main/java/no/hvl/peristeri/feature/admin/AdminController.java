@@ -21,6 +21,7 @@ import no.hvl.peristeri.feature.utstilling.KatalogPdfService;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
 import no.hvl.peristeri.util.RaseStringHjelper;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -145,6 +146,15 @@ public class AdminController {
 		model.addAttribute("brukere", filter.isBlank() ? List.of() : brukerService.finnBrukere(filter).stream().limit(10).toList());
 		model.addAttribute("sok", filter);
 		return "admin/admin_fragments :: brukerForslag";
+	}
+
+	@HxRequest
+	@GetMapping("/admins/brukere")
+	public String getAdminsBrukereHtmx(@RequestParam(required = false) String sok, Model model) {
+		String filter = hentSoketekst(null, sok);
+		model.addAttribute("brukere", filter.isBlank() ? List.of() : brukerService.finnBrukereForDommerAutocomplete(filter, 10));
+		model.addAttribute("sok", filter);
+		return "admin/admin_fragments :: brukerForslagAdmin";
 	}
 
 	@HxRequest
@@ -325,10 +335,69 @@ public class AdminController {
 
 	private void settDommerAdminModel(Model model) {
 		settAlleDommereListeModel(model);
+		settAlleAdminListeModel(model);
+		model.addAttribute("alleBrukere", brukerService.getBrukere());
 		model.addAttribute("utstillinger", utstillingService.finnIkkeTidligereUtstillinger());
 		settDommerTildelingModel(model);
 		model.addAttribute("brukere", List.of());
 		model.addAttribute("fragment", "dommerAdministrasjon");
+	}
+
+	private void settAlleAdminListeModel(Model model) {
+		model.addAttribute("administratorer", brukerService.hentBrukereMedRolle(Rolle.ADMIN));
+	}
+
+	@HxRequest
+	@PostMapping("/admins/rolle")
+	public String postLeggTilAdminRolle(@RequestParam(required = false) Long brukerId,
+	                                   Model model,
+	                                   HtmxResponse htmxResponse) {
+		if (brukerId == null) {
+			model.addAttribute("alleAdminFeil", "Velg bruker å tildele adminrolle");
+		} else {
+			try {
+				brukerService.hentBrukerMedId(brukerId);
+				if (brukerService.harRolle(brukerId, Rolle.ADMIN)) {
+					model.addAttribute("alleAdminFeil", "Brukeren har allerede adminrolle.");
+				} else {
+					brukerService.leggTilRolle(brukerId, Rolle.ADMIN);
+				}
+			} catch (ResourceNotFoundException ex) {
+				model.addAttribute("alleAdminFeil", "Fant ikke brukeren du prøvde å gi adminrolle.");
+			}
+		}
+
+		htmxResponse.setReswap(HtmxReswap.outerHtml());
+		htmxResponse.setRetarget("#main-content");
+		settDommerAdminModel(model);
+		return "admin/admin_fragments :: dommerAdministrasjon";
+	}
+
+	@HxRequest
+	@DeleteMapping("/admins/{brukerId}/rolle")
+	public String deleteAdminRolle(@PathVariable Long brukerId,
+	                              @AuthenticationPrincipal Bruker innloggetBruker,
+	                              Model model,
+	                              HtmxResponse htmxResponse) {
+		try {
+			Bruker bruker = brukerService.hentBrukerMedId(brukerId);
+			if (!brukerService.harRolle(brukerId, Rolle.ADMIN)) {
+				model.addAttribute("alleAdminFeil", "Brukeren har ikke adminrolle.");
+			} else if (innloggetBruker != null && innloggetBruker.getId() != null && innloggetBruker.getId().equals(brukerId)) {
+				model.addAttribute("alleAdminFeil", "Du kan ikke fjerne din egen adminrolle.");
+			} else if (brukerService.hentBrukereMedRolle(Rolle.ADMIN).size() <= 1) {
+				model.addAttribute("alleAdminFeil", "Kan ikke fjerne siste administrator.");
+			} else {
+				brukerService.fjernRolle(bruker.getId(), Rolle.ADMIN);
+			}
+		} catch (ResourceNotFoundException ex) {
+			model.addAttribute("alleAdminFeil", "Fant ikke brukeren du prøvde å fjerne adminrolle fra.");
+		}
+
+		htmxResponse.setReswap(HtmxReswap.outerHtml());
+		htmxResponse.setRetarget("#main-content");
+		settDommerAdminModel(model);
+		return "admin/admin_fragments :: dommerAdministrasjon";
 	}
 
 	private void settAlleDommereListeModel(Model model) {

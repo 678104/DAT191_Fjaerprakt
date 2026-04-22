@@ -18,6 +18,7 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -59,6 +60,18 @@ public class DommerController {
 		model.addAttribute("innloggetDommerId", bruker.getId());
 		leggTilVinnerData(model, bruker, utstillingId);
 		return "dommer/dommer_utstilling";
+	}
+
+	@GetMapping("/utstilling/{utstillingId}/vinnere-oppsummering")
+	public String dommerVinnerOppsummering(@AuthenticationPrincipal Bruker bruker,
+	                                       @PathVariable Long utstillingId,
+	                                       Model model) {
+		bruker = sikkerBruker(bruker);
+		model.addAttribute("valgtUtstillingId", utstillingId);
+		leggTilVinnerData(model, bruker, utstillingId);
+		leggTilVinnerOppsummering(model);
+		model.addAttribute("vinnerMelding", "Vinnere er lagret. Administrator kan nå generer katalog.");
+		return "dommer/dommer_vinner_oppsummering";
 	}
 
 	@HxRequest
@@ -139,9 +152,9 @@ public class DommerController {
 	                          @RequestParam(required = false) List<String> gruppeNavn,
 	                          @RequestParam(required = false) List<Long> gruppeVinnerDueId,
 	                          @RequestParam(required = false) Long bisVinnerDueId,
-	                          @RequestParam(required = false) Long norgesmesterOppdrett1DueId,
-	                          @RequestParam(required = false) Long norgesmesterOppdrett2DueId,
-	                          @RequestParam(required = false) Long norgesmesterOppdrett3DueId,
+	                          @RequestParam(required = false) Long norgesmesterOppdrett1BrukerId,
+	                          @RequestParam(required = false) Long norgesmesterOppdrett2BrukerId,
+	                          @RequestParam(required = false) Long norgesmesterOppdrett3BrukerId,
 	                          @AuthenticationPrincipal Bruker bruker,
 	                          Model model) {
 		bruker = sikkerBruker(bruker);
@@ -156,16 +169,20 @@ public class DommerController {
 					gruppeNavn,
 					gruppeVinnerDueId,
 					bisVinnerDueId,
-					norgesmesterOppdrett1DueId,
-					norgesmesterOppdrett2DueId,
-					norgesmesterOppdrett3DueId
+					norgesmesterOppdrett1BrukerId,
+					norgesmesterOppdrett2BrukerId,
+					norgesmesterOppdrett3BrukerId
 			);
 			model.addAttribute("vinnerMelding", "Vinnere er lagret.");
+			leggTilVinnerData(model, bruker, utstillingId);
+			leggTilVinnerOppsummering(model);
+			model.addAttribute("vinnerMelding", "Vinnere er lagret. Administrator kan nå generer katalog.");
+			return "dommer/dommer_fragments :: vinnerOppsummering";
 		} catch (RuntimeException e) {
 			model.addAttribute("vinnerFeilMelding", e.getMessage());
+			leggTilVinnerData(model, bruker, utstillingId);
+			return "dommer/dommer_fragments :: dueliste";
 		}
-		leggTilVinnerData(model, bruker, utstillingId);
-		return "dommer/dommer_fragments :: dueliste";
 	}
 
 	private BedommelseBilde opprettBilde(MultipartFile bilde) {
@@ -431,6 +448,7 @@ public class DommerController {
 			model.addAttribute("vinnerKandidaterPerRase", vinnerData.getKandidaterPerRase());
 			model.addAttribute("vinnerKandidaterPerGruppe", vinnerData.getKandidaterPerGruppe());
 			model.addAttribute("alleVinnerKandidater", vinnerData.getAlleKandidater());
+			model.addAttribute("oppdretterKandidater", vinnerData.getOppdretterKandidater());
 			model.addAttribute("valgteRasevinnere", vinnerData.getValgteRasevinnere());
 			model.addAttribute("valgteGruppevinnere", vinnerData.getValgteGruppevinnere());
 			model.addAttribute("valgtBisVinnerId", vinnerData.getValgtBisVinnerId());
@@ -442,6 +460,7 @@ public class DommerController {
 			model.addAttribute("vinnerKandidaterPerRase", Map.of());
 			model.addAttribute("vinnerKandidaterPerGruppe", Map.of());
 			model.addAttribute("alleVinnerKandidater", List.of());
+			model.addAttribute("oppdretterKandidater", Map.of());
 			model.addAttribute("valgteRasevinnere", Map.of());
 			model.addAttribute("valgteGruppevinnere", Map.of());
 			model.addAttribute("valgtBisVinnerId", null);
@@ -449,6 +468,71 @@ public class DommerController {
 			model.addAttribute("valgtNorgesmesterOppdrett2Id", null);
 			model.addAttribute("valgtNorgesmesterOppdrett3Id", null);
 		}
+	}
+
+	private void leggTilVinnerOppsummering(Model model) {
+		Map<Long, Due> duePerId = hentDuePerId((List<Due>) model.getAttribute("alleVinnerKandidater"));
+		Map<String, String> raseOppsummering = byggKategoriOppsummering(
+				(Map<String, Long>) model.getAttribute("valgteRasevinnere"),
+				duePerId
+		);
+		Map<String, String> gruppeOppsummering = byggKategoriOppsummering(
+				(Map<String, Long>) model.getAttribute("valgteGruppevinnere"),
+				duePerId
+		);
+		model.addAttribute("oppsummeringRasevinnere", raseOppsummering);
+		model.addAttribute("oppsummeringGruppevinnere", gruppeOppsummering);
+		model.addAttribute("oppsummeringBis", byggDueKortTekst((Long) model.getAttribute("valgtBisVinnerId"), duePerId));
+
+		Map<Long, String> oppdretterKandidater = (Map<Long, String>) model.getAttribute("oppdretterKandidater");
+		model.addAttribute("oppsummeringNorgesmester1", byggOppdretterTekst((Long) model.getAttribute("valgtNorgesmesterOppdrett1Id"), oppdretterKandidater));
+		model.addAttribute("oppsummeringNorgesmester2", byggOppdretterTekst((Long) model.getAttribute("valgtNorgesmesterOppdrett2Id"), oppdretterKandidater));
+		model.addAttribute("oppsummeringNorgesmester3", byggOppdretterTekst((Long) model.getAttribute("valgtNorgesmesterOppdrett3Id"), oppdretterKandidater));
+	}
+
+	private Map<Long, Due> hentDuePerId(List<Due> duer) {
+		if (duer == null || duer.isEmpty()) {
+			return Map.of();
+		}
+		return duer.stream()
+				.filter(Objects::nonNull)
+				.filter(due -> due.getId() != null)
+				.collect(Collectors.toMap(Due::getId, due -> due, (a, b) -> a, LinkedHashMap::new));
+	}
+
+	private Map<String, String> byggKategoriOppsummering(Map<String, Long> valgtPerKategori, Map<Long, Due> duePerId) {
+		if (valgtPerKategori == null || valgtPerKategori.isEmpty()) {
+			return Map.of();
+		}
+		Map<String, String> oppsummering = new LinkedHashMap<>();
+		for (Map.Entry<String, Long> entry : valgtPerKategori.entrySet()) {
+			oppsummering.put(entry.getKey(), byggDueKortTekst(entry.getValue(), duePerId));
+		}
+		return oppsummering;
+	}
+
+	private String byggDueKortTekst(Long dueId, Map<Long, Due> duePerId) {
+		if (dueId == null || duePerId == null || duePerId.isEmpty()) {
+			return "Ikke valgt";
+		}
+		Due due = duePerId.get(dueId);
+		if (due == null) {
+			return "Ikke valgt";
+		}
+		String rase = due.getRase() == null || due.getRase().isBlank() ? "Ukjent rase" : due.getRase();
+		String burnummer = due.getBurnummer() == null ? "-" : due.getBurnummer().toString();
+		String poeng = due.getBedommelse() == null || due.getBedommelse().getPoeng() == null
+				? "-"
+				: due.getBedommelse().getPoeng().toString();
+		return "Burnr " + burnummer + " - " + rase + " (" + poeng + " poeng)";
+	}
+
+	private String byggOppdretterTekst(Long oppdretterId, Map<Long, String> oppdretterKandidater) {
+		if (oppdretterId == null || oppdretterKandidater == null || oppdretterKandidater.isEmpty()) {
+			return "Ikke valgt";
+		}
+		String navn = oppdretterKandidater.get(oppdretterId);
+		return navn == null || navn.isBlank() ? "Ikke valgt" : navn;
 	}
 
 	@ModelAttribute("navLocation")

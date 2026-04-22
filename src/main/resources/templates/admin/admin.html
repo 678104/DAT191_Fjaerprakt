@@ -14,7 +14,7 @@
         <h1>Admin panel</h1>
         <div class="admin-action-buttons">
             <a href="/admin/panel" role="button" class="secondary">Admin panel</a>
-            <a href="/admin/dommere" role="button" class="secondary">Dommere</a>
+            <a href="/admin/dommere" role="button" class="secondary">Rolleadministrasjon</a>
             <a href="/utstilling/registrer" role="button" class="secondary">Registrer utstilling</a>
             <a href="/admin/bedomming-oppsett" role="button" class="secondary">Oppsett bedømming</a>
             <a href="/admin/duekatalog" role="button" class="secondary">Legg til dueraser og grupper</a>
@@ -97,6 +97,24 @@
             hidden.value = brukerId;
             lukkBrukerForslag();
             skjulBrukerFeil();
+        }
+    }
+
+    function velgAdminBrukerFraForslag(button) {
+        const input = document.getElementById('adminBrukerSok');
+        const hidden = document.getElementById('adminBrukerId');
+        const form = input?.closest('form');
+
+        if (input && hidden && form) {
+            const brukerId = button.dataset.brukerId || '';
+            const brukerNavn = button.dataset.brukerNavn || '';
+            input.value = brukerNavn;
+            input.dataset.valgtBrukerNavn = brukerNavn;
+            form.dataset.valgtBrukerId = brukerId;
+            form.dataset.valgtBrukerNavn = brukerNavn;
+            hidden.value = brukerId;
+            lukkAdminBrukerForslag();
+            skjulAdminBrukerFeil();
         }
     }
 
@@ -209,6 +227,84 @@
         skjulBrukerFeil();
     }
 
+    function nullstillAdminBrukerId() {
+        const hidden = document.getElementById('adminBrukerId');
+        const input = document.getElementById('adminBrukerSok');
+        const form = input?.closest('form');
+
+        if (input && form && input.value === (form.dataset.valgtBrukerNavn || '')) {
+            skjulAdminBrukerFeil();
+            return;
+        }
+
+        if (hidden) {
+            hidden.value = '';
+        }
+        if (input) {
+            delete input.dataset.valgtBrukerNavn;
+        }
+        if (form) {
+            delete form.dataset.valgtBrukerId;
+            delete form.dataset.valgtBrukerNavn;
+        }
+        skjulAdminBrukerFeil();
+    }
+
+    function nullstillAdminBrukerVelger() {
+        const input = document.getElementById('adminBrukerSok');
+        const hidden = document.getElementById('adminBrukerId');
+        const form = input?.closest('form');
+
+        if (input) {
+            input.value = '';
+            delete input.dataset.valgtBrukerNavn;
+        }
+        if (hidden) {
+            hidden.value = '';
+        }
+        if (form) {
+            delete form.dataset.valgtBrukerId;
+            delete form.dataset.valgtBrukerNavn;
+        }
+        lukkAdminBrukerForslag();
+        skjulAdminBrukerFeil();
+    }
+
+    function lukkAdminBrukerForslag() {
+        const container = document.getElementById('adminBrukerForslagContainer');
+        if (container) {
+            container.innerHTML = '';
+        }
+    }
+
+    function visAdminBrukerFeil(melding) {
+        const feil = document.getElementById('adminBrukerFeilmelding');
+        const input = document.getElementById('adminBrukerSok');
+        if (!feil) {
+            return;
+        }
+
+        feil.textContent = melding;
+        feil.hidden = false;
+        if (input) {
+            input.setAttribute('aria-invalid', 'true');
+        }
+    }
+
+    function skjulAdminBrukerFeil() {
+        const feil = document.getElementById('adminBrukerFeilmelding');
+        const input = document.getElementById('adminBrukerSok');
+        if (!feil) {
+            return;
+        }
+
+        feil.textContent = '';
+        feil.hidden = true;
+        if (input) {
+            input.removeAttribute('aria-invalid');
+        }
+    }
+
     function visBrukerFeil(melding) {
         const feil = document.getElementById('brukerFeilmelding');
         const input = document.getElementById('brukerSok');
@@ -247,9 +343,29 @@
         let debounceTimer = null;
         let abortController = null;
 
+        const ensureContainer = () => {
+            if (!containerId) {
+                return null;
+            }
+
+            let container = document.getElementById(containerId);
+            if (container) {
+                return container;
+            }
+
+            container = document.createElement('div');
+            container.id = containerId;
+            container.className = 'autocomplete-results';
+            const wrapper = input.closest('.autocomplete-field') || input.parentElement;
+            if (wrapper) {
+                wrapper.appendChild(container);
+            }
+            return container;
+        };
+
         const updateForslag = async () => {
             const query = (input.value || '').trim();
-            const container = containerId ? document.getElementById(containerId) : null;
+            const container = ensureContainer();
 
             if (!container) {
                 return;
@@ -267,8 +383,12 @@
             abortController = new AbortController();
 
             try {
-                const response = await fetch(`/admin/brukere?sok=${encodeURIComponent(query)}`, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                const autocompleteUrl = input.dataset.autocompleteUrl || '/admin/brukere';
+                const response = await fetch(`${autocompleteUrl}?sok=${encodeURIComponent(query)}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'HX-Request': 'true'
+                    },
                     credentials: 'same-origin',
                     signal: abortController.signal
                 });
@@ -278,7 +398,7 @@
                 }
 
                 const html = await response.text();
-                const target = document.getElementById(containerId);
+                const target = ensureContainer();
                 if (target) {
                     target.outerHTML = html;
                 }
@@ -296,7 +416,7 @@
     }
 
     function initBrukerAutocomplete(root = document) {
-        root.querySelectorAll('input[data-autocomplete-url="/admin/brukere"]').forEach(bindBrukerAutocomplete);
+        root.querySelectorAll('input[data-autocomplete-url]').forEach(bindBrukerAutocomplete);
     }
 
     function sjekkBrukerValgt() {
@@ -319,6 +439,29 @@
         }
 
         visBrukerFeil('Velg bruker å tildele rolle');
+        return false;
+    }
+
+    function sjekkAdminBrukerValgt() {
+        const hidden = document.getElementById('adminBrukerId');
+        const input = document.getElementById('adminBrukerSok');
+        const form = input?.closest('form');
+
+        if (!hidden || !input || !form) {
+            visAdminBrukerFeil('Velg bruker å tildele rolle');
+            return false;
+        }
+
+        if (!hidden.value && form.dataset.valgtBrukerId) {
+            hidden.value = form.dataset.valgtBrukerId;
+        }
+
+        if (hidden && hidden.value) {
+            skjulAdminBrukerFeil();
+            return true;
+        }
+
+        visAdminBrukerFeil('Velg bruker å tildele rolle');
         return false;
     }
 

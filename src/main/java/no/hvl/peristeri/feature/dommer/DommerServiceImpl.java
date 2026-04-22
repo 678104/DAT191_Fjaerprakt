@@ -9,6 +9,7 @@ import no.hvl.peristeri.feature.bruker.Rolle;
 import no.hvl.peristeri.feature.due.Due;
 import no.hvl.peristeri.feature.due.DueNotFoundException;
 import no.hvl.peristeri.feature.due.DueRepository;
+import no.hvl.peristeri.feature.duekatalog.DueRaseRepository;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingRepository;
 import no.hvl.peristeri.util.RaseStringHjelper;
@@ -19,6 +20,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -34,6 +36,7 @@ public class DommerServiceImpl implements DommerService {
 	private final UtstillingRepository       utstillingRepo;
 	private final DommerPaameldingRepository dommerPaameldingRepository;
 	private final DommerVinnerRepository     dommerVinnerRepository;
+	private final DueRaseRepository          dueRaseRepository;
 	private final BrukerService              brukerService;
 
 	private static final Comparator<Due> DUE_VINNER_SORTERING =
@@ -259,23 +262,24 @@ public class DommerServiceImpl implements DommerService {
 			throw new InvalidParameterException("utstillingId", "cannot be null");
 		}
 
-		List<Due> alleTildelteDuer = finnDuerDommerSkalBedomme(dommer, utstillingId);
-		if (alleTildelteDuer.isEmpty()) {
-			return new DommerVinnerData(false, Map.of(), Map.of(), List.of(), Map.of(), Map.of(), null, null, null, null);
+		List<Due> allePaameldteDuer = dueRepo.findByPaamelding_Utstilling_IdOrderByBurnummerAsc(utstillingId);
+		if (allePaameldteDuer.isEmpty()) {
+			return new DommerVinnerData(false, Map.of(), Map.of(), List.of(), Map.of(), Map.of(), Map.of(), null, null, null, null);
 		}
 
-		boolean klarForVinnerkaring = alleTildelteDuer.stream().allMatch(this::harPoeng);
+		boolean klarForVinnerkaring = erKlarForVinnerkaring(allePaameldteDuer);
 		if (!klarForVinnerkaring) {
-			return new DommerVinnerData(false, Map.of(), Map.of(), List.of(), Map.of(), Map.of(), null, null, null, null);
+			return new DommerVinnerData(false, Map.of(), Map.of(), List.of(), Map.of(), Map.of(), Map.of(), null, null, null, null);
 		}
 
-		List<Due> kandidater = alleTildelteDuer.stream()
+		List<Due> kandidater = allePaameldteDuer.stream()
 				.filter(this::harPoeng)
 				.sorted(DUE_VINNER_SORTERING)
 				.toList();
 
 		Map<String, List<Due>> kandidaterPerRase = grupperEtterRase(kandidater);
 		Map<String, List<Due>> kandidaterPerGruppe = grupperEtterGruppe(kandidater);
+		Map<Long, String> oppdretterKandidater = byggOppdretterKandidater(kandidater);
 
 		DommerPaamelding dp = finnDommerPaameldingForUtstilling(dommer, utstillingId);
 		List<DommerVinner> eksisterendeVinnere = dommerVinnerRepository
@@ -297,11 +301,11 @@ public class DommerServiceImpl implements DommerService {
 				if ("BIS".equals(vinner.getKategoriNavn())) {
 					valgtBisVinnerId = vinner.getDue().getId();
 				} else if (NORGESMESTER_OPPDRETT_1.equals(vinner.getKategoriNavn())) {
-					valgtNorgesmesterOppdrett1Id = vinner.getDue().getId();
+					valgtNorgesmesterOppdrett1Id = hentOppdretterId(vinner.getDue());
 				} else if (NORGESMESTER_OPPDRETT_2.equals(vinner.getKategoriNavn())) {
-					valgtNorgesmesterOppdrett2Id = vinner.getDue().getId();
+					valgtNorgesmesterOppdrett2Id = hentOppdretterId(vinner.getDue());
 				} else if (NORGESMESTER_OPPDRETT_3.equals(vinner.getKategoriNavn())) {
-					valgtNorgesmesterOppdrett3Id = vinner.getDue().getId();
+					valgtNorgesmesterOppdrett3Id = hentOppdretterId(vinner.getDue());
 				}
 			}
 		}
@@ -311,6 +315,7 @@ public class DommerServiceImpl implements DommerService {
 				kandidaterPerRase,
 				kandidaterPerGruppe,
 				kandidater,
+				oppdretterKandidater,
 				valgteRasevinnere,
 				valgteGruppevinnere,
 				valgtBisVinnerId,
@@ -329,9 +334,9 @@ public class DommerServiceImpl implements DommerService {
 	                        List<String> gruppeNavn,
 	                        List<Long> gruppeVinnerDueId,
 	                        Long bisVinnerDueId,
-	                        Long norgesmesterOppdrett1DueId,
-	                        Long norgesmesterOppdrett2DueId,
-	                        Long norgesmesterOppdrett3DueId) {
+	                        Long norgesmesterOppdrett1BrukerId,
+	                        Long norgesmesterOppdrett2BrukerId,
+	                        Long norgesmesterOppdrett3BrukerId) {
 		if (dommer == null) {
 			throw new InvalidParameterException("dommer", "cannot be null");
 		}
@@ -339,15 +344,16 @@ public class DommerServiceImpl implements DommerService {
 			throw new InvalidParameterException("utstillingId", "cannot be null");
 		}
 
-		List<Due> alleTildelteDuer = finnDuerDommerSkalBedomme(dommer, utstillingId);
-		if (alleTildelteDuer.isEmpty() || alleTildelteDuer.stream().anyMatch(due -> !harPoeng(due))) {
-			throw new InvalidParameterException("vinnere", "Alle duer må være bedømt før vinnerkåring.");
+		List<Due> allePaameldteDuer = dueRepo.findByPaamelding_Utstilling_IdOrderByBurnummerAsc(utstillingId);
+		if (allePaameldteDuer.isEmpty() || !erKlarForVinnerkaring(allePaameldteDuer)) {
+			throw new InvalidParameterException("vinnere", "Alle paameldte duer maa vaere bedomt for vinnerkaring.");
 		}
 
-		List<Due> kandidater = alleTildelteDuer.stream().filter(this::harPoeng).toList();
+		List<Due> kandidater = allePaameldteDuer.stream().filter(this::harPoeng).toList();
 		Map<Long, Due> kandidaterPerId = kandidater.stream().collect(Collectors.toMap(Due::getId, due -> due));
 		Map<String, List<Due>> kandidaterPerRase = grupperEtterRase(kandidater);
 		Map<String, List<Due>> kandidaterPerGruppe = grupperEtterGruppe(kandidater);
+		Map<Long, Due> besteDuePerOppdretter = byggBesteDuePerOppdretter(kandidater);
 
 		if (!harLikLengde(raseNavn, raseVinnerDueId) || !harLikLengde(gruppeNavn, gruppeVinnerDueId)) {
 			throw new InvalidParameterException("vinnere", "Ugyldig vinnerdata sendt inn.");
@@ -385,10 +391,10 @@ public class DommerServiceImpl implements DommerService {
 		}
 
 		lagreNorgesmesterOppdrett(dp,
-				kandidaterPerId,
-				norgesmesterOppdrett1DueId,
-				norgesmesterOppdrett2DueId,
-				norgesmesterOppdrett3DueId);
+				besteDuePerOppdretter,
+				norgesmesterOppdrett1BrukerId,
+				norgesmesterOppdrett2BrukerId,
+				norgesmesterOppdrett3BrukerId);
 	}
 
 	@Override
@@ -587,39 +593,34 @@ public class DommerServiceImpl implements DommerService {
 	}
 
 	private Map<String, List<Due>> grupperEtterGruppe(List<Due> duer) {
+		Map<String, String> raseTilGruppe = byggRaseTilGruppeOppslag();
 		return duer.stream()
 				.collect(Collectors.groupingBy(
-						due -> finnGruppeNavn(due.getRase()),
+						due -> finnGruppeNavnFraRase(due.getRase(), raseTilGruppe),
 						LinkedHashMap::new,
 						Collectors.collectingAndThen(Collectors.toList(),
 								liste -> liste.stream().sorted(DUE_VINNER_SORTERING).toList())
 				));
 	}
 
-	private String finnGruppeNavn(String rase) {
-		String verdi = trimTilTomTekst(rase);
-		if (verdi.isBlank()) {
+	private Map<String, String> byggRaseTilGruppeOppslag() {
+		return dueRaseRepository.findAll().stream()
+				.filter(rase -> rase.getGruppe() != null)
+				.collect(Collectors.toMap(
+					rase -> trimTilTomTekst(rase.getNavn()).toLowerCase(Locale.ROOT),
+					rase -> trimTilTomTekst(rase.getGruppe().getNavn()),
+					(eksisterende, ignored) -> eksisterende,
+					LinkedHashMap::new
+				));
+	}
+
+	private String finnGruppeNavnFraRase(String raseNavn, Map<String, String> raseTilGruppe) {
+		String raseNokkel = trimTilTomTekst(raseNavn).toLowerCase(Locale.ROOT);
+		if (raseNokkel.isBlank()) {
 			return "Ukjent gruppe";
 		}
-
-		int startParentes = verdi.indexOf('(');
-		int sluttParentes = verdi.indexOf(')');
-		if (startParentes >= 0 && sluttParentes > startParentes) {
-			String parentesVerdi = trimTilTomTekst(verdi.substring(startParentes + 1, sluttParentes));
-			if (!parentesVerdi.isBlank()) {
-				return parentesVerdi;
-			}
-		}
-
-		if (verdi.contains("-")) {
-			return trimTilTomTekst(verdi.substring(0, verdi.indexOf('-')));
-		}
-		if (verdi.contains(":")) {
-			return trimTilTomTekst(verdi.substring(0, verdi.indexOf(':')));
-		}
-
-		String[] deler = verdi.split("\\s+");
-		return deler.length == 0 ? "Ukjent gruppe" : deler[0];
+		String gruppe = raseTilGruppe.get(raseNokkel);
+		return gruppe == null || gruppe.isBlank() ? "Ukjent gruppe" : gruppe;
 	}
 
 	private boolean harPoeng(Due due) {
@@ -632,6 +633,55 @@ public class DommerServiceImpl implements DommerService {
 		int aLen = a == null ? 0 : a.size();
 		int bLen = b == null ? 0 : b.size();
 		return aLen == bLen;
+	}
+
+	private boolean erKlarForVinnerkaring(List<Due> allePaameldteDuer) {
+		if (allePaameldteDuer == null || allePaameldteDuer.isEmpty()) {
+			return false;
+		}
+		return allePaameldteDuer.stream().allMatch(this::harPoeng);
+	}
+
+	private Map<Long, Due> byggBesteDuePerOppdretter(List<Due> kandidater) {
+		Map<Long, Due> bestePerOppdretter = new LinkedHashMap<>();
+		kandidater.stream()
+				.filter(this::harGyldigOppdretter)
+				.sorted(DUE_VINNER_SORTERING)
+				.forEach(due -> bestePerOppdretter.putIfAbsent(hentOppdretterId(due), due));
+		return bestePerOppdretter;
+	}
+
+	private Map<Long, String> byggOppdretterKandidater(List<Due> kandidater) {
+		return byggBesteDuePerOppdretter(kandidater).values().stream()
+				.filter(this::harGyldigOppdretter)
+				.collect(Collectors.toMap(
+						this::hentOppdretterId,
+						this::byggOppdretterNavn,
+						(eksisterende, ignored) -> eksisterende,
+						LinkedHashMap::new
+				));
+	}
+
+	private boolean harGyldigOppdretter(Due due) {
+		return hentOppdretterId(due) != null;
+	}
+
+	private Long hentOppdretterId(Due due) {
+		if (due == null || due.getPaamelding() == null || due.getPaamelding().getUtstiller() == null) {
+			return null;
+		}
+		return due.getPaamelding().getUtstiller().getId();
+	}
+
+	private String byggOppdretterNavn(Due due) {
+		if (due == null || due.getPaamelding() == null || due.getPaamelding().getUtstiller() == null) {
+			return "Ukjent oppdretter";
+		}
+		Bruker oppdretter = due.getPaamelding().getUtstiller();
+		String fornavn = trimTilTomTekst(oppdretter.getFornavn());
+		String etternavn = trimTilTomTekst(oppdretter.getEtternavn());
+		String navn = (fornavn + " " + etternavn).trim();
+		return navn.isBlank() ? "Ukjent oppdretter" : navn;
 	}
 
 	private Due validerOgFinnValgtDue(Map<Long, Due> kandidaterPerId, List<Due> kategoriKandidater, Long dueId, String feilmelding) {
@@ -650,27 +700,20 @@ public class DommerServiceImpl implements DommerService {
 	}
 
 	private void lagreNorgesmesterOppdrett(DommerPaamelding dp,
-	                                      Map<Long, Due> kandidaterPerId,
-	                                      Long plass1DueId,
-	                                      Long plass2DueId,
-	                                      Long plass3DueId) {
-		if (plass1DueId == null && plass2DueId == null && plass3DueId == null) {
+	                                      Map<Long, Due> besteDuePerOppdretter,
+	                                      Long plass1BrukerId,
+	                                      Long plass2BrukerId,
+	                                      Long plass3BrukerId) {
+		if (plass1BrukerId == null && plass2BrukerId == null && plass3BrukerId == null) {
 			return;
 		}
-		if (plass1DueId == null || plass2DueId == null || plass3DueId == null) {
+		if (plass1BrukerId == null || plass2BrukerId == null || plass3BrukerId == null) {
 			throw new InvalidParameterException("norgesmesterOppdrett", "Velg 1., 2. og 3. plass for Norgesmester i oppdrett.");
 		}
-		Set<Long> unike = new HashSet<>();
-		unike.add(plass1DueId);
-		unike.add(plass2DueId);
-		unike.add(plass3DueId);
-		if (unike.size() != 3) {
-			throw new InvalidParameterException("norgesmesterOppdrett", "1., 2. og 3. plass må være ulike duer.");
-		}
 
-		Due plass1 = kandidaterPerId.get(plass1DueId);
-		Due plass2 = kandidaterPerId.get(plass2DueId);
-		Due plass3 = kandidaterPerId.get(plass3DueId);
+		Due plass1 = besteDuePerOppdretter.get(plass1BrukerId);
+		Due plass2 = besteDuePerOppdretter.get(plass2BrukerId);
+		Due plass3 = besteDuePerOppdretter.get(plass3BrukerId);
 		if (plass1 == null || plass2 == null || plass3 == null) {
 			throw new InvalidParameterException("norgesmesterOppdrett", "Ugyldig valg for Norgesmester i oppdrett.");
 		}

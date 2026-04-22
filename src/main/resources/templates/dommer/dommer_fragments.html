@@ -87,13 +87,14 @@
                 <p th:if="${vinnerMelding}" style="color: #1b7f3a;" th:text="${vinnerMelding}"></p>
 
                 <div th:unless="${klarForVinnerkaring}">
-                  <p>Du kan kåre vinnere når alle tildelte duer er bedømt.</p>
+                  <p>Du kan kåre vinnere når alle paameldte duer i utstillingen er bedomt.</p>
                 </div>
 
                 <div th:if="${klarForVinnerkaring}">
                   <form hx-post="/dommer/vinnere"
-                        hx-target="#dueliste"
-                        hx-swap="outerHTML">
+                        th:attr="hx-push-url='/dommer/utstilling/' + ${valgtUtstillingId} + '/vinnere-oppsummering'"
+                        hx-target="#content"
+                        hx-swap="innerHTML">
                     <input type="hidden" name="utstillingId" th:value="${valgtUtstillingId}"/>
 
                     <h3>Rasevinner</h3>
@@ -136,32 +137,32 @@
 
                     <h3 style="margin-top: 1rem;">Norgesmester i oppdrett</h3>
                     <label for="norgesmester-oppdrett-1">1. plass</label>
-                    <select id="norgesmester-oppdrett-1" name="norgesmesterOppdrett1DueId" required>
+                    <select id="norgesmester-oppdrett-1" name="norgesmesterOppdrett1BrukerId" required>
                       <option value="">Velg 1. plass</option>
-                      <option th:each="due : ${alleVinnerKandidater}"
-                              th:value="${due.id}"
-                              th:selected="${valgtNorgesmesterOppdrett1Id != null and valgtNorgesmesterOppdrett1Id == due.id}"
-                              th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                      <option th:each="oppdretter : ${oppdretterKandidater}"
+                              th:value="${oppdretter.key}"
+                              th:selected="${valgtNorgesmesterOppdrett1Id != null and valgtNorgesmesterOppdrett1Id == oppdretter.key}"
+                              th:text="${oppdretter.value}">
                       </option>
                     </select>
 
                     <label for="norgesmester-oppdrett-2">2. plass</label>
-                    <select id="norgesmester-oppdrett-2" name="norgesmesterOppdrett2DueId" required>
+                    <select id="norgesmester-oppdrett-2" name="norgesmesterOppdrett2BrukerId" required>
                       <option value="">Velg 2. plass</option>
-                      <option th:each="due : ${alleVinnerKandidater}"
-                              th:value="${due.id}"
-                              th:selected="${valgtNorgesmesterOppdrett2Id != null and valgtNorgesmesterOppdrett2Id == due.id}"
-                              th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                      <option th:each="oppdretter : ${oppdretterKandidater}"
+                              th:value="${oppdretter.key}"
+                              th:selected="${valgtNorgesmesterOppdrett2Id != null and valgtNorgesmesterOppdrett2Id == oppdretter.key}"
+                              th:text="${oppdretter.value}">
                       </option>
                     </select>
 
                     <label for="norgesmester-oppdrett-3">3. plass</label>
-                    <select id="norgesmester-oppdrett-3" name="norgesmesterOppdrett3DueId" required>
+                    <select id="norgesmester-oppdrett-3" name="norgesmesterOppdrett3BrukerId" required>
                       <option value="">Velg 3. plass</option>
-                      <option th:each="due : ${alleVinnerKandidater}"
-                              th:value="${due.id}"
-                              th:selected="${valgtNorgesmesterOppdrett3Id != null and valgtNorgesmesterOppdrett3Id == due.id}"
-                              th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                      <option th:each="oppdretter : ${oppdretterKandidater}"
+                              th:value="${oppdretter.key}"
+                              th:selected="${valgtNorgesmesterOppdrett3Id != null and valgtNorgesmesterOppdrett3Id == oppdretter.key}"
+                              th:text="${oppdretter.value}">
                       </option>
                     </select>
 
@@ -171,6 +172,59 @@
                   </form>
                 </div>
               </article>
+</div>
+
+<div id="vinnerOppsummering" th:fragment="vinnerOppsummering">
+  <article>
+    <header>
+      <h2>Oppsummering av valgte vinnere</h2>
+    </header>
+    <p th:text="${vinnerMelding}">Vinnere er lagret. Administrator kan nå generer katalog.</p>
+
+    <h3>Rasevinnere</h3>
+    <table>
+      <thead>
+      <tr>
+        <th>Rase</th>
+        <th>Vinner</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="entry : ${oppsummeringRasevinnere}">
+        <td th:text="${entry.key}">Rase</td>
+        <td th:text="${entry.value}">Vinner</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <h3>Gruppevinnere</h3>
+    <table>
+      <thead>
+      <tr>
+        <th>Gruppe</th>
+        <th>Vinner</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="entry : ${oppsummeringGruppevinnere}">
+        <td th:text="${entry.key}">Gruppe</td>
+        <td th:text="${entry.value}">Vinner</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <h3>Best in Show (BIS)</h3>
+    <p th:text="${oppsummeringBis}">Ikke valgt</p>
+
+    <h3>Norgesmester i oppdrett</h3>
+    <p><strong>1. plass:</strong> <span th:text="${oppsummeringNorgesmester1}">Ikke valgt</span></p>
+    <p><strong>2. plass:</strong> <span th:text="${oppsummeringNorgesmester2}">Ikke valgt</span></p>
+    <p><strong>3. plass:</strong> <span th:text="${oppsummeringNorgesmester3}">Ikke valgt</span></p>
+
+    <div class="grid" style="margin-top: 1rem;">
+      <a role="button" class="secondary" th:href="@{/dommer/utstilling/{id}(id=${valgtUtstillingId})}">Tilbake til utstilling</a>
+    </div>
+  </article>
 </div>
 
 <!-- ✅ Dommer Bedømmelse Fragment -->

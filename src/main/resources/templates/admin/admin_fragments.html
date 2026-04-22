@@ -823,8 +823,100 @@
     <section th:fragment="dommerAdministrasjon" id="main-content">
         <!--/*@thymesVar id="dommere" type="java.util.List<no.hvl.peristeri.feature.bruker.Bruker>"*/-->
         <!--/*@thymesVar id="utstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
-        <h2>Dommeradministrasjon</h2>
-        <p>Her kan admin legge til dommerrolle, se alle dommere og fjerne dommerrolle.</p>
+        <h2>Rolleadministrasjon</h2>
+        <p>Her kan admin legge til, se og fjerne roller.</p>
+
+        <article>
+            <header><strong>Legg til adminrolle</strong></header>
+            <form id="adminRolleForm"
+                  data-admin-rolle-form="true"
+                  th:hx-post="@{/admin/admins/rolle}"
+                  hx-target="#main-content"
+                  hx-select="#main-content"
+                  hx-swap="outerHTML"
+                  hx-on::afterRequest="const rc = event.detail && event.detail.requestConfig; const source = event.detail && event.detail.elt; const verb = ((rc && rc.verb) || '').toLowerCase(); if (source === this && verb && verb !== 'get') { this.reset(); nullstillAdminBrukerVelger(); }"
+                  onsubmit="return sjekkAdminBrukerValgt();">
+                <fieldset role="group">
+                    <div class="autocomplete-field">
+                        <label for="adminBrukerSok">Velg bruker</label>
+                        <input id="adminBrukerSok"
+                               type="search"
+                               name="sok"
+                               placeholder="Skriv navn eller e-post..."
+                               autocomplete="off"
+                               minlength="1"
+                               aria-autocomplete="list"
+                               aria-controls="adminBrukerForslagContainer"
+                               data-autocomplete-url="/admin/admins/brukere"
+                               oninput="nullstillAdminBrukerId()"/>
+                        <input type="hidden" id="adminBrukerId" name="brukerId">
+                        <p id="adminBrukerFeilmelding"
+                           class="feilmelding"
+                           aria-live="polite"
+                           th:attr="hidden=${alleAdminFeil} ? null : 'hidden'"
+                           th:text="${alleAdminFeil}">Velg bruker å tildele rolle</p>
+                        <div id="adminBrukerForslagContainer" th:replace="~{admin/admin_fragments :: brukerForslagAdmin}"></div>
+                    </div>
+                </fieldset>
+                <button type="submit">Gi adminrolle</button>
+            </form>
+        </article>
+
+        <div id="adminBrukerForslagContainer" th:fragment="brukerForslagAdmin">
+            <div class="autocomplete-results" th:if="${!#lists.isEmpty(brukere)}" role="listbox" aria-label="Forslag til adminbrukere">
+                <button type="button"
+                        class="secondary outline-small autocomplete-option"
+                        th:each="bruker : ${brukere}"
+                        th:attr="data-bruker-id=${bruker.id},data-bruker-navn=${bruker.fornavn + ' ' + bruker.etternavn + ' (' + bruker.epost + ')'}"
+                        role="option"
+                        tabindex="-1"
+                        onclick="velgAdminBrukerFraForslag(this)">
+                    <span th:text="${bruker.fornavn + ' ' + bruker.etternavn}"></span>
+                    <small th:text="${bruker.epost}"></small>
+                </button>
+            </div>
+            <p th:if="${sok != null and !sok.isBlank() and #lists.isEmpty(brukere)}">
+                Ingen brukere funnet.
+            </p>
+        </div>
+
+        <article>
+            <header><strong>Alle administratorer</strong></header>
+            <p class="feilmelding"
+               aria-live="polite"
+               th:attr="hidden=${alleAdminFeil} ? null : 'hidden'"
+               th:text="${alleAdminFeil}"></p>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Navn</th>
+                    <th>E-post</th>
+                    <th>Handling</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(administratorer)}">
+                    <td colspan="4">Ingen administratorer funnet.</td>
+                </tr>
+                <tr th:each="adminBruker : ${administratorer}">
+                    <td th:text="${adminBruker.id}"></td>
+                    <td th:text="${adminBruker.fornavn + ' ' + adminBruker.etternavn}"></td>
+                    <td th:text="${adminBruker.epost}"></td>
+                    <td>
+                        <button class="secondary"
+                                th:hx-delete="@{/admin/admins/{id}/rolle(id=${adminBruker.id})}"
+                                hx-target="#main-content"
+                                hx-select="#main-content"
+                                hx-swap="outerHTML"
+                                hx-confirm="Fjerne adminrolle fra denne brukeren?">
+                            Fjern adminrolle
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
 
         <article>
             <header><strong>Legg til dommerrolle</strong></header>

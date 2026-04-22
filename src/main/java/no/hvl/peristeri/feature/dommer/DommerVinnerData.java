@@ -14,6 +14,7 @@ public class DommerVinnerData {
 	private final Map<String, List<Due>> kandidaterPerRase;
 	private final Map<String, List<Due>> kandidaterPerGruppe;
 	private final List<Due> alleKandidater;
+	private final Map<Long, String> oppdretterKandidater;
 	private final Map<String, Long> valgteRasevinnere;
 	private final Map<String, Long> valgteGruppevinnere;
 	private final Long valgtBisVinnerId;

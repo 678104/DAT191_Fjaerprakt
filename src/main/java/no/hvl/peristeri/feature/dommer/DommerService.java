@@ -62,7 +62,7 @@ public interface DommerService {
 	                 List<String> gruppeNavn,
 	                 List<Long> gruppeVinnerDueId,
 	                 Long bisVinnerDueId,
-	                 Long norgesmesterOppdrett1DueId,
-	                 Long norgesmesterOppdrett2DueId,
-	                 Long norgesmesterOppdrett3DueId);
+	                 Long norgesmesterOppdrett1BrukerId,
+	                 Long norgesmesterOppdrett2BrukerId,
+	                 Long norgesmesterOppdrett3BrukerId);
 }
