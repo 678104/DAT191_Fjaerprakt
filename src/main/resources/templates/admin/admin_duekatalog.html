@@ -65,50 +65,6 @@
         </article>
     </section>
 
-    <section class="grid">
-        <article>
-            <header><b>Farger</b></header>
-            <form method="post" action="/admin/duekatalog/farge">
-                <label for="farge-navn">Ny farge</label>
-                <input id="farge-navn" name="navn" type="text" required>
-                <button type="submit">Legg til farge</button>
-            </form>
-            <table>
-                <thead>
-                <tr>
-                    <th>Farge</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="farge : ${farger}">
-                    <td th:text="${farge.navn}"></td>
-                </tr>
-                </tbody>
-            </table>
-        </article>
-
-        <article>
-            <header><b>Varianter</b></header>
-            <form method="post" action="/admin/duekatalog/variant">
-                <label for="variant-navn">Ny variant</label>
-                <input id="variant-navn" name="navn" type="text" required>
-                <button type="submit">Legg til variant</button>
-            </form>
-            <table>
-                <thead>
-                <tr>
-                    <th>Variant</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="variant : ${varianter}">
-                    <td th:text="${variant.navn}"></td>
-                </tr>
-                </tbody>
-            </table>
-        </article>
-    </section>
-
     <a href="/admin" role="button" class="secondary">Tilbake til admin</a>
 </main>
 <footer class="container">

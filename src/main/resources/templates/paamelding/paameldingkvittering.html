@@ -87,18 +87,13 @@
                     </label>
 
                     <label for="ny-due-farge">Farge
-                        <select id="ny-due-farge" name="farge">
-                            <option value="">Velg farge (valgfritt)</option>
-                            <option th:each="farge : ${dueFarger}" th:value="${farge.navn}" th:text="${farge.navn}"></option>
-                        </select>
+                        <input id="ny-due-farge" type="text" name="farge" placeholder="Farge">
                     </label>
 
                     <label for="ny-due-variant">Variant
-                        <select id="ny-due-variant" name="variant">
-                            <option value="">Velg variant (valgfritt)</option>
-                            <option th:each="variant : ${dueVarianter}" th:value="${variant.navn}" th:text="${variant.navn}"></option>
-                        </select>
+                        <input id="ny-due-variant" type="text" name="variant" placeholder="Variant">
                     </label>
+
                 </div>
 
                 <div class="grid due-form-row due-form-row--bottom">

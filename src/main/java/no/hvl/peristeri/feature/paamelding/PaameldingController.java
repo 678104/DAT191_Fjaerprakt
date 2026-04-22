@@ -65,10 +65,8 @@ public class PaameldingController {
 		logger.info("PaameldingDTO: {}", dueDTO);
 
 		boolean ugyldigRase = !dueKatalogService.erRaseGyldigForGruppe(gruppeId, dueDTO.rase());
-		boolean ugyldigFarge = !erTom(dueDTO.farge()) && !dueKatalogService.finnesFarge(dueDTO.farge());
-		boolean ugyldigVariant = !erTom(dueDTO.variant()) && !dueKatalogService.finnesVariant(dueDTO.variant());
 
-		if (ugyldigRase || ugyldigFarge || ugyldigVariant) {
+		if (ugyldigRase) {
 			throw new BusinessRuleViolationException("Ugyldig valg for rase, farge eller variant.");
 		}
 
