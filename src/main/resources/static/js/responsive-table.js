@@ -21,15 +21,44 @@
         });
     }
 
-    function initResponsiveTables() {
-        const tables = document.querySelectorAll("table");
+    function getTablesFromRoot(root) {
+        if (!root) {
+            return [];
+        }
+
+        if (root.matches && root.matches("table")) {
+            return [root];
+        }
+
+        return Array.from(root.querySelectorAll("table"));
+    }
+
+    function initResponsiveTables(root = document) {
+        const tables = getTablesFromRoot(root);
         tables.forEach((table) => applyResponsiveTable(table));
     }
 
+    function bindHtmxListeners() {
+        const onHtmxUpdate = (event) => {
+            initResponsiveTables(event?.target || document);
+        };
+
+        document.body.addEventListener("htmx:afterSwap", onHtmxUpdate);
+        document.body.addEventListener("htmx:load", onHtmxUpdate);
+    }
+
+    function bootstrap() {
+        initResponsiveTables(document);
+
+        if (document.body) {
+            bindHtmxListeners();
+        }
+    }
+
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initResponsiveTables, { once: true });
+        document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
     } else {
-        initResponsiveTables();
+        bootstrap();
     }
 })();
 
