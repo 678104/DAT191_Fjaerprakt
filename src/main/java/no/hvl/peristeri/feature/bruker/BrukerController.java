@@ -25,6 +25,7 @@ public class BrukerController {
 
 	private final BrukerService     brukerService;
 	private final PaameldingService paameldingService;
+	private final BedommelseNotifikasjonService bedommelseNotifikasjonService;
 
 	@GetMapping
 	public String bruker(@AuthenticationPrincipal Bruker bruker, Model model, HttpSession session) {
@@ -135,11 +136,23 @@ public class BrukerController {
 
 	@HxRequest
 	@GetMapping("/paamelding/{paameldingId}/resultater")
-	public String getResultaterHtmx(@PathVariable("paameldingId") Long paameldingId, Model model, HttpSession session) {
+	public String getResultaterHtmx(@AuthenticationPrincipal Bruker bruker,
+	                                @PathVariable("paameldingId") Long paameldingId,
+	                                Model model,
+	                                HttpSession session) {
 		Paamelding paamelding = paameldingService.hentPaamelding(paameldingId);
+		bedommelseNotifikasjonService.markerSomLestForPaamelding(bruker.getId(), paameldingId);
 		model.addAttribute("paamelding", paamelding);
 
 		return "bruker/bruker_resultatliste";
+	}
+
+	@HxRequest
+	@GetMapping("/notifikasjoner/badge")
+	public String getNotifikasjonerBadge(@AuthenticationPrincipal Bruker bruker, Model model) {
+		long ulesteBedommelser = bedommelseNotifikasjonService.tellUleste(bruker.getId());
+		model.addAttribute("ulesteBedommelser", ulesteBedommelser);
+		return "fragments/navbar :: bedommelseNotifikasjonContent";
 	}
 
 	@ModelAttribute("navLocation")

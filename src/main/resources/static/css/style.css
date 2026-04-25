@@ -109,6 +109,23 @@ header nav a:hover {
 }
 
 #theme-toggle [data-theme-icon] svg {}
+
+.bedommelse-varsel-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.4rem;
+    height: 1.4rem;
+    margin-left: 0.45rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background-color: #C62828;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
 .nav-icon {
     height: 100%;
     max-height: 3rem;

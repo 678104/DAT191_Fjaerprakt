@@ -3,6 +3,7 @@ package no.hvl.peristeri.feature.dommer;
 import lombok.RequiredArgsConstructor;
 import no.hvl.peristeri.common.exception.InvalidParameterException;
 import no.hvl.peristeri.common.exception.ResourceNotFoundException;
+import no.hvl.peristeri.feature.bruker.BedommelseNotifikasjonService;
 import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.bruker.BrukerService;
 import no.hvl.peristeri.feature.bruker.Rolle;
@@ -38,6 +39,7 @@ public class DommerServiceImpl implements DommerService {
 	private final DommerVinnerRepository     dommerVinnerRepository;
 	private final DueRaseRepository          dueRaseRepository;
 	private final BrukerService              brukerService;
+	private final BedommelseNotifikasjonService bedommelseNotifikasjonService;
 
 	private static final Comparator<Due> DUE_VINNER_SORTERING =
 			Comparator.comparing((Due due) -> due.getBedommelse() != null ? due.getBedommelse().getPoeng() : 0,
@@ -113,6 +115,7 @@ public class DommerServiceImpl implements DommerService {
 
 			bedommelseRepo.save(nyBedommelse);
 			dueRepo.save(due);
+			bedommelseNotifikasjonService.opprettVedFerdigBedommelse(due);
 		}
 	}
 

@@ -46,7 +46,19 @@
                 </a>
             </li>
             <li sec:authorize="isAuthenticated()">
-                <a href="/bruker/din-paamelding" role="button">Din påmelding</a>
+                <div id="bedommelse-notifikasjon"
+                     th:fragment="bedommelseNotifikasjon"
+                     th:hx-get="@{/bruker/notifikasjoner/badge}"
+                     hx-trigger="load, every 20s"
+                     hx-target="this"
+                     hx-swap="innerHTML">
+                    <a href="/bruker/din-paamelding" role="button" th:fragment="bedommelseNotifikasjonContent">
+                        Din påmelding
+                        <span th:if="${ulesteBedommelser != null and ulesteBedommelser > 0}"
+                              class="bedommelse-varsel-badge"
+                              th:text="${ulesteBedommelser}">0</span>
+                    </a>
+                </div>
             </li>
             <li sec:authorize="isAuthenticated()">
                 <form th:action="@{/logout}" method="post" style="display: inline;">
