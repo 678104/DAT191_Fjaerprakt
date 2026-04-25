@@ -3,7 +3,7 @@ package no.hvl.peristeri.feature.admin;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HtmxReswap;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HtmxResponse;
-import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import no.hvl.peristeri.common.exception.ResourceNotFoundException;
 import no.hvl.peristeri.feature.bruker.Bruker;
@@ -17,6 +17,8 @@ import no.hvl.peristeri.feature.dommer.StandardKommentarType;
 import no.hvl.peristeri.feature.due.Due;
 import no.hvl.peristeri.feature.due.DueService;
 import no.hvl.peristeri.feature.duekatalog.DueKatalogService;
+import no.hvl.peristeri.feature.kontaktperson.Kontaktperson;
+import no.hvl.peristeri.feature.kontaktperson.KontaktpersonService;
 import no.hvl.peristeri.feature.utstilling.KatalogPdfService;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
@@ -28,6 +30,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -54,9 +57,10 @@ public class AdminController {
 	private final StandardKommentarService standardKommentarService;
 	private final DueKatalogService dueKatalogService;
 	private final KatalogPdfService katalogPdfService;
+	private final KontaktpersonService kontaktpersonService;
 
 	@GetMapping
-	public String getAdmin(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+	public String getAdmin(Model model) {
 		model.addAttribute("kommendeUtstillinger", utstillingService.finnIkkeTidligereUtstillinger());
 		model.addAttribute("tidligereUtstillinger", utstillingService.finnTidligereUtstillinger());
 		return "admin/admin";
@@ -103,16 +107,14 @@ public class AdminController {
 
 	@HxRequest
 	@GetMapping("/{id}")
-	public String getAdminUtstillingHtmx(@PathVariable Long id, Model model, HttpSession session,
-	                                     RedirectAttributes redirectAttributes) {
+	public String getAdminUtstillingHtmx(@PathVariable Long id, Model model) {
 		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(id));
 		return "admin/admin_fragments :: adminUtstilling";
 	}
 
 
 	@GetMapping("/{id}")
-	public String getAdminUtstilling(@PathVariable Long id, Model model, HttpSession session,
-	                                 RedirectAttributes redirectAttributes) {
+	public String getAdminUtstilling(@PathVariable Long id, Model model) {
 		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(id));
 		model.addAttribute("fragment", "adminUtstilling");
 		return "admin/admin";
@@ -120,8 +122,7 @@ public class AdminController {
 
 	@HxRequest
 	@GetMapping("/{id}/tildel-dommer-rolle")
-	public String getTildelDommerRolleHtmx(@PathVariable Long id, Model model, HttpSession session,
-	                                       RedirectAttributes redirectAttributes) {
+	public String getTildelDommerRolleHtmx(@PathVariable Long id, Model model) {
 		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(id));
 		model.addAttribute("brukere", List.of());
 		model.addAttribute("dommerListe", dommerService.finnDommerPaameldingerTilUtstilling(id));
@@ -159,7 +160,7 @@ public class AdminController {
 
 	@HxRequest
 	@GetMapping("/{id}/tildel-dommer-rolle/brukere")
-	public String getTildelDommerRolleBrukereHtmx(@PathVariable Long id, @RequestParam(required = false) String sok,
+	public String getTildelDommerRolleBrukereHtmx(@RequestParam(required = false) String sok,
 	                                             Model model) {
 		String filter = hentSoketekst(null, sok);
 		model.addAttribute("brukere", filter.isBlank() ? List.of() : brukerService.finnBrukere(filter).stream().limit(10).toList());
@@ -169,8 +170,8 @@ public class AdminController {
 
 	@HxRequest
 	@PostMapping("/{utstillingId}/tildel-dommer-rolle")
-	public String postTildelDommerRolle(@PathVariable Long utstillingId, Model model, HttpSession session,
-	                                    RedirectAttributes redirectAttributes, @RequestParam(required = false) Long brukerId,
+	public String postTildelDommerRolle(@PathVariable Long utstillingId, Model model,
+	                                    @RequestParam(required = false) Long brukerId,
 	                                    HtmxResponse htmxResponse) {
 		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
 		model.addAttribute("utstilling", utstilling);
@@ -312,7 +313,7 @@ public class AdminController {
 	@HxRequest
 	@PostMapping("/{utstillingId}/fjern-dommer/{dommerPaameldingId}")
 	public String postFjernDommer(@PathVariable Long utstillingId, @PathVariable Long dommerPaameldingId, 
-	                               Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+	                               Model model) {
 		List<DommerPaamelding> dommerePaameldtUtstilling = dommerService.finnDommerPaameldingerTilUtstilling(utstillingId);
 		boolean erKnyttetTilUtstilling = dommerePaameldtUtstilling.stream()
 				.anyMatch(dp -> dp.getId().equals(dommerPaameldingId));
@@ -404,10 +405,17 @@ public class AdminController {
 		List<Bruker> dommere = dommerService.hentDommere();
 		model.addAttribute("dommere", dommere);
 		Map<Long, List<Utstilling>> utstillingerPerDommer = new LinkedHashMap<>();
+		Map<Long, String> utstillingstitlerPerDommer = new LinkedHashMap<>();
 		for (Bruker dommer : dommere) {
-			utstillingerPerDommer.put(dommer.getId(), dommerService.hentUtstillingerForDommer(dommer.getId()));
+			List<Utstilling> utstillinger = dommerService.hentUtstillingerForDommer(dommer.getId());
+			utstillingerPerDommer.put(dommer.getId(), utstillinger);
+			String titler = utstillinger.isEmpty()
+					? "Ingen"
+					: String.join(", ", utstillinger.stream().map(Utstilling::getTittel).toList());
+			utstillingstitlerPerDommer.put(dommer.getId(), titler);
 		}
 		model.addAttribute("utstillingerPerDommer", utstillingerPerDommer);
+		model.addAttribute("utstillingstitlerPerDommer", utstillingstitlerPerDommer);
 	}
 
 	private void settDommerTildelingModel(Model model) {
@@ -432,8 +440,7 @@ public class AdminController {
 
 	@HxRequest
 	@GetMapping("/{utstillingId}/dommerFordeling")
-	public String getDommerFordelingHtmx(@PathVariable Long utstillingId, Model model, HttpSession session,
-	                                     RedirectAttributes redirectAttributes) {
+	public String getDommerFordelingHtmx(@PathVariable Long utstillingId, Model model) {
 		settDommerFordelingModel(model, utstillingId);
 		return "admin/admin_fragments :: dommerFordeling";
 	}
@@ -442,8 +449,6 @@ public class AdminController {
 	@PostMapping("/{utstillingId}/fordel-dommer")
 	public String postFordelDommerHtmx(@PathVariable Long utstillingId,
 	                                   Model model,
-	                                   HttpSession session,
-	                                   RedirectAttributes redirectAttributes,
 	                                   @RequestParam Long dommerPaameldingId,
 	                                   @RequestParam(value = "raser", required = false) List<String> raser) {
 		List<String> valgteRaser = raser == null ? List.of() : raser.stream()
@@ -547,8 +552,7 @@ public class AdminController {
 
 	@HxRequest
 	@GetMapping("/{utstillingId}/raseSortering")
-	public String getRaseSorteringHtmx(@PathVariable Long utstillingId, Model model, HttpSession session,
-	                                   RedirectAttributes redirectAttributes) {
+	public String getRaseSorteringHtmx(@PathVariable Long utstillingId, Model model) {
 		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(utstillingId));
 		model.addAttribute("paameldteRaser", dueService.hentRaserPaameldtUtstilling(utstillingId));
 		return "admin/admin_fragments :: raseSortering";
@@ -556,8 +560,8 @@ public class AdminController {
 
 	@HxRequest
 	@PostMapping("/sorterRaser/{utstillingId}")
-	public String postRaseSorteringHtmx(@PathVariable Long utstillingId, Model model, HttpSession session,
-	                                    RedirectAttributes redirectAttributes, @RequestParam String sorterteRaser) {
+	public String postRaseSorteringHtmx(@PathVariable Long utstillingId, Model model,
+	                                    @RequestParam String sorterteRaser) {
 		utstillingService.oppdaterSorterteRaser(utstillingId, sorterteRaser);
 
 		model.addAttribute("utstilling", utstillingService.finnUtstillingMedId(utstillingId));
@@ -567,8 +571,7 @@ public class AdminController {
 
 	@HxRequest
 	@GetMapping("/{utstillingId}/burnummerGenerering")
-	public String getGenererBurnumreHtmx(@PathVariable Long utstillingId, Model model, HttpSession session,
-	                                     RedirectAttributes redirectAttributes) {
+	public String getGenererBurnumreHtmx(@PathVariable Long utstillingId, Model model) {
 		Utstilling utstilling    = utstillingService.finnUtstillingMedId(utstillingId);
 		List<Due>  paameldteDuer = dueService.finnAlleDuerPaameldtUTstilling(utstillingId);
 		model.addAttribute("utstilling", utstilling);
@@ -578,8 +581,7 @@ public class AdminController {
 
 	@HxRequest
 	@PostMapping("/genererBurnumre/{utstillingId}")
-	public String postGenererBurnumreHtmx(@PathVariable Long utstillingId, Model model, HttpSession session,
-	                                      RedirectAttributes redirectAttributes) {
+	public String postGenererBurnumreHtmx(@PathVariable Long utstillingId, Model model) {
 		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
 		utstillingService.genererBurnumre(utstilling);
 		List<Due> paameldteDuer = dueService.finnAlleDuerPaameldtUTstilling(utstillingId);
@@ -589,7 +591,7 @@ public class AdminController {
 	}
 
 	@GetMapping("/genererkatalogdata/{utstillingId}")
-	public String genererKatalogData(@PathVariable Long utstillingId, Model model, HttpSession session) {
+	public String genererKatalogData(@PathVariable Long utstillingId, Model model) {
 		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
 		Map<String, List<String>> raseFargerMap = utstillingService.hentFargeForRaseFraUtstilling(utstilling);
 		List<String> raser = dueService.hentRaserPaameldtUtstilling(utstillingId);
@@ -726,7 +728,7 @@ public class AdminController {
 		if (utstillinger.isEmpty()) {
 			return null;
 		}
-		return utstillinger.get(0).getId();
+		return utstillinger.getFirst().getId();
 	}
 
 	private List<Utstilling> hentUtstillingerForKatalogvalg() {
@@ -751,7 +753,7 @@ public class AdminController {
 
 	@HxRequest
 	@GetMapping("/{utstillingId}/bulkdueendring")
-	public String getBulkDueEndringHtmx(@PathVariable Long utstillingId, Model model, HttpSession session) {
+	public String getBulkDueEndringHtmx(@PathVariable Long utstillingId, Model model) {
 		Utstilling utstilling    = utstillingService.finnUtstillingMedId(utstillingId);
 		List<Due>  paameldteDuer = dueService.finnAlleDuerPaameldtUTstilling(utstillingId);
 		model.addAttribute("utstilling", utstilling);
@@ -761,8 +763,7 @@ public class AdminController {
 
 	@HxRequest
 	@GetMapping("/{utstillingId}/bulkendre/{felt}")
-	public String getBulkDueFeltEndringHtmx(@PathVariable Long utstillingId, @PathVariable String felt, Model model,
-	                                     HttpSession session, RedirectAttributes redirectAttributes) {
+	public String getBulkDueFeltEndringHtmx(@PathVariable Long utstillingId, @PathVariable String felt, Model model) {
 		if (felt == null || !felt.matches("rase|farge|variant")) {
 			Utstilling utstilling    = utstillingService.finnUtstillingMedId(utstillingId);
 			List<Due>  paameldteDuer = dueService.finnAlleDuerPaameldtUTstilling(utstillingId);
@@ -773,15 +774,9 @@ public class AdminController {
 		Utstilling utstilling    = utstillingService.finnUtstillingMedId(utstillingId);
 		List<Due>  paameldteDuer = dueService.finnAlleDuerPaameldtUTstilling(utstillingId);
 		switch (felt) {
-			case "rase" -> {
-				paameldteDuer.sort((d1, d2) -> d1.getRase().compareToIgnoreCase(d2.getRase()));
-			}
-			case "farge" -> {
-				paameldteDuer.sort((d1, d2) -> d1.getFarge().compareToIgnoreCase(d2.getFarge()));
-			}
-			case "variant" -> {
-				paameldteDuer.sort((d1, d2) -> d1.getVariant().compareToIgnoreCase(d2.getVariant()));
-			}
+			case "rase" -> paameldteDuer.sort((d1, d2) -> d1.getRase().compareToIgnoreCase(d2.getRase()));
+			case "farge" -> paameldteDuer.sort((d1, d2) -> d1.getFarge().compareToIgnoreCase(d2.getFarge()));
+			case "variant" -> paameldteDuer.sort((d1, d2) -> d1.getVariant().compareToIgnoreCase(d2.getVariant()));
 		}
 
 
@@ -794,7 +789,7 @@ public class AdminController {
 	@HxRequest
 	@PostMapping("/{utstillingId}/bulkendre/{felt}")
 	public String postBulkDueFeltEndringHtmx(@PathVariable Long utstillingId, @PathVariable String felt,
-	                                         Model model, HttpSession session, RedirectAttributes redirectAttributes,
+	                                         Model model,
 	                                         @RequestParam List<Long> dueId, @RequestParam(required = false) String nyVerdi) {
 		switch (felt) {
 			case "rase" -> dueService.endreRasePaDuer(nyVerdi, dueId);
@@ -813,8 +808,7 @@ public class AdminController {
 
 	@HxRequest
 	@PostMapping("/aktiverUtstilling/{utstillingId}")
-	public String postAktiverUtstillingHtmx(@PathVariable Long utstillingId, Model model, HttpSession session,
-	                                    RedirectAttributes redirectAttributes) {
+	public String postAktiverUtstillingHtmx(@PathVariable Long utstillingId, Model model) {
 		Utstilling utstilling = utstillingService.setAktivUtstilling(utstillingId);
 		model.addAttribute("utstilling", utstilling);
 		return "admin/admin_fragments :: adminUtstilling";
@@ -822,8 +816,7 @@ public class AdminController {
 
 	@HxRequest
 	@PostMapping("/deaktiverUtstilling/{utstillingId}")
-	public String postDeaktiverUtstillingHtmx(@PathVariable Long utstillingId, Model model, HttpSession session,
-	                                        RedirectAttributes redirectAttributes) {
+	public String postDeaktiverUtstillingHtmx(@PathVariable Long utstillingId, Model model) {
 		utstillingService.fjernAktivUtstilling(); // denne metoden setter aktiv = false for alle utstillinger
 		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
 		model.addAttribute("utstilling", utstilling);
@@ -834,6 +827,54 @@ public class AdminController {
 	public String getDuekatalog(Model model) {
 		leggTilDuekatalogModel(model);
 		return "admin/admin_duekatalog";
+	}
+
+	@GetMapping("/kontaktpersoner")
+	public String getKontaktpersonerAdmin(Model model) {
+		leggTilKontaktpersonModel(model);
+		model.addAttribute("kontaktpersonSkjema", new Kontaktperson());
+		model.addAttribute("fragment", "kontaktpersonAdministrasjon");
+		return "admin/admin";
+	}
+
+	@PostMapping("/kontaktpersoner")
+	public String postOpprettKontaktperson(@ModelAttribute("kontaktpersonSkjema") @Valid Kontaktperson kontaktperson,
+	                                       BindingResult bindingResult,
+	                                       Model model,
+	                                       RedirectAttributes redirectAttributes) {
+		if (bindingResult.hasErrors()) {
+			leggTilKontaktpersonModel(model);
+			model.addAttribute("fragment", "kontaktpersonAdministrasjon");
+			return "admin/admin";
+		}
+
+		kontaktpersonService.opprett(kontaktperson);
+		redirectAttributes.addFlashAttribute("kontaktpersonMelding", "Kontaktperson lagt til.");
+		return "redirect:/admin/kontaktpersoner";
+	}
+
+	@PostMapping("/kontaktpersoner/{id}/oppdater")
+	public String postOppdaterKontaktperson(@PathVariable Long id,
+	                                       @ModelAttribute("kontaktpersonSkjema") @Valid Kontaktperson kontaktperson,
+	                                       BindingResult bindingResult,
+	                                       Model model,
+	                                       RedirectAttributes redirectAttributes) {
+		if (bindingResult.hasErrors()) {
+			leggTilKontaktpersonModel(model);
+			model.addAttribute("fragment", "kontaktpersonAdministrasjon");
+			return "admin/admin";
+		}
+
+		kontaktpersonService.oppdater(id, kontaktperson);
+		redirectAttributes.addFlashAttribute("kontaktpersonMelding", "Kontaktperson oppdatert.");
+		return "redirect:/admin/kontaktpersoner";
+	}
+
+	@PostMapping("/kontaktpersoner/{id}/slett")
+	public String postSlettKontaktperson(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+		kontaktpersonService.slett(id);
+		redirectAttributes.addFlashAttribute("kontaktpersonMelding", "Kontaktperson slettet.");
+		return "redirect:/admin/kontaktpersoner";
 	}
 
 	@PostMapping("/duekatalog/gruppe")
@@ -870,5 +911,9 @@ public class AdminController {
 		model.addAttribute("raser", dueKatalogService.finnAlleRaser());
 		model.addAttribute("farger", dueKatalogService.finnAlleFarger());
 		model.addAttribute("varianter", dueKatalogService.finnAlleVarianter());
+	}
+
+	private void leggTilKontaktpersonModel(Model model) {
+		model.addAttribute("kontaktpersoner", kontaktpersonService.hentAlle());
 	}
 }

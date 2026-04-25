@@ -8,7 +8,17 @@
 <footer class="container">
     <div th:fragment="footer" id="footer">
         <hr/>
-        <p>Dette e footeren</p>
+        <p><strong>Bergen praktdueforening</strong></p>
+        <div>
+            <ul>
+                <li th:if="${#lists.isEmpty(footerKontaktpersoner)}">Ingen kontaktpersoner registrert enda.</li>
+                <li th:each="kontakt : ${footerKontaktpersoner}">
+                    <span th:text="${kontakt.rolle + ' ' + kontakt.navn}">Formann Johny Larsen</span>
+                    <span th:if="${kontakt.telefon != null and !kontakt.telefon.isBlank()}" th:text="${' - Tlf: ' + kontakt.telefon}"></span>
+                    <span th:if="${kontakt.epost != null and !kontakt.epost.isBlank()}" th:text="${' - Epost: ' + kontakt.epost}"></span>
+                </li>
+            </ul>
+        </div>
         <div th:if="${@environment.acceptsProfiles('dev')}">
             <p>Development Mode</p>
             <p>Åpne <a href="http://localhost:8080/h2-console?jdbcUrl=jdbc:h2:mem:testdb&user=sa&password="

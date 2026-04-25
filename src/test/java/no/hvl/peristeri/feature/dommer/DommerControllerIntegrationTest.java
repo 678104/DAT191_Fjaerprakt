@@ -2,6 +2,7 @@ package no.hvl.peristeri.feature.dommer;
 
 import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.due.Due;
+import no.hvl.peristeri.feature.kontaktperson.KontaktpersonService;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,9 @@ public class DommerControllerIntegrationTest {
     @MockitoBean
     private StandardKommentarService standardKommentarService;
 
+    @MockitoBean
+    private KontaktpersonService kontaktpersonService;
+
     private Due testDue;
     private Bruker testBruker;
     private Bedommelse testBedommelse;
@@ -49,6 +53,8 @@ public class DommerControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        when(kontaktpersonService.hentAlle()).thenReturn(Collections.emptyList());
+
         Map<String, List<String>> tommeKommentarer = tomKategoriMap();
         when(standardKommentarService.hentKommentarTeksterPerKategori(StandardKommentarType.STANDARD)).thenReturn(tommeKommentarer);
         when(standardKommentarService.hentKommentarTeksterPerKategori(StandardKommentarType.ONSKER)).thenReturn(tommeKommentarer);

@@ -223,7 +223,7 @@
             <form th:hx-post="@{/admin/sorterRaser/{id}(id=*{id})}"
                   hx-target="#main-content"
                   hx-swap="outerHTML"
-                  hx-on::afterRequest="this.reset();">
+                  hx-on:htmx:after-request="this.reset();">
                 <ol id="sortable-list" class="sortable-list">
                     <li th:each="rase : ${paameldteRaser}"
                         th:data-id="${rase}"
@@ -255,7 +255,7 @@
         <form th:hx-post="@{/admin/{utstillingId}/fordel-dommer(utstillingId=${utstilling.id})}"
               hx-target="#main-content"
               hx-swap="outerHTML"
-              hx-on::afterRequest="this.reset();">
+              hx-on:htmx:after-request="this.reset();">
             <fieldset>
                 <label for="dommerPaameldingId">Dommer</label>
                 <select id="dommerPaameldingId" name="dommerPaameldingId" required>
@@ -320,7 +320,7 @@
         <form th:hx-post="@{/admin/{id}/tildel-dommer-rolle(id=${utstilling.id})}"
               hx-target="#main-content"
               hx-swap="outerHTML"
-              hx-on::afterRequest="const rc = event.detail && event.detail.requestConfig; const source = event.detail && event.detail.elt; const verb = ((rc && rc.verb) || '').toLowerCase(); if (source === this && verb && verb !== 'get') { this.reset(); nullstillBrukerVelger(); }"
+              hx-on:htmx:after-request="const rc = event.detail && event.detail.requestConfig; const source = event.detail && event.detail.elt; const verb = ((rc && rc.verb) || '').toLowerCase(); if (source === this && verb && verb !== 'get') { this.reset(); nullstillBrukerVelger(); }"
               onsubmit="return sjekkBrukerValgt();">
             <fieldset role="group">
                 <div class="autocomplete-field">
@@ -820,6 +820,78 @@
 
         <a href="/admin" role="button" class="secondary" style="margin-top: 1rem;">Tilbake</a>
     </section>
+    <section th:fragment="kontaktpersonAdministrasjon" id="main-content">
+        <h2>Kontaktpersoner</h2>
+        <p>Legg til, rediger og slett kontaktpersoner som vises i footeren.</p>
+
+        <p th:if="${kontaktpersonMelding}" th:text="${kontaktpersonMelding}"></p>
+
+        <article>
+            <header><strong>Legg til kontaktperson</strong></header>
+            <form th:action="@{/admin/kontaktpersoner}" method="post" th:object="${kontaktpersonSkjema}">
+                <label for="kontaktRolle">Rolle</label>
+                <input id="kontaktRolle" type="text" th:field="*{rolle}" required>
+                <small th:if="${#fields.hasErrors('rolle')}" th:errors="*{rolle}"></small>
+
+                <label for="kontaktNavn">Navn</label>
+                <input id="kontaktNavn" type="text" th:field="*{navn}" required>
+                <small th:if="${#fields.hasErrors('navn')}" th:errors="*{navn}"></small>
+
+                <label for="kontaktTelefon">Telefon (valgfritt)</label>
+                <input id="kontaktTelefon" type="text" th:field="*{telefon}">
+                <small th:if="${#fields.hasErrors('telefon')}" th:errors="*{telefon}"></small>
+
+                <label for="kontaktEpost">E-post (valgfritt)</label>
+                <input id="kontaktEpost" type="email" th:field="*{epost}">
+                <small th:if="${#fields.hasErrors('epost')}" th:errors="*{epost}"></small>
+
+                <button type="submit">Lagre kontaktperson</button>
+            </form>
+        </article>
+
+        <article>
+            <header><strong>Eksisterende kontaktpersoner</strong></header>
+            <table>
+                <thead>
+                <tr>
+                    <th>Rolle</th>
+                    <th>Navn</th>
+                    <th>Telefon</th>
+                    <th>E-post</th>
+                    <th>Handling</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(kontaktpersoner)}">
+                    <td colspan="5">Ingen kontaktpersoner registrert.</td>
+                </tr>
+                <tr th:each="kontakt : ${kontaktpersoner}">
+                    <td colspan="5">
+                        <form th:action="@{/admin/kontaktpersoner/{id}/oppdater(id=${kontakt.id})}" method="post">
+                            <div class="grid">
+                                <input type="text" name="rolle" th:value="${kontakt.rolle}" required>
+                                <input type="text" name="navn" th:value="${kontakt.navn}" required>
+                                <input type="text" name="telefon" th:value="${kontakt.telefon}">
+                                <input type="email" name="epost" th:value="${kontakt.epost}">
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <button type="submit">Oppdater</button>
+                                    <button type="submit"
+                                            class="secondary"
+                                            th:formaction="@{/admin/kontaktpersoner/{id}/slett(id=${kontakt.id})}"
+                                            onclick="return confirm('Er du sikker paa at du vil slette kontaktpersonen?');">
+                                        Slett
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+
+        <a href="/admin" role="button" class="secondary">Tilbake til admin panel</a>
+    </section>
     <section th:fragment="dommerAdministrasjon" id="main-content">
         <!--/*@thymesVar id="dommere" type="java.util.List<no.hvl.peristeri.feature.bruker.Bruker>"*/-->
         <!--/*@thymesVar id="utstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
@@ -834,7 +906,7 @@
                   hx-target="#main-content"
                   hx-select="#main-content"
                   hx-swap="outerHTML"
-                  hx-on::afterRequest="const rc = event.detail && event.detail.requestConfig; const source = event.detail && event.detail.elt; const verb = ((rc && rc.verb) || '').toLowerCase(); if (source === this && verb && verb !== 'get') { this.reset(); nullstillAdminBrukerVelger(); }"
+                  hx-on:htmx:after-request="const rc = event.detail && event.detail.requestConfig; const source = event.detail && event.detail.elt; const verb = ((rc && rc.verb) || '').toLowerCase(); if (source === this && verb && verb !== 'get') { this.reset(); nullstillAdminBrukerVelger(); }"
                   onsubmit="return sjekkAdminBrukerValgt();">
                 <fieldset role="group">
                     <div class="autocomplete-field">
@@ -926,7 +998,7 @@
                   hx-target="#main-content"
                   hx-select="#main-content"
                   hx-swap="outerHTML"
-                  hx-on::afterRequest="const rc = event.detail && event.detail.requestConfig; const source = event.detail && event.detail.elt; const verb = ((rc && rc.verb) || '').toLowerCase(); if (source === this && verb && verb !== 'get') { this.reset(); nullstillBrukerVelger(); }"
+                  hx-on:htmx:after-request="const rc = event.detail && event.detail.requestConfig; const source = event.detail && event.detail.elt; const verb = ((rc && rc.verb) || '').toLowerCase(); if (source === this && verb && verb !== 'get') { this.reset(); nullstillBrukerVelger(); }"
                   onsubmit="return sjekkBrukerValgt();">
                 <fieldset role="group">
                     <div class="autocomplete-field">
@@ -977,9 +1049,9 @@
                         <td th:text="${dommer.fornavn + ' ' + dommer.etternavn}"></td>
                         <td th:text="${dommer.epost}"></td>
                         <td>
-                            <span th:if="${utstillingerPerDommer != null and utstillingerPerDommer[dommer.id] != null}"
-                                  th:text="${#lists.isEmpty(utstillingerPerDommer[dommer.id]) ? 'Ingen' : #strings.listJoin(utstillingerPerDommer[dommer.id].![tittel], ', ')}"></span>
-                            <span th:unless="${utstillingerPerDommer != null and utstillingerPerDommer[dommer.id] != null}">Ingen</span>
+                            <span th:if="${utstillingstitlerPerDommer != null and utstillingstitlerPerDommer[dommer.id] != null}"
+                                  th:text="${utstillingstitlerPerDommer[dommer.id]}"></span>
+                            <span th:unless="${utstillingstitlerPerDommer != null and utstillingstitlerPerDommer[dommer.id] != null}">Ingen</span>
                         </td>
                         <td>
                             <button class="secondary"
@@ -1003,7 +1075,7 @@
                   hx-target="#dommerTildelingListe"
                   hx-select="#dommerTildelingListe"
                   hx-swap="outerHTML"
-                  hx-on::after-request="if (event.detail && event.detail.successful && event.detail.elt === this) { this.reset(); }">
+                  hx-on:htmx:after-request="if (event.detail && event.detail.successful && event.detail.elt === this) { this.reset(); }">
                 <fieldset>
                     <label for="utstillingDommerId">Dommer</label>
                     <select id="utstillingDommerId" name="brukerId" required>
