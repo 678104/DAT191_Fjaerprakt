@@ -1,4 +1,4 @@
-<html lang="no">
+<html lang="no" xmlns:hx-on="http://www.w3.org/1999/xhtml">
 <body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
 <main class="container" id="main">
     <section th:fragment="bulkDueEndring" id="main-content" th:object="${utstilling}">

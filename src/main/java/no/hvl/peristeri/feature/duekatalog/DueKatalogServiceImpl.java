@@ -21,7 +21,7 @@ public class DueKatalogServiceImpl implements DueKatalogService {
 
     @Override
     public List<DueGruppe> finnAlleGrupper() {
-        return dueGruppeRepository.findAllByOrderByNavnAsc();
+        return dueGruppeRepository.findAllByOrderByIdAsc();
     }
 
     @Override

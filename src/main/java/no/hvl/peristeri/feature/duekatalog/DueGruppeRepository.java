@@ -9,5 +9,7 @@ public interface DueGruppeRepository extends JpaRepository<DueGruppe, Long> {
     boolean existsByNavnIgnoreCase(String navn);
 
     List<DueGruppe> findAllByOrderByNavnAsc();
+
+    List<DueGruppe> findAllByOrderByIdAsc();
 }
 
