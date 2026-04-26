@@ -14,7 +14,7 @@ services:
       args:
         ENVIRONMENT: demo
     ports:
-      - "8080:8080"
+      - "8181:8181"
     depends_on:
       - postgres
     environment:
@@ -27,7 +27,7 @@ services:
       # set postgres connection string
       # SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/peristeri
 #    healthcheck:
-#      test: [ "CMD", "wget", "-q", "--spider", "http://peristeri:8080/actuator/health", "||", "exit", "1" ]
+#      test: [ "CMD", "wget", "-q", "--spider", "http://peristeri:8181/actuator/health", "||", "exit", "1" ]
 #      interval: 30s
 #      timeout: 3s
 #      retries: 3

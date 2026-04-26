@@ -22,10 +22,10 @@ RUN groupadd -g ${PGID} appgroup && \
 USER springuser
 
 # Add health check
-HEALTHCHECK --interval=30s --timeout=3s CMD wget -q --spider http://localhost:8080/actuator/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s CMD wget -q --spider http://localhost:8181/actuator/health || exit 1
 
 # Expose the application port
-EXPOSE 8080
+EXPOSE 8181
 
 # Set Spring profile to prod by default
 ARG ENVIRONMENT=prod
