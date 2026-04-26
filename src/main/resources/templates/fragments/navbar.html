@@ -10,8 +10,8 @@
         <ul>
             <li>
                 <a th:href="@{/}" href="/" aria-label="Gå til forsiden">
-                    <img src="/favicon.ico" alt="Peristeri logo" class="nav-icon">
-                    <strong>Peristeri</strong>
+                    <img src="/favicon.jpeg" alt="Fjærprakt logo" class="nav-icon">
+                    <strong>Fjærprakt</strong>
                 </a>
             </li>
         </ul>
@@ -33,38 +33,137 @@
                 <a href="/admin" class=""
                    th:classappend="${navLocation == 'admin'} ? 'navCurrent' : ''">Admin</a>
             </li>
-            <li sec:authorize="!isAuthenticated()">
-                <a href="/login" role="button"
-                   th:classappend="${navLocation == 'login'} ? 'contrast' : ''">Logg inn</a>
-            </li>
-            <li sec:authorize="isAuthenticated()">
-                <a href="/bruker" role="button"
-                   th:classappend="${navLocation == 'bruker'} ? 'contrast' : ''">
-                    <span th:if="${#authorization.expression('hasRole(''ADMIN'')')}">Din bruker: Admin</span>
-                    <span th:if="${#authorization.expression('hasRole(''DOMMER'') and not hasRole(''ADMIN'')')}">Din bruker: Dommer</span>
-                    <span th:if="${not #authorization.expression('hasRole(''ADMIN'') or hasRole(''DOMMER'')')}">Din bruker</span>
+
+            <!-- Her starter det jeg jobber med nå -->
+
+            <li style="position: relative;">
+                <!-- Logget ut-->
+                <a sec:authorize="!isAuthenticated()"
+                   href="/login"
+                   aria-label="Logg inn"
+                   style="display: flex; flex-direction: column;
+                   align-items: center; gap: 0;
+                   color: var(--nav-text); text-decoration: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="3rem" height="3rem"
+                         viewBox="0 0 32 32"
+                         style="fill: var(--nav-text);">
+                        <path d="M16 15.503A5.041 5.041 0 1 0 16 5.42a5.041 5.041 0 0 0 0 10.083zm0 2.215c-6.703
+                        0-11 3.699-11 5.5v3.363h22v-3.363c0-2.178-4.068-5.5-11-5.5z"/>
+                    </svg>
+                    <span style="font-size: 0.7rem; line-height: 1; margin-top: -0.3rem">Logg inn</span>
                 </a>
-            </li>
-            <li sec:authorize="isAuthenticated()">
-                <div id="bedommelse-notifikasjon"
-                     th:fragment="bedommelseNotifikasjon"
-                     th:hx-get="@{/bruker/notifikasjoner/badge}"
-                     hx-trigger="load, every 60s"
-                     hx-target="this"
-                     hx-swap="innerHTML">
-                    <a href="/bruker/din-paamelding" role="button" th:fragment="bedommelseNotifikasjonContent">
-                        Din påmelding
-                        <span th:if="${ulesteBedommelser != null and ulesteBedommelser > 0}"
-                              class="bedommelse-varsel-badge"
-                              th:text="${ulesteBedommelser}">0</span>
-                    </a>
+
+                <!-- Logget inn -->
+                <div sec:authorize="isAuthenticated()" style="position: relative;">
+                    <button id="bruker-meny-knp" type="button"
+                            aria-haspopup="true" aria-expanded="false"
+                            aria-label="Brukermeny" onclick="toggleUserMenu()"
+                            style="display: flex; flex-direction: column;
+                                   align-items: center; gap: 0;
+                                   background: none; border: none; outline: none;
+                                   color: var(--nav-text);
+                                   padding: 0.2rem; cursor: pointer;"  >
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="3rem" height="3rem"
+                             viewBox="0 0 32 32"
+                             style="fill: var(--nav-text);">
+                            <path d="M16 15.503A5.041 5.041 0 1 0 16 5.42a5.041 5.041 0 0 0 0 10.083zm0 2.215c-6.703
+                        0-11 3.699-11 5.5v3.363h22v-3.363c0-2.178-4.068-5.5-11-5.5z"/>
+                        </svg>
+
+                        <!-- Brukertype under ikonet-->
+
+                        <!-- Admin -->
+                        <span th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                              style="font-size: 0.7rem; line-height: 1; margin-top: -0.3rem">Admin
+                        </span>
+
+                        <!-- Dommer -->
+                        <span th:if="${#authorization.expression('hasRole(''DOMMER'') and not hasRole(''ADMIN'')')}"
+                              style="font-size: 0.7rem; line-height: 1; margin-top: -0.3rem">Dommer
+                        </span>
+
+                        <!-- Bruker -->
+                        <span th:if="${not #authorization.expression('hasRole(''ADMIN'') or hasRole(''DOMMER'')')}"
+                              style="font-size: 0.7rem; line-height: 1; margin-top: -0.3rem">Bruker
+                        </span>
+                    </button>
+
+                    <!-- Nedtrekksmeny -->
+                    <div id="bruker-nedtrekk"
+                         role="menu"
+                         aria-labelledby="bruker-meny-knp"
+                         style="display: none;
+                         position: absolute;
+                         right: 0;
+                         top: calc(100% + 0.5rem);
+                         min-width: 200px;
+                         background: var(--card-bg);
+                         border: 1px solid var(--border-color);
+                         border-radius: 0.5rem;
+                         box-shadow: 0 8px 24px rgba(0,31,77,0.18);
+                         z-index: 999;
+                         overflow: hidden;">
+
+                        <!-- Brukertype inni nedtrekk -->
+                        <div style="padding: 0.75rem 1rem;
+                                    border-bottom: 1px solid var(--card-border);
+                                    font-weight: 700;
+                                    color: var(--text-strong);">
+                            <span th:if="${#authorization.expression('hasRole(''ADMIN'')')}">Admin</span>
+                            <span th:if="${#authorization.expression('hasRole(''DOMMER'') and not hasRole(''ADMIN'')')}">Dommer</span>
+                            <span th:if="${not #authorization.expression('hasRole(''ADMIN'') or hasRole(''DOMMER'')')}">Bruker</span>
+                        </div>
+
+                        <!-- Min bruker -->
+                        <a href="/bruker"
+                           role="menuitem"
+                           class="bruker-nedtrekk-item">
+                            Min bruker
+                        </a>
+
+                        <!-- Min bruker + varslinsbanner -->
+                        <div id="bedommelse-notifikasjon"
+                             th:fragment="bedommelseNotifikasjon"
+                             th:hx-get="@{/bruker/notifikasjoner/badge}"
+                             hx-trigger="load, every 60s"
+                             hx-target="this"
+                             hx-swap="innerHTML">
+                            <a href="/bruker/din-paamelding"
+                               role="menuitem"
+                               class="bruker-nedtrekk-item"
+                               th:fragment="bedommelseNotifikasjonContent">
+                                Din påmelding
+                                <span th:if="${ulesteBedommelser != null and ulesteBedommelser > 0}"
+                                      class="bedommelse-varsel-badge"
+                                      th:text="${ulesteBedommelser}">0</span>
+                            </a>
+                        </div>
+
+                        <!-- Logg ut -->
+                        <div style="border-top: 1px solid var(--card-border);">
+                            <form th:action="@{/logout}" method="post">
+                                <button type="submit"
+                                        role="menuitem"
+                                        class="bruker-nedtrekk-item logout-btn"
+                                        style="width: 100%;
+                                               text-align: left;
+                                               padding: 0.75rem 1rem;
+                                               background: none; border: none;
+                                               outline: none;
+                                               color: var(--text-strong);
+                                               cursor: pointer; font-size: inherit;">
+                                    Logg ut
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </li>
-            <li sec:authorize="isAuthenticated()">
-                <form th:action="@{/logout}" method="post" style="display: inline;">
-                    <button type="submit" role="button" class="contrast logout-btn" style="border: none; background: none; padding: 0; cursor: pointer; font-size: inherit;">Logg ut</button>
-                </form>
-            </li>
+
+            <!-- Så langt har jeg kommet -->
+
             <li>
                 <button id="theme-toggle" type="button" class="secondary outline" aria-label="Bytt til morkt tema"
                         aria-pressed="false" title="Bytt tema">
@@ -73,8 +172,12 @@
             </li>
 
         </ul>
+        <script th:src="@{/js/bruker-meny.js}"></script>
     </nav>
 </header>
 <script th:src="@{/js/minimal-theme-switcher.js}"></script>
+
 </body>
 </html>
+
+
