@@ -67,7 +67,7 @@ public class Utstilling {
 	 *
 	 * @see RaseStringHjelper
 	 */
-	@Column(name = "rase_sortering")
+	@Column(name = "rase_sortering", length = 1000)
 	private String raseSortering = "";
 
 	@NotNull

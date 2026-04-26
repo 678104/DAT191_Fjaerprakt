@@ -33,6 +33,7 @@ public class DommerPaamelding {
 	 *
 	 * @see RaseStringHjelper Se RaseStringHjelper for mer info.
 	 */
+	@Column(length = 1000)
 	private String raser = "";
 
 }

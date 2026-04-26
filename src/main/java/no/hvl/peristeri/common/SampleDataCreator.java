@@ -132,15 +132,15 @@ public class SampleDataCreator implements CommandLineRunner {
 
 		Due ds1 = new Due("1-23", "Norsk Tomler", "Hvit", "Standard", true, false, false, p1);
 		ds1.setPaamelding(p1);
-		Due ds2 = new Due("2-23", "Norsk Tomler", "Grå", "Standard", true, false, false, p1);
+		Due ds2 = new Due("2-23", "Carrier", "Grå", "Standard", true, false, false, p1);
 		ds2.setPaamelding(p1);
-		Due ds3 = new Due("3-23", "Norsk Tomler", "Blå", "Sjelden", false, true, false, p1);
+		Due ds3 = new Due("3-23", "Spansk Jordbærøye", "Blå", "Sjelden", false, true, false, p1);
 		ds3.setPaamelding(p1);
-		Due ds4 = new Due("4-23", "Norsk Tomler", "Oransje", "Sjelden", false, true, false, p1);
+		Due ds4 = new Due("4-23", "Vorburger Kroppert", "Oransje", "Sjelden", false, true, false, p1);
 		ds4.setPaamelding(p1);
-		Due dc1 = new Due("5-23", "Engelsk Tippler", "Rød", "Lang", false, true, false, p2);
+		Due dc1 = new Due("5-23", "Norwich Puster", "Rød", "Lang", false, true, false, p2);
 		dc1.setPaamelding(p2);
-		Due db1 = new Due("6-23", "Bergensprakt", "Blå", "Kort", false, false, true, p3);
+		Due db1 = new Due("6-23", "Tysk skjønnhetsbrevdue", "Blå", "Kort", false, false, true, p3);
 		db1.setPaamelding(p3);
 
 		Bedommelse b2 = new Bedommelse(94, "Ønsker mer rød", "Fint posture", "Ingen feil");
@@ -293,11 +293,16 @@ public class SampleDataCreator implements CommandLineRunner {
 				"raud"
 		);
 		List<String> dr = List.of(
-				"Rock Pigeon",
-				"Common Wood Pigeon",
-				"Eurasian Collared Dove",
-				"Stock Dove",
-				"Speckled Pigeon"
+				"Norsk Tomler", "Bergens Tomler", "Norsk Mefikk",
+				"Damacener", "Tysk skjønnhetsbrevdue",
+				"Carrier", "Spansk Jordbærøye",
+				"Engelsk Modena Schetti", "Engelsk Modena Gazzi", "Tysk Modeneser Schetti", "Tysk Modeneser Gazzi",
+				"Vorburger Kroppert", "Brunner Kroppert", "Norwich Puster", "Amsterdamer",
+				"Nurnberg Svale", "Nurnberg Lerke",
+				"Tysk dobbeltkappet Trommer",
+				"Indisk Høystjert", "Engelsk Høystjert",
+				"Gml. Tysk Mefikk", "Italiensk Mefikk", "Afrikansk Mefikk", "Gml. Orientalsk Mefikk", "Aachener Lakkvinge",
+				"Dansk Tomler", "Tysk Show Tippler", "Limerick Tumler", "Tysk Nonne", "Hamburg Skimmel"
 		);
 		List<String> v = List.of(
 				"Standard",
