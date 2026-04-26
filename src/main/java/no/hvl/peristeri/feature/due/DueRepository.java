@@ -12,7 +12,16 @@ import java.util.List;
 
 public interface DueRepository extends JpaRepository<Due, Long> {
 
-	@Query("SELECT DISTINCT d.rase FROM Due d JOIN d.paamelding p WHERE p.utstilling.id = :utstillingId")
+	@Query("""
+			SELECT d.rase
+			FROM Due d
+			LEFT JOIN DueRase dr ON dr.navn = d.rase
+			WHERE d.paamelding.utstilling.id = :utstillingId
+			GROUP BY d.rase
+			ORDER BY CASE WHEN MIN(dr.gruppe.id) IS NULL THEN 1 ELSE 0 END,
+			         MIN(dr.gruppe.id),
+			         LOWER(d.rase)
+			""")
 	List<String> hentRaserPaameldtUtstilling(@Param("utstillingId") Long utstillingId);
 
 	List<Due> findByPaamelding_Utstilling_Id(Long utstillingId);
