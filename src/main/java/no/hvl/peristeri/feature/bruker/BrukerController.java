@@ -51,6 +51,7 @@ public class BrukerController {
 	                                Model model,
 	                                HttpSession session) {
 		Paamelding paamelding = hentEgenPaamelding(bruker, paameldingId);
+		leggTilUlesteBedommelser(model, bruker);
 		model.addAttribute("paamelding", paamelding);
 		model.addAttribute("kanEndrePaamelding", kanEndrePaamelding(paamelding));
 
@@ -151,6 +152,7 @@ public class BrukerController {
 	                              Model model,
 	                              HttpSession session) {
 		Paamelding paamelding = hentEgenPaamelding(bruker, paameldingId);
+		leggTilUlesteBedommelser(model, bruker);
 		model.addAttribute("paamelding", paamelding);
 		model.addAttribute("kanEndrePaamelding", kanEndrePaamelding(paamelding));
 
@@ -165,6 +167,7 @@ public class BrukerController {
 	                                HttpSession session) {
 		Paamelding paamelding = hentEgenPaamelding(bruker, paameldingId);
 		bedommelseNotifikasjonService.markerSomLestForPaamelding(bruker.getId(), paameldingId);
+		leggTilUlesteBedommelser(model, bruker);
 		model.addAttribute("paamelding", paamelding);
 
 		return "bruker/bruker_resultatliste";
@@ -173,9 +176,8 @@ public class BrukerController {
 	@HxRequest
 	@GetMapping("/notifikasjoner/badge")
 	public String getNotifikasjonerBadge(@AuthenticationPrincipal Bruker bruker, Model model) {
-		long ulesteBedommelser = bedommelseNotifikasjonService.tellUleste(bruker.getId());
-		model.addAttribute("ulesteBedommelser", ulesteBedommelser);
-		return "fragments/navbar :: bedommelseNotifikasjonContent";
+		leggTilUlesteBedommelser(model, bruker);
+		return "fragments/navbar :: bedommelseNotifikasjonOob";
 	}
 
 	@ModelAttribute("navLocation")
@@ -205,6 +207,11 @@ public class BrukerController {
 		}
 		LocalDate frist = paamelding.getUtstilling().getPaameldingsFrist();
 		return frist == null || !LocalDate.now().isAfter(frist);
+	}
+
+	private void leggTilUlesteBedommelser(Model model, Bruker bruker) {
+		Long brukerId = bruker != null ? bruker.getId() : null;
+		model.addAttribute("ulesteBedommelser", bedommelseNotifikasjonService.tellUleste(brukerId));
 	}
 
 

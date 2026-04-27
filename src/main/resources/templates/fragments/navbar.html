@@ -88,6 +88,11 @@
                         <span th:if="${not #authorization.expression('hasRole(''ADMIN'') or hasRole(''DOMMER'')')}"
                               style="font-size: 0.7rem; line-height: 1; margin-top: -0.3rem">Bruker
                         </span>
+
+                        <span id="bruker-meny-knp-badge"
+                              class="bedommelse-varsel-badge bedommelse-varsel-prikk"
+                              style="display: none;"
+                              aria-label="Du har nye bedømmelser"></span>
                     </button>
 
                     <!-- Nedtrekksmeny -->
@@ -123,23 +128,24 @@
                             Min bruker
                         </a>
 
-                        <!-- Min bruker + varslinsbanner -->
-                        <div id="bedommelse-notifikasjon"
-                             th:fragment="bedommelseNotifikasjon"
+                        <!-- Min påmelding + varslingsbanner -->
+                        <a id="bedommelse-notifikasjon"
+                           href="/bruker/din-paamelding"
+                           role="menuitem"
+                           class="bruker-nedtrekk-item">
+                            Min påmelding
+                            <span id="bedommelse-notifikasjon-badge"
+                                  class="bedommelse-varsel-badge"
+                                  style="display: none;"
+                                  aria-label="Du har nye bedømmelser"></span>
+                        </a>
+
+                        <div id="bedommelse-notifikasjon-poller"
                              th:hx-get="@{/bruker/notifikasjoner/badge}"
                              hx-trigger="load, every 60s"
-                             hx-target="this"
-                             hx-swap="innerHTML">
-                            <a href="/bruker/din-paamelding"
-                               role="menuitem"
-                               class="bruker-nedtrekk-item"
-                               th:fragment="bedommelseNotifikasjonContent">
-                                Din påmelding
-                                <span th:if="${ulesteBedommelser != null and ulesteBedommelser > 0}"
-                                      class="bedommelse-varsel-badge"
-                                      th:text="${ulesteBedommelser}">0</span>
-                            </a>
-                        </div>
+                             hx-swap="none"
+                             aria-hidden="true"
+                             style="display: none;"></div>
 
                         <!-- Logg ut -->
                         <div style="border-top: 1px solid var(--card-border);">
@@ -175,6 +181,42 @@
         <script th:src="@{/js/bruker-meny.js}"></script>
     </nav>
 </header>
+
+<th:block th:fragment="bedommelseNotifikasjonOob">
+    <span id="bruker-meny-knp-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge bedommelse-varsel-prikk"
+          th:if="${ulesteBedommelser != null and ulesteBedommelser > 0}"
+          aria-label="Du har nye bedømmelser"></span>
+    <span id="bruker-meny-knp-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge bedommelse-varsel-prikk"
+          th:if="${ulesteBedommelser == null or ulesteBedommelser <= 0}"
+          style="display: none;"></span>
+
+    <span id="bedommelse-notifikasjon-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge"
+          th:if="${ulesteBedommelser != null and ulesteBedommelser > 0}"
+          th:text="${ulesteBedommelser}"></span>
+    <span id="bedommelse-notifikasjon-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge"
+          th:if="${ulesteBedommelser == null or ulesteBedommelser <= 0}"
+          style="display: none;"></span>
+
+    <span id="resultater-notifikasjon-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge"
+          th:if="${ulesteBedommelser != null and ulesteBedommelser > 0}"
+          th:text="${ulesteBedommelser}"></span>
+    <span id="resultater-notifikasjon-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge"
+          th:if="${ulesteBedommelser == null or ulesteBedommelser <= 0}"
+          style="display: none;"></span>
+</th:block>
+
 <script th:src="@{/js/minimal-theme-switcher.js}"></script>
 
 </body>

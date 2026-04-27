@@ -35,6 +35,11 @@
                                 hx-target="#due-liste" hx-swap="outerHTML"
                                 style="margin-bottom: 0.9rem;">
                             Se Resultater
+                            <span id="resultater-notifikasjon-badge"
+                                  class="bedommelse-varsel-badge"
+                                  th:text="${ulesteBedommelser != null and ulesteBedommelser > 0 ? ulesteBedommelser : ''}"
+                                  th:style="${ulesteBedommelser != null and ulesteBedommelser > 0} ? '' : 'display: none;'"
+                                  aria-label="Du har nye bedømmelser"></span>
                         </button>
                         <table class="striped">
                             <thead>

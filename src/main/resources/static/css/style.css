@@ -153,6 +153,27 @@ header nav a:hover {
     line-height: 1;
 }
 
+#bruker-meny-knp .bedommelse-varsel-badge {
+    margin-left: 0;
+    margin-top: 0.35rem;
+}
+
+#bruker-meny-knp {
+    position: relative;
+}
+
+#bruker-meny-knp .bedommelse-varsel-prikk {
+    position: absolute;
+    top: 0.2rem;
+    right: 0.15rem;
+    min-width: 0.75rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin: 0;
+    padding: 0;
+    border: 2px solid var(--nav-bg);
+}
+
 .nav-icon {
     height: 100%;
     max-height: 3rem;

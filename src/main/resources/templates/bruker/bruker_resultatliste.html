@@ -34,3 +34,38 @@
         Legg til eller endre ringnumre
     </button>
 </div>
+
+<th:block th:if="${ulesteBedommelser != null}">
+    <span id="bruker-meny-knp-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge bedommelse-varsel-prikk"
+          th:if="${ulesteBedommelser > 0}"
+          aria-label="Du har nye bedømmelser"></span>
+    <span id="bruker-meny-knp-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge bedommelse-varsel-prikk"
+          th:if="${ulesteBedommelser <= 0}"
+          style="display: none;"></span>
+    <span id="bedommelse-notifikasjon-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge"
+          th:if="${ulesteBedommelser > 0}"
+          th:text="${ulesteBedommelser}"></span>
+    <span id="bedommelse-notifikasjon-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge"
+          th:if="${ulesteBedommelser <= 0}"
+          style="display: none;"></span>
+
+    <span id="resultater-notifikasjon-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge"
+          th:if="${ulesteBedommelser > 0}"
+          th:text="${ulesteBedommelser}"></span>
+    <span id="resultater-notifikasjon-badge"
+          hx-swap-oob="outerHTML"
+          class="bedommelse-varsel-badge"
+          th:if="${ulesteBedommelser <= 0}"
+          style="display: none;"></span>
+</th:block>
+
