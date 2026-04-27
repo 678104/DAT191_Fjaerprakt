@@ -155,6 +155,9 @@ public class DommerController {
 	                          @RequestParam(required = false) Long norgesmesterOppdrett1BrukerId,
 	                          @RequestParam(required = false) Long norgesmesterOppdrett2BrukerId,
 	                          @RequestParam(required = false) Long norgesmesterOppdrett3BrukerId,
+	                          @RequestParam(required = false) Long norgesmesterTrioSeniorDueId,
+	                          @RequestParam(required = false) Long norgesmesterParJuniorDueId,
+	                          @RequestParam(required = false) Long eePlakettDueId,
 	                          @AuthenticationPrincipal Bruker bruker,
 	                          Model model) {
 		bruker = sikkerBruker(bruker);
@@ -171,7 +174,10 @@ public class DommerController {
 					bisVinnerDueId,
 					norgesmesterOppdrett1BrukerId,
 					norgesmesterOppdrett2BrukerId,
-					norgesmesterOppdrett3BrukerId
+					norgesmesterOppdrett3BrukerId,
+					norgesmesterTrioSeniorDueId,
+					norgesmesterParJuniorDueId,
+					eePlakettDueId
 			);
 			model.addAttribute("vinnerMelding", "Vinnere er lagret.");
 			leggTilVinnerData(model, bruker, utstillingId);
@@ -445,9 +451,12 @@ public class DommerController {
 		try {
 			DommerVinnerData vinnerData = dommerService.hentVinnerData(bruker, utstillingId);
 			model.addAttribute("klarForVinnerkaring", vinnerData.isKlarForVinnerkaring());
+			model.addAttribute("utstillingType", vinnerData.getUtstillingType());
+			model.addAttribute("kaaringRegler", vinnerData.getKaaringRegler());
 			model.addAttribute("vinnerKandidaterPerRase", vinnerData.getKandidaterPerRase());
 			model.addAttribute("vinnerKandidaterPerGruppe", vinnerData.getKandidaterPerGruppe());
 			model.addAttribute("alleVinnerKandidater", vinnerData.getAlleKandidater());
+			model.addAttribute("gullmedaljer", vinnerData.getGullmedaljer());
 			model.addAttribute("oppdretterKandidater", vinnerData.getOppdretterKandidater());
 			model.addAttribute("valgteRasevinnere", vinnerData.getValgteRasevinnere());
 			model.addAttribute("valgteGruppevinnere", vinnerData.getValgteGruppevinnere());
@@ -455,11 +464,17 @@ public class DommerController {
 			model.addAttribute("valgtNorgesmesterOppdrett1Id", vinnerData.getValgtNorgesmesterOppdrett1Id());
 			model.addAttribute("valgtNorgesmesterOppdrett2Id", vinnerData.getValgtNorgesmesterOppdrett2Id());
 			model.addAttribute("valgtNorgesmesterOppdrett3Id", vinnerData.getValgtNorgesmesterOppdrett3Id());
+			model.addAttribute("valgtNorgesmesterTrioSeniorDueId", vinnerData.getValgtNorgesmesterTrioSeniorDueId());
+			model.addAttribute("valgtNorgesmesterParJuniorDueId", vinnerData.getValgtNorgesmesterParJuniorDueId());
+			model.addAttribute("valgtEePlakettDueId", vinnerData.getValgtEePlakettDueId());
 		} catch (RuntimeException e) {
 			model.addAttribute("klarForVinnerkaring", false);
+			model.addAttribute("utstillingType", null);
+			model.addAttribute("kaaringRegler", null);
 			model.addAttribute("vinnerKandidaterPerRase", Map.of());
 			model.addAttribute("vinnerKandidaterPerGruppe", Map.of());
 			model.addAttribute("alleVinnerKandidater", List.of());
+			model.addAttribute("gullmedaljer", List.of());
 			model.addAttribute("oppdretterKandidater", Map.of());
 			model.addAttribute("valgteRasevinnere", Map.of());
 			model.addAttribute("valgteGruppevinnere", Map.of());
@@ -467,6 +482,9 @@ public class DommerController {
 			model.addAttribute("valgtNorgesmesterOppdrett1Id", null);
 			model.addAttribute("valgtNorgesmesterOppdrett2Id", null);
 			model.addAttribute("valgtNorgesmesterOppdrett3Id", null);
+			model.addAttribute("valgtNorgesmesterTrioSeniorDueId", null);
+			model.addAttribute("valgtNorgesmesterParJuniorDueId", null);
+			model.addAttribute("valgtEePlakettDueId", null);
 		}
 	}
 
@@ -488,6 +506,9 @@ public class DommerController {
 		model.addAttribute("oppsummeringNorgesmester1", byggOppdretterTekst((Long) model.getAttribute("valgtNorgesmesterOppdrett1Id"), oppdretterKandidater));
 		model.addAttribute("oppsummeringNorgesmester2", byggOppdretterTekst((Long) model.getAttribute("valgtNorgesmesterOppdrett2Id"), oppdretterKandidater));
 		model.addAttribute("oppsummeringNorgesmester3", byggOppdretterTekst((Long) model.getAttribute("valgtNorgesmesterOppdrett3Id"), oppdretterKandidater));
+		model.addAttribute("oppsummeringNorgesmesterTrioSenior", byggDueKortTekst((Long) model.getAttribute("valgtNorgesmesterTrioSeniorDueId"), duePerId));
+		model.addAttribute("oppsummeringNorgesmesterParJunior", byggDueKortTekst((Long) model.getAttribute("valgtNorgesmesterParJuniorDueId"), duePerId));
+		model.addAttribute("oppsummeringEePlakett", byggDueKortTekst((Long) model.getAttribute("valgtEePlakettDueId"), duePerId));
 	}
 
 	private Map<Long, Due> hentDuePerId(List<Due> duer) {

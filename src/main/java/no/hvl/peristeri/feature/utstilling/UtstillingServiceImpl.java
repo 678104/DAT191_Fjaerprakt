@@ -159,6 +159,7 @@ public class UtstillingServiceImpl implements UtstillingService {
 		}
 		existing.setPaameldingsFrist(oppdatertUtstilling.getPaameldingsFrist());
 		existing.setRedigeringsFrist(oppdatertUtstilling.getRedigeringsFrist());
+		existing.setUtstillingType(oppdatertUtstilling.getUtstillingType());
 		existing.setBeskrivelse(oppdatertUtstilling.getBeskrivelse());
 		existing.setTittel(oppdatertUtstilling.getTittel());
 		existing.setPaameldingAApnet(existing.erPaameldingAapen(LocalDate.now()));

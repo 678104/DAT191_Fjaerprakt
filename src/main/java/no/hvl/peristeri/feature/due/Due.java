@@ -53,6 +53,11 @@ public class Due {
 		}
 		return lopenummer + "-" + aarstall;
 	}
+
+	@Transient
+	public DueKlasse getKlasse() {
+		return Boolean.TRUE.equals(alder) ? DueKlasse.SENIOR : DueKlasse.JUNIOR;
+	}
 	
 	public void setRingnummer(String ringnummer) {
 		String[] split = ringnummer.split("-");

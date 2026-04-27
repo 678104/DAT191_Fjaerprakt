@@ -97,74 +97,120 @@
                         hx-swap="innerHTML">
                     <input type="hidden" name="utstillingId" th:value="${valgtUtstillingId}"/>
 
-                    <h3>Rasevinner</h3>
-                    <th:block th:each="entry : ${vinnerKandidaterPerRase}">
-                      <label th:for="${'rase-vinner-' + #strings.replace(entry.key, ' ', '-') }" th:text="${entry.key}">Rase</label>
-                      <input type="hidden" name="raseNavn" th:value="${entry.key}"/>
-                      <select th:id="${'rase-vinner-' + #strings.replace(entry.key, ' ', '-') }" name="raseVinnerDueId" required>
-                        <option value="">Velg due</option>
-                        <option th:each="due : ${entry.value}"
+                    <th:block th:if="${kaaringRegler != null and kaaringRegler.harRasevinner()}">
+                      <h3>Rasevinner</h3>
+                      <th:block th:each="entry : ${vinnerKandidaterPerRase}">
+                        <label th:for="${'rase-vinner-' + #strings.replace(entry.key, ' ', '-') }" th:text="${entry.key}">Rase</label>
+                        <input type="hidden" name="raseNavn" th:value="${entry.key}"/>
+                        <select th:id="${'rase-vinner-' + #strings.replace(entry.key, ' ', '-') }" name="raseVinnerDueId" required>
+                          <option value="">Velg due</option>
+                          <option th:each="due : ${entry.value}"
+                                  th:value="${due.id}"
+                                  th:selected="${valgteRasevinnere[entry.key] != null and valgteRasevinnere[entry.key] == due.id}"
+                                  th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                          </option>
+                        </select>
+                      </th:block>
+                    </th:block>
+
+                    <th:block th:if="${kaaringRegler != null and kaaringRegler.harGruppevinner()}">
+                      <h3>Gruppevinner</h3>
+                      <th:block th:each="entry : ${vinnerKandidaterPerGruppe}">
+                        <label th:for="${'gruppe-vinner-' + #strings.replace(entry.key, ' ', '-') }" th:text="${entry.key}">Gruppe</label>
+                        <input type="hidden" name="gruppeNavn" th:value="${entry.key}"/>
+                        <select th:id="${'gruppe-vinner-' + #strings.replace(entry.key, ' ', '-') }" name="gruppeVinnerDueId" required>
+                          <option value="">Velg due</option>
+                          <option th:each="due : ${entry.value}"
+                                  th:value="${due.id}"
+                                  th:selected="${valgteGruppevinnere[entry.key] != null and valgteGruppevinnere[entry.key] == due.id}"
+                                  th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                          </option>
+                        </select>
+                      </th:block>
+                    </th:block>
+
+                    <th:block th:if="${kaaringRegler != null and kaaringRegler.harBis()}">
+                      <h3>Best in Show (BIS)</h3>
+                      <select id="bis-vinner" name="bisVinnerDueId" required>
+                        <option value="">Velg BIS</option>
+                        <option th:each="due : ${alleVinnerKandidater}"
                                 th:value="${due.id}"
-                                th:selected="${valgteRasevinnere[entry.key] != null and valgteRasevinnere[entry.key] == due.id}"
+                                th:selected="${valgtBisVinnerId != null and valgtBisVinnerId == due.id}"
                                 th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
                         </option>
                       </select>
                     </th:block>
 
-                    <h3>Gruppevinner</h3>
-                    <th:block th:each="entry : ${vinnerKandidaterPerGruppe}">
-                      <label th:for="${'gruppe-vinner-' + #strings.replace(entry.key, ' ', '-') }" th:text="${entry.key}">Gruppe</label>
-                      <input type="hidden" name="gruppeNavn" th:value="${entry.key}"/>
-                      <select th:id="${'gruppe-vinner-' + #strings.replace(entry.key, ' ', '-') }" name="gruppeVinnerDueId" required>
+                    <th:block th:if="${kaaringRegler != null and kaaringRegler.harNorgesmesterOppdrett()}">
+                      <h3 style="margin-top: 1rem;">Norgesmester i oppdrett</h3>
+                      <label for="norgesmester-oppdrett-1">1. plass</label>
+                      <select id="norgesmester-oppdrett-1" name="norgesmesterOppdrett1BrukerId" required>
+                        <option value="">Velg 1. plass</option>
+                        <option th:each="oppdretter : ${oppdretterKandidater}"
+                                th:value="${oppdretter.key}"
+                                th:selected="${valgtNorgesmesterOppdrett1Id != null and valgtNorgesmesterOppdrett1Id == oppdretter.key}"
+                                th:text="${oppdretter.value}">
+                        </option>
+                      </select>
+
+                      <label for="norgesmester-oppdrett-2">2. plass</label>
+                      <select id="norgesmester-oppdrett-2" name="norgesmesterOppdrett2BrukerId" required>
+                        <option value="">Velg 2. plass</option>
+                        <option th:each="oppdretter : ${oppdretterKandidater}"
+                                th:value="${oppdretter.key}"
+                                th:selected="${valgtNorgesmesterOppdrett2Id != null and valgtNorgesmesterOppdrett2Id == oppdretter.key}"
+                                th:text="${oppdretter.value}">
+                        </option>
+                      </select>
+
+                      <label for="norgesmester-oppdrett-3">3. plass</label>
+                      <select id="norgesmester-oppdrett-3" name="norgesmesterOppdrett3BrukerId" required>
+                        <option value="">Velg 3. plass</option>
+                        <option th:each="oppdretter : ${oppdretterKandidater}"
+                                th:value="${oppdretter.key}"
+                                th:selected="${valgtNorgesmesterOppdrett3Id != null and valgtNorgesmesterOppdrett3Id == oppdretter.key}"
+                                th:text="${oppdretter.value}">
+                        </option>
+                      </select>
+                    </th:block>
+
+                    <th:block th:if="${kaaringRegler != null and kaaringRegler.harNorgesmesterBesteTrioSenior()}">
+                      <h3 style="margin-top: 1rem;">Norgesmester - beste trio (senior)</h3>
+                      <select id="norgesmester-trio-senior" name="norgesmesterTrioSeniorDueId">
                         <option value="">Velg due</option>
-                        <option th:each="due : ${entry.value}"
+                        <option th:each="due : ${gullmedaljer}"
+                                th:if="${due.klasse.name() == 'SENIOR'}"
                                 th:value="${due.id}"
-                                th:selected="${valgteGruppevinnere[entry.key] != null and valgteGruppevinnere[entry.key] == due.id}"
+                                th:selected="${valgtNorgesmesterTrioSeniorDueId != null and valgtNorgesmesterTrioSeniorDueId == due.id}"
                                 th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
                         </option>
                       </select>
                     </th:block>
 
-                    <h3>Best in Show (BIS)</h3>
-                    <select id="bis-vinner" name="bisVinnerDueId" required>
-                      <option value="">Velg BIS</option>
-                      <option th:each="due : ${alleVinnerKandidater}"
-                              th:value="${due.id}"
-                              th:selected="${valgtBisVinnerId != null and valgtBisVinnerId == due.id}"
-                              th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
-                      </option>
-                    </select>
+                    <th:block th:if="${kaaringRegler != null and kaaringRegler.harNorgesmesterBesteParJunior()}">
+                      <h3 style="margin-top: 1rem;">Norgesmester - beste par (junior)</h3>
+                      <select id="norgesmester-par-junior" name="norgesmesterParJuniorDueId">
+                        <option value="">Velg due</option>
+                        <option th:each="due : ${gullmedaljer}"
+                                th:if="${due.klasse.name() == 'JUNIOR'}"
+                                th:value="${due.id}"
+                                th:selected="${valgtNorgesmesterParJuniorDueId != null and valgtNorgesmesterParJuniorDueId == due.id}"
+                                th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                        </option>
+                      </select>
+                    </th:block>
 
-                    <h3 style="margin-top: 1rem;">Norgesmester i oppdrett</h3>
-                    <label for="norgesmester-oppdrett-1">1. plass</label>
-                    <select id="norgesmester-oppdrett-1" name="norgesmesterOppdrett1BrukerId" required>
-                      <option value="">Velg 1. plass</option>
-                      <option th:each="oppdretter : ${oppdretterKandidater}"
-                              th:value="${oppdretter.key}"
-                              th:selected="${valgtNorgesmesterOppdrett1Id != null and valgtNorgesmesterOppdrett1Id == oppdretter.key}"
-                              th:text="${oppdretter.value}">
-                      </option>
-                    </select>
-
-                    <label for="norgesmester-oppdrett-2">2. plass</label>
-                    <select id="norgesmester-oppdrett-2" name="norgesmesterOppdrett2BrukerId" required>
-                      <option value="">Velg 2. plass</option>
-                      <option th:each="oppdretter : ${oppdretterKandidater}"
-                              th:value="${oppdretter.key}"
-                              th:selected="${valgtNorgesmesterOppdrett2Id != null and valgtNorgesmesterOppdrett2Id == oppdretter.key}"
-                              th:text="${oppdretter.value}">
-                      </option>
-                    </select>
-
-                    <label for="norgesmester-oppdrett-3">3. plass</label>
-                    <select id="norgesmester-oppdrett-3" name="norgesmesterOppdrett3BrukerId" required>
-                      <option value="">Velg 3. plass</option>
-                      <option th:each="oppdretter : ${oppdretterKandidater}"
-                              th:value="${oppdretter.key}"
-                              th:selected="${valgtNorgesmesterOppdrett3Id != null and valgtNorgesmesterOppdrett3Id == oppdretter.key}"
-                              th:text="${oppdretter.value}">
-                      </option>
-                    </select>
+                    <th:block th:if="${kaaringRegler != null and kaaringRegler.harEePlakett()}">
+                      <h3 style="margin-top: 1rem;">EE-plakett</h3>
+                      <select id="ee-plakett" name="eePlakettDueId">
+                        <option value="">Velg due</option>
+                        <option th:each="due : ${alleVinnerKandidater}"
+                                th:value="${due.id}"
+                                th:selected="${valgtEePlakettDueId != null and valgtEePlakettDueId == due.id}"
+                                th:text="${'Burnr ' + due.burnummer + ' - ' + due.rase + ' (' + due.bedommelse.poeng + ' poeng)'}">
+                        </option>
+                      </select>
+                    </th:block>
 
                     <div class="grid" style="margin-top: 0.75rem;">
                       <button type="submit">Lagre vinnere</button>
@@ -181,45 +227,68 @@
     </header>
     <p th:text="${vinnerMelding}">Vinnere er lagret. Administrator kan nå generer katalog.</p>
 
-    <h3>Rasevinnere</h3>
-    <table>
-      <thead>
-      <tr>
-        <th>Rase</th>
-        <th>Vinner</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="entry : ${oppsummeringRasevinnere}">
-        <td th:text="${entry.key}">Rase</td>
-        <td th:text="${entry.value}">Vinner</td>
-      </tr>
-      </tbody>
-    </table>
+    <th:block th:if="${kaaringRegler != null and kaaringRegler.harRasevinner()}">
+      <h3>Rasevinnere</h3>
+      <table>
+        <thead>
+        <tr>
+          <th>Rase</th>
+          <th>Vinner</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="entry : ${oppsummeringRasevinnere}">
+          <td th:text="${entry.key}">Rase</td>
+          <td th:text="${entry.value}">Vinner</td>
+        </tr>
+        </tbody>
+      </table>
+    </th:block>
 
-    <h3>Gruppevinnere</h3>
-    <table>
-      <thead>
-      <tr>
-        <th>Gruppe</th>
-        <th>Vinner</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="entry : ${oppsummeringGruppevinnere}">
-        <td th:text="${entry.key}">Gruppe</td>
-        <td th:text="${entry.value}">Vinner</td>
-      </tr>
-      </tbody>
-    </table>
+    <th:block th:if="${kaaringRegler != null and kaaringRegler.harGruppevinner()}">
+      <h3>Gruppevinnere</h3>
+      <table>
+        <thead>
+        <tr>
+          <th>Gruppe</th>
+          <th>Vinner</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="entry : ${oppsummeringGruppevinnere}">
+          <td th:text="${entry.key}">Gruppe</td>
+          <td th:text="${entry.value}">Vinner</td>
+        </tr>
+        </tbody>
+      </table>
+    </th:block>
 
-    <h3>Best in Show (BIS)</h3>
-    <p th:text="${oppsummeringBis}">Ikke valgt</p>
+    <th:block th:if="${kaaringRegler != null and kaaringRegler.harBis()}">
+      <h3>Best in Show (BIS)</h3>
+      <p th:text="${oppsummeringBis}">Ikke valgt</p>
+    </th:block>
 
-    <h3>Norgesmester i oppdrett</h3>
-    <p><strong>1. plass:</strong> <span th:text="${oppsummeringNorgesmester1}">Ikke valgt</span></p>
-    <p><strong>2. plass:</strong> <span th:text="${oppsummeringNorgesmester2}">Ikke valgt</span></p>
-    <p><strong>3. plass:</strong> <span th:text="${oppsummeringNorgesmester3}">Ikke valgt</span></p>
+    <th:block th:if="${kaaringRegler != null and kaaringRegler.harNorgesmesterOppdrett()}">
+      <h3>Norgesmester i oppdrett</h3>
+      <p><strong>1. plass:</strong> <span th:text="${oppsummeringNorgesmester1}">Ikke valgt</span></p>
+      <p><strong>2. plass:</strong> <span th:text="${oppsummeringNorgesmester2}">Ikke valgt</span></p>
+      <p><strong>3. plass:</strong> <span th:text="${oppsummeringNorgesmester3}">Ikke valgt</span></p>
+    </th:block>
+
+    <th:block th:if="${kaaringRegler != null and kaaringRegler.harNorgesmesterBesteTrioSenior()}">
+      <h3>Norgesmester - beste trio (senior)</h3>
+      <p th:text="${oppsummeringNorgesmesterTrioSenior}">Ikke valgt</p>
+    </th:block>
+
+    <th:block th:if="${kaaringRegler != null and kaaringRegler.harNorgesmesterBesteParJunior()}">
+      <h3>Norgesmester - beste par (junior)</h3>
+      <p th:text="${oppsummeringNorgesmesterParJunior}">Ikke valgt</p>
+    </th:block>
+
+    <th:block th:if="${kaaringRegler != null and kaaringRegler.harEePlakett()}">
+      <h3>EE-plakett</h3>
+      <p th:text="${oppsummeringEePlakett}">Ikke valgt</p>
+    </th:block>
 
     <div class="grid" style="margin-top: 1rem;">
       <a role="button" class="secondary" th:href="@{/dommer/utstilling/{id}(id=${valgtUtstillingId})}">Tilbake til utstilling</a>

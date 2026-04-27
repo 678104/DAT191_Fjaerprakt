@@ -35,6 +35,8 @@ public interface DueService {
 
 	Due finnDueMedId(Long dueId);
 
+	Due saveDue(Due due);
+
 	Due oppdaterDueInfo(Long dueId, String rase, String farge, String variant);
 
 
