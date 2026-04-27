@@ -32,7 +32,8 @@
                     <div id="due-liste">
                         <h2>Påmeldte Duer</h2>
                         <button th:hx-get="@{/bruker/paamelding/{id}/resultater(id=${paamelding.id})}"
-                                hx-target="#due-liste" hx-swap="outerHTML">
+                                hx-target="#due-liste" hx-swap="outerHTML"
+                                style="margin-bottom: 0.9rem;">
                             Se Resultater
                         </button>
                         <table class="striped">
@@ -69,9 +70,10 @@
                 <footer>
                     <div class="grid">
                         <a href="/bruker" role="button" class="secondary">Tilbake</a>
-                        <a th:href="@{/bruker/paamelding/endre/{id}(id=${paamelding.id})}"
-                           role="button" class="secondary">
-                            Endre påmelding</a>
+                        <a th:if="${kanEndrePaamelding}"
+                           th:href="@{/bruker/paamelding/endre/{id}(id=${paamelding.id})}"
+                           role="button"
+                           class="secondary">Endre påmelding</a>
                     </div>
                 </footer>
             </article>

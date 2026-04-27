@@ -3,6 +3,7 @@ package no.hvl.peristeri.feature.bruker;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import no.hvl.peristeri.common.exception.InvalidParameterException;
 import no.hvl.peristeri.feature.paamelding.Paamelding;
 import no.hvl.peristeri.feature.paamelding.PaameldingService;
 import org.slf4j.Logger;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -44,11 +46,25 @@ public class BrukerController {
 	}
 
 	@GetMapping("/paamelding/{paameldingId}")
-	public String getPaamledingInfo(@PathVariable("paameldingId") Long paameldingId, Model model, HttpSession session) {
-		Paamelding paamelding = paameldingService.hentPaamelding(paameldingId);
+	public String getPaamledingInfo(@AuthenticationPrincipal Bruker bruker,
+	                                @PathVariable("paameldingId") Long paameldingId,
+	                                Model model,
+	                                HttpSession session) {
+		Paamelding paamelding = hentEgenPaamelding(bruker, paameldingId);
 		model.addAttribute("paamelding", paamelding);
+		model.addAttribute("kanEndrePaamelding", kanEndrePaamelding(paamelding));
 
 		return "bruker/bruker_paamelding";
+	}
+
+	@GetMapping("/paamelding/endre/{paameldingId}")
+	public String gaaTilEndrePaamelding(@AuthenticationPrincipal Bruker bruker,
+	                                    @PathVariable("paameldingId") Long paameldingId) {
+		Paamelding paamelding = hentEgenPaamelding(bruker, paameldingId);
+		if (!kanEndrePaamelding(paamelding)) {
+			return "redirect:/bruker/paamelding/" + paameldingId;
+		}
+		return "redirect:/paamelding?utstillingId=" + paamelding.getUtstilling().getId() + "&paameldingId=" + paameldingId;
 	}
 
 	@GetMapping("/din-paamelding")
@@ -118,8 +134,11 @@ public class BrukerController {
 
 	@HxRequest
 	@GetMapping("/paamelding/{paameldingId}/ringnumre")
-	public String getRingNumreHtmx(@PathVariable("paameldingId") Long paameldingId, Model model, HttpSession session) {
-		Paamelding paamelding = paameldingService.hentPaamelding(paameldingId);
+	public String getRingNumreHtmx(@AuthenticationPrincipal Bruker bruker,
+	                               @PathVariable("paameldingId") Long paameldingId,
+	                               Model model,
+	                               HttpSession session) {
+		Paamelding paamelding = hentEgenPaamelding(bruker, paameldingId);
 		model.addAttribute("paamelding", paamelding);
 
 		return "bruker/bruker_fragments :: redigerRingnumre";
@@ -127,9 +146,13 @@ public class BrukerController {
 
 	@HxRequest
 	@GetMapping("/paamelding/{paameldingId}/dueliste")
-	public String getDueListeHtmx(@PathVariable("paameldingId") Long paameldingId, Model model, HttpSession session) {
-		Paamelding paamelding = paameldingService.hentPaamelding(paameldingId);
+	public String getDueListeHtmx(@AuthenticationPrincipal Bruker bruker,
+	                              @PathVariable("paameldingId") Long paameldingId,
+	                              Model model,
+	                              HttpSession session) {
+		Paamelding paamelding = hentEgenPaamelding(bruker, paameldingId);
 		model.addAttribute("paamelding", paamelding);
+		model.addAttribute("kanEndrePaamelding", kanEndrePaamelding(paamelding));
 
 		return "bruker/bruker_paamelding :: #due-liste";
 	}
@@ -140,7 +163,7 @@ public class BrukerController {
 	                                @PathVariable("paameldingId") Long paameldingId,
 	                                Model model,
 	                                HttpSession session) {
-		Paamelding paamelding = paameldingService.hentPaamelding(paameldingId);
+		Paamelding paamelding = hentEgenPaamelding(bruker, paameldingId);
 		bedommelseNotifikasjonService.markerSomLestForPaamelding(bruker.getId(), paameldingId);
 		model.addAttribute("paamelding", paamelding);
 
@@ -164,5 +187,22 @@ public class BrukerController {
 	public Bruker bruker(@AuthenticationPrincipal Bruker bruker) {
 		return bruker;
 	}
+
+	private Paamelding hentEgenPaamelding(Bruker bruker, Long paameldingId) {
+		Paamelding paamelding = paameldingService.hentPaamelding(paameldingId);
+		if (bruker == null || paamelding.getUtstiller() == null || !paamelding.getUtstiller().getId().equals(bruker.getId())) {
+			throw new InvalidParameterException("paameldingId", "Du har ikke tilgang til denne påmeldingen.");
+		}
+		return paamelding;
+	}
+
+	private boolean kanEndrePaamelding(Paamelding paamelding) {
+		if (paamelding == null || paamelding.getUtstilling() == null) {
+			return false;
+		}
+		LocalDate frist = paamelding.getUtstilling().getPaameldingsFrist();
+		return frist == null || !LocalDate.now().isAfter(frist);
+	}
+
 
 }
