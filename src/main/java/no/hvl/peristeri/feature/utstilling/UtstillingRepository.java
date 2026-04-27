@@ -11,7 +11,12 @@ import java.util.Optional;
 
 public interface UtstillingRepository extends JpaRepository<Utstilling, Long> {
 
-    @Query("select u from Utstilling u where u.paameldingAApnet = true order by u.datoRange.startDate")
+      @Query("""
+          select u from Utstilling u
+          where (u.manuellPaameldingStatus is null and u.paameldingsFrist >= CURRENT_DATE)
+             or u.manuellPaameldingStatus = true
+          order by u.datoRange.startDate
+          """)
     List<Utstilling> finnUtstillingerMedAApenPaameldingSortertEtterStartdato();
 
     @Query("select u from Utstilling u where u.datoRange.startDate >= ?1 order by u.datoRange.startDate")

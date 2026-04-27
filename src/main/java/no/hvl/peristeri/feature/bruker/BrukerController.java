@@ -200,6 +200,9 @@ public class BrukerController {
 		if (paamelding == null || paamelding.getUtstilling() == null) {
 			return false;
 		}
+		if (Boolean.TRUE.equals(paamelding.getUtstilling().getPaameldingAApnet())) {
+			return true;
+		}
 		LocalDate frist = paamelding.getUtstilling().getPaameldingsFrist();
 		return frist == null || !LocalDate.now().isAfter(frist);
 	}

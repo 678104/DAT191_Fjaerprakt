@@ -122,6 +122,7 @@ public class UtstillingServiceImpl implements UtstillingService {
 		if (nyUtstilling == null) {
 			throw new InvalidParameterException("nyUtstilling", "cannot be null");
 		}
+		nyUtstilling.setPaameldingAApnet(nyUtstilling.erPaameldingAapen(LocalDate.now()));
 		Utstilling saved = utstillingRepository.save(nyUtstilling);
 		logger.info("Lagret utstilling: {}", saved);
 		return saved;
@@ -153,12 +154,14 @@ public class UtstillingServiceImpl implements UtstillingService {
 		existing.setArrangoer(oppdatertUtstilling.getArrangoer());
 		existing.setDatoRange(oppdatertUtstilling.getDatoRange());
 		existing.setPaameldingStartDato(oppdatertUtstilling.getPaameldingStartDato());
-		existing.setPaameldingAApnet(
-				oppdatertUtstilling.getPaameldingAApnet() != null ? oppdatertUtstilling.getPaameldingAApnet() : false);
+		if (oppdatertUtstilling.getPaameldingAApnet() != null) {
+			existing.setManuellPaameldingStatus(oppdatertUtstilling.getPaameldingAApnet());
+		}
 		existing.setPaameldingsFrist(oppdatertUtstilling.getPaameldingsFrist());
 		existing.setRedigeringsFrist(oppdatertUtstilling.getRedigeringsFrist());
 		existing.setBeskrivelse(oppdatertUtstilling.getBeskrivelse());
 		existing.setTittel(oppdatertUtstilling.getTittel());
+		existing.setPaameldingAApnet(existing.erPaameldingAapen(LocalDate.now()));
 		Utstilling saved = utstillingRepository.save(existing);
 		logger.info("Oppdaterer utstilling: {}", saved);
 		return saved;
@@ -169,8 +172,10 @@ public class UtstillingServiceImpl implements UtstillingService {
 		if (id == null) {
 			throw new InvalidParameterException("id", "cannot be null");
 		}
-		return utstillingRepository.findById(id)
+		Utstilling utstilling = utstillingRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Utstilling", id));
+		utstilling.setPaameldingAApnet(utstilling.erPaameldingAapen(LocalDate.now()));
+		return utstilling;
 	}
 
 	@Override
@@ -180,27 +185,37 @@ public class UtstillingServiceImpl implements UtstillingService {
 
 	@Override
 	public List<Utstilling> hentAlleUtstillinger() {
-		return utstillingRepository.findAll(Sort.by("datoRange.startDate").ascending());
+		List<Utstilling> utstillinger = utstillingRepository.findAll(Sort.by("datoRange.startDate").ascending());
+		settEffektivPaameldingStatus(utstillinger);
+		return utstillinger;
 	}
 
 	@Override
 	public List<Utstilling> finnIkkeTidligereUtstillinger() {
-		return utstillingRepository.finnUtstillingerSomAvslutterEtterGittDato(LocalDate.now());
+		List<Utstilling> utstillinger = utstillingRepository.finnUtstillingerSomAvslutterEtterGittDato(LocalDate.now());
+		settEffektivPaameldingStatus(utstillinger);
+		return utstillinger;
 	}
 
 	@Override
 	public List<Utstilling> finnUtstillingerMedMulighetForPaamelding() {
-		return utstillingRepository.finnUtstillingerMedAApenPaameldingSortertEtterStartdato();
+		List<Utstilling> utstillinger = utstillingRepository.finnUtstillingerMedAApenPaameldingSortertEtterStartdato();
+		settEffektivPaameldingStatus(utstillinger);
+		return utstillinger;
 	}
 
 	@Override
 	public List<Utstilling> finnKommendeUtstillinger() {
-		return utstillingRepository.finnUtstillingerSomStarterEtterGittDato(LocalDate.now());
+		List<Utstilling> utstillinger = utstillingRepository.finnUtstillingerSomStarterEtterGittDato(LocalDate.now());
+		settEffektivPaameldingStatus(utstillinger);
+		return utstillinger;
 	}
 
 	@Override
 	public List<Utstilling> finnTidligereUtstillinger() {
-		return utstillingRepository.finnUtstillingerSomEnderFoerGittDato(LocalDate.now());
+		List<Utstilling> utstillinger = utstillingRepository.finnUtstillingerSomEnderFoerGittDato(LocalDate.now());
+		settEffektivPaameldingStatus(utstillinger);
+		return utstillinger;
 	}
 
 	@Override
@@ -373,5 +388,12 @@ public class UtstillingServiceImpl implements UtstillingService {
 		    });
 
 		return variantFargerMap;
+	}
+
+	private void settEffektivPaameldingStatus(List<Utstilling> utstillinger) {
+		LocalDate iDag = LocalDate.now();
+		for (Utstilling utstilling : utstillinger) {
+			utstilling.setPaameldingAApnet(utstilling.erPaameldingAapen(iDag));
+		}
 	}
 }

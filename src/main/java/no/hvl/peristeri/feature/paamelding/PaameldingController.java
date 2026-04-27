@@ -278,6 +278,9 @@ public class PaameldingController {
 		if (utstilling == null) {
 			return true;
 		}
+		if (Boolean.TRUE.equals(utstilling.getPaameldingAApnet())) {
+			return false;
+		}
 		LocalDate frist = utstilling.getPaameldingsFrist();
 		return frist != null && LocalDate.now().isAfter(frist);
 	}

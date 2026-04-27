@@ -50,6 +50,9 @@ public class Utstilling {
 	@Column(name = "paamelding_aapnet")
 	private Boolean paameldingAApnet;
 
+	@Column(name = "manuell_paamelding_status")
+	private Boolean manuellPaameldingStatus;
+
 	private String arrangoer;
 	private String adresse;
 	private String postnummer;
@@ -95,7 +98,8 @@ public class Utstilling {
 		this.paameldingStartDato = paameldingsFrist != null ? paameldingsFrist.minusDays(30) : null;
 		this.paameldingsFrist    = paameldingsFrist;
 		this.redigeringsFrist    = paameldingsFrist;
-		this.paameldingAApnet    = false;
+		this.manuellPaameldingStatus = null;
+		this.paameldingAApnet    = erPaameldingAapen(LocalDate.now());
 		this.duePris             = BigDecimal.valueOf(duePris);
 	}
 
@@ -110,8 +114,22 @@ public class Utstilling {
 		this.paameldingStartDato = paameldingsFrist != null ? paameldingsFrist.minusDays(30) : null;
 		this.paameldingsFrist    = paameldingsFrist;
 		this.redigeringsFrist    = paameldingsFrist;
-		this.paameldingAApnet    = false;
+		this.manuellPaameldingStatus = null;
+		this.paameldingAApnet    = erPaameldingAapen(LocalDate.now());
 		this.duePris             = duePris;
+	}
+
+	public boolean erPaameldingAapen(LocalDate dagensDato) {
+		if (Boolean.TRUE.equals(manuellPaameldingStatus)) {
+			return true;
+		}
+		if (Boolean.FALSE.equals(manuellPaameldingStatus)) {
+			return false;
+		}
+		if (paameldingsFrist == null) {
+			return false;
+		}
+		return !dagensDato.isAfter(paameldingsFrist);
 	}
 
 }
