@@ -36,36 +36,22 @@
 </div>
 
 <th:block th:if="${ulesteBedommelser != null}">
-    <span id="bruker-meny-knp-badge"
+    <span th:id="'bruker-meny-knp-badge'"
           hx-swap-oob="outerHTML"
           class="bedommelse-varsel-badge bedommelse-varsel-prikk"
-          th:if="${ulesteBedommelser > 0}"
+          th:style="${ulesteBedommelser > 0} ? '' : 'display: none;'"
           aria-label="Du har nye bedømmelser"></span>
-    <span id="bruker-meny-knp-badge"
-          hx-swap-oob="outerHTML"
-          class="bedommelse-varsel-badge bedommelse-varsel-prikk"
-          th:if="${ulesteBedommelser <= 0}"
-          style="display: none;"></span>
-    <span id="bedommelse-notifikasjon-badge"
-          hx-swap-oob="outerHTML"
-          class="bedommelse-varsel-badge"
-          th:if="${ulesteBedommelser > 0}"
-          th:text="${ulesteBedommelser}"></span>
-    <span id="bedommelse-notifikasjon-badge"
-          hx-swap-oob="outerHTML"
-          class="bedommelse-varsel-badge"
-          th:if="${ulesteBedommelser <= 0}"
-          style="display: none;"></span>
 
-    <span id="resultater-notifikasjon-badge"
+    <span th:id="'bedommelse-notifikasjon-badge'"
           hx-swap-oob="outerHTML"
           class="bedommelse-varsel-badge"
-          th:if="${ulesteBedommelser > 0}"
-          th:text="${ulesteBedommelser}"></span>
-    <span id="resultater-notifikasjon-badge"
+          th:text="${ulesteBedommelser > 0 ? ulesteBedommelser : ''}"
+          th:style="${ulesteBedommelser > 0} ? '' : 'display: none;'"></span>
+
+    <span th:id="'resultater-notifikasjon-badge'"
           hx-swap-oob="outerHTML"
           class="bedommelse-varsel-badge"
-          th:if="${ulesteBedommelser <= 0}"
-          style="display: none;"></span>
+          th:text="${ulesteBedommelser > 0 ? ulesteBedommelser : ''}"
+          th:style="${ulesteBedommelser > 0} ? '' : 'display: none;'"></span>
 </th:block>
 

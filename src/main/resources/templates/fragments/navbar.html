@@ -183,38 +183,23 @@
 </header>
 
 <th:block th:fragment="bedommelseNotifikasjonOob">
-    <span id="bruker-meny-knp-badge"
+    <span th:id="'bruker-meny-knp-badge'"
           hx-swap-oob="outerHTML"
           class="bedommelse-varsel-badge bedommelse-varsel-prikk"
-          th:if="${ulesteBedommelser != null and ulesteBedommelser > 0}"
+          th:style="${ulesteBedommelser != null and ulesteBedommelser > 0} ? '' : 'display: none;'"
           aria-label="Du har nye bedømmelser"></span>
-    <span id="bruker-meny-knp-badge"
-          hx-swap-oob="outerHTML"
-          class="bedommelse-varsel-badge bedommelse-varsel-prikk"
-          th:if="${ulesteBedommelser == null or ulesteBedommelser <= 0}"
-          style="display: none;"></span>
 
-    <span id="bedommelse-notifikasjon-badge"
+    <span th:id="'bedommelse-notifikasjon-badge'"
           hx-swap-oob="outerHTML"
           class="bedommelse-varsel-badge"
-          th:if="${ulesteBedommelser != null and ulesteBedommelser > 0}"
-          th:text="${ulesteBedommelser}"></span>
-    <span id="bedommelse-notifikasjon-badge"
-          hx-swap-oob="outerHTML"
-          class="bedommelse-varsel-badge"
-          th:if="${ulesteBedommelser == null or ulesteBedommelser <= 0}"
-          style="display: none;"></span>
+          th:text="${ulesteBedommelser != null and ulesteBedommelser > 0 ? ulesteBedommelser : ''}"
+          th:style="${ulesteBedommelser != null and ulesteBedommelser > 0} ? '' : 'display: none;'"></span>
 
-    <span id="resultater-notifikasjon-badge"
+    <span th:id="'resultater-notifikasjon-badge'"
           hx-swap-oob="outerHTML"
           class="bedommelse-varsel-badge"
-          th:if="${ulesteBedommelser != null and ulesteBedommelser > 0}"
-          th:text="${ulesteBedommelser}"></span>
-    <span id="resultater-notifikasjon-badge"
-          hx-swap-oob="outerHTML"
-          class="bedommelse-varsel-badge"
-          th:if="${ulesteBedommelser == null or ulesteBedommelser <= 0}"
-          style="display: none;"></span>
+          th:text="${ulesteBedommelser != null and ulesteBedommelser > 0 ? ulesteBedommelser : ''}"
+          th:style="${ulesteBedommelser != null and ulesteBedommelser > 0} ? '' : 'display: none;'"></span>
 </th:block>
 
 <script th:src="@{/js/minimal-theme-switcher.js}"></script>
