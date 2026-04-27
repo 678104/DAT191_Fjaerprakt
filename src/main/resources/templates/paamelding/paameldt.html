@@ -8,7 +8,6 @@
 <main class="container" th:fragment="paameldt">
     <section>
         <h2>Du er nå påmeldt</h2>
-        <p class="epost-varsel-melding">E-postvarsling er sendt til <strong th:text="${utstiller.epost}">din e-post</strong>.</p>
         <!--/*@thymesVar id="utstiller" type="no.hvl.peristeri.feature.bruker.Bruker"*/-->
         <div class="grid" style="grid-template-columns: auto 1fr; gap: 0.5rem;" th:object="${utstiller}">
             <strong>Navn:</strong><span th:text="|*{fornavn} *{etternavn}|"></span>

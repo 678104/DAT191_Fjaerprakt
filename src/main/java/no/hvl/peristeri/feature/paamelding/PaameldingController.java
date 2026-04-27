@@ -18,7 +18,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -35,12 +38,13 @@ public class PaameldingController {
 	@GetMapping
 	public String paamelding(@AuthenticationPrincipal Bruker bruker,
 	                        @RequestParam(required = false) Long utstillingId,
+	                        @RequestParam(required = false) Long paameldingId,
 	                        Model model,
 	                        HttpSession session) {
 		if (utstillingId == null) {
 			return visUtstillingsvalg(model, bruker, null, null);
 		}
-		return visDirektePaamelding(model, bruker, session, utstillingId);
+		return visDirektePaamelding(model, bruker, session, utstillingId, paameldingId);
 	}
 
 	@PostMapping("/paameldingskvittering")
@@ -50,7 +54,7 @@ public class PaameldingController {
 			return visUtstillingsvalg(model, bruker, null,
 					"Du må velge en utstilling før du kan melde deg på.");
 		}
-		String view = visDirektePaamelding(model, bruker, session, utstillingId);
+		String view = visDirektePaamelding(model, bruker, session, utstillingId, null);
 		if ("paamelding/paameldingkvittering".equals(view)) {
 			return "paamelding/paameldingkvittering :: kvittering";
 		}
@@ -124,8 +128,15 @@ public class PaameldingController {
 				((Utstilling) session.getAttribute("utstilling")).getDuePris());
 		session.setAttribute("totalPris", totalPris);
 
-		paameldingService.leggTilPaamelding(bruker.getId(), ((Utstilling) session.getAttribute("utstilling")).getId(),
-				getDueList(session), (BigDecimal) session.getAttribute("totalPris"));
+		Long redigerPaameldingId = (Long) session.getAttribute("redigerPaameldingId");
+		if (redigerPaameldingId != null) {
+			paameldingService.oppdaterPaamelding(redigerPaameldingId, bruker.getId(), getDueList(session),
+					(BigDecimal) session.getAttribute("totalPris"));
+			session.removeAttribute("redigerPaameldingId");
+		} else {
+			paameldingService.leggTilPaamelding(bruker.getId(), ((Utstilling) session.getAttribute("utstilling")).getId(),
+					getDueList(session), (BigDecimal) session.getAttribute("totalPris"));
+		}
 
 		logger.info("Utstiller: {}, Utstilling: {}, DueDTOList: {}", bruker, session.getAttribute("utstilling"),
 				getDueList(session));
@@ -141,26 +152,46 @@ public class PaameldingController {
 	private String visDirektePaamelding(Model model,
 	                                   Bruker bruker,
 	                                   HttpSession session,
-	                                   Long utstillingId) {
+	                                   Long utstillingId,
+	                                   Long paameldingId) {
 		model.addAttribute("utstiller", bruker);
 
-		List<Utstilling> utstillinger = utstillingService.finnUtstillingerMedMulighetForPaamelding();
-		Utstilling utstilling = finnGyldigUtstilling(utstillinger, utstillingId);
-		if (utstilling == null) {
-			return visUtstillingsvalg(model, bruker, utstillingId,
-					"Fant ikke valgt utstilling, eller påmelding er stengt.");
+		Utstilling utstilling;
+		if (paameldingId != null) {
+			Paamelding paamelding = paameldingService.hentPaamelding(paameldingId);
+			if (!erEgenPaamelding(bruker, paamelding) || !utstillingId.equals(paamelding.getUtstilling().getId())) {
+				return visUtstillingsvalg(model, bruker, utstillingId, "Du har ikke tilgang til å endre denne påmeldingen.");
+			}
+			utstilling = paamelding.getUtstilling();
+			if (erPaameldingsfristUtlopt(utstilling)) {
+				return visUtstillingsvalg(model, bruker, utstillingId,
+						"Påmeldingsfristen er utløpt. Du kan ikke endre påmeldingen.");
+			}
+			session.setAttribute("redigerPaameldingId", paameldingId);
+			session.setAttribute("dueDTOListe", byggDueDTOListFraPaamelding(paamelding));
+		} else {
+			List<Utstilling> utstillinger = utstillingService.finnUtstillingerMedMulighetForPaamelding();
+			utstilling = finnGyldigUtstilling(utstillinger, utstillingId);
+			if (utstilling == null) {
+				return visUtstillingsvalg(model, bruker, utstillingId,
+						"Fant ikke valgt utstilling, eller påmelding er stengt.");
+			}
 		}
 
-		if (paameldingService.sjekkOmBrukerAlleredeErPaameldt(bruker, utstilling)) {
+		if (paameldingId == null && paameldingService.sjekkOmBrukerAlleredeErPaameldt(bruker, utstilling)) {
 			return visUtstillingsvalg(model, bruker, utstillingId,
 					"Du er allerede påmeldt denne utstillingen.");
 		}
 
+		if (paameldingId == null) {
+			session.removeAttribute("redigerPaameldingId");
+			session.setAttribute("dueDTOListe", new DueDTOList());
+		}
+
 		session.setAttribute("utstilling", utstilling);
-		session.setAttribute("dueDTOListe", new DueDTOList());
 
 		logger.info("Påmelding startet for utstilling: {} ({})", utstilling.getTittel(), utstillingId);
-		model.addAttribute("radId", 1);
+		model.addAttribute("radId", finnNesteRadId(getDueList(session)));
 		leggTilDueKatalogModel(model, null);
 		return "paamelding/paameldingkvittering";
 	}
@@ -234,5 +265,102 @@ public class PaameldingController {
 
 	private boolean erTom(String verdi) {
 		return verdi == null || verdi.isBlank();
+	}
+
+	private boolean erEgenPaamelding(Bruker bruker, Paamelding paamelding) {
+		return bruker != null
+				&& paamelding != null
+				&& paamelding.getUtstiller() != null
+				&& bruker.getId().equals(paamelding.getUtstiller().getId());
+	}
+
+	private boolean erPaameldingsfristUtlopt(Utstilling utstilling) {
+		if (utstilling == null) {
+			return true;
+		}
+		if (Boolean.TRUE.equals(utstilling.getPaameldingAApnet())) {
+			return false;
+		}
+		LocalDate frist = utstilling.getPaameldingsFrist();
+		return frist != null && LocalDate.now().isAfter(frist);
+	}
+
+	private int finnNesteRadId(DueDTOList dueDTOList) {
+		int max = 0;
+		for (DueDTO dueDTO : dueDTOList.getListe()) {
+			if (dueDTO.radId() != null && dueDTO.radId() > max) {
+				max = dueDTO.radId();
+			}
+		}
+		return max + 1;
+	}
+
+	private DueDTOList byggDueDTOListFraPaamelding(Paamelding paamelding) {
+		DueDTOList resultat = new DueDTOList();
+		Map<String, DueAggregat> aggregatMap = new LinkedHashMap<>();
+		for (var due : paamelding.getDuer()) {
+			String noekkel = lagNoekkel(due.getRase(), due.getFarge(), due.getVariant(), due.getIkkeEget());
+			DueAggregat aggregat = aggregatMap.computeIfAbsent(noekkel,
+					ignored -> new DueAggregat(due.getRase(), due.getFarge(), due.getVariant(), due.getIkkeEget()));
+			aggregat.inkrementer(due.getKjonn(), due.getAlder());
+		}
+
+		int radId = 1;
+		for (DueAggregat aggregat : aggregatMap.values()) {
+			resultat.leggTilDueDTO(new DueDTO(
+					radId++,
+					aggregat.rase,
+					aggregat.farge,
+					aggregat.variant,
+					aggregat.hannerUng,
+					aggregat.hannerEldre,
+					aggregat.hunnerUng,
+					aggregat.hunnerEldre,
+					aggregat.ikkeEget
+			));
+		}
+		return resultat;
+	}
+
+	private String lagNoekkel(String rase, String farge, String variant, Boolean ikkeEget) {
+		return String.join("|",
+				rase == null ? "" : rase,
+				farge == null ? "" : farge,
+				variant == null ? "" : variant,
+				String.valueOf(Boolean.TRUE.equals(ikkeEget)));
+	}
+
+	private static class DueAggregat {
+		private final String rase;
+		private final String farge;
+		private final String variant;
+		private final Boolean ikkeEget;
+		private int hannerUng;
+		private int hannerEldre;
+		private int hunnerUng;
+		private int hunnerEldre;
+
+		private DueAggregat(String rase, String farge, String variant, Boolean ikkeEget) {
+			this.rase = rase;
+			this.farge = farge;
+			this.variant = variant;
+			this.ikkeEget = Boolean.TRUE.equals(ikkeEget);
+		}
+
+		private void inkrementer(Boolean hann, Boolean eldre) {
+			if (Boolean.TRUE.equals(hann)) {
+				if (Boolean.TRUE.equals(eldre)) {
+					hannerEldre++;
+				} else {
+					hannerUng++;
+				}
+			} else {
+				if (Boolean.TRUE.equals(eldre)) {
+					hunnerEldre++;
+				} else {
+					hunnerUng++;
+				}
+			}
+		}
 	}
 }

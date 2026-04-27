@@ -184,6 +184,7 @@ public class UtstillingController {
 			return "utstilling/utstilling_fragments :: liste";
 		}
 		logger.info("Åpner påmelding for utstilling med id: {}", id);
+		utstilling.setManuellPaameldingStatus(true);
 		utstilling.setPaameldingAApnet(true);
 		Utstilling saved = utstillingService.oppdaterUtstilling(id, utstilling);
 		if (saved == null) {
@@ -216,6 +217,7 @@ public class UtstillingController {
 			return "utstilling/utstilling_fragments :: liste";
 		}
 		logger.info("Lukker påmelding for utstilling med id: {}", id);
+		utstilling.setManuellPaameldingStatus(false);
 		utstilling.setPaameldingAApnet(false);
 		Utstilling saved = utstillingService.oppdaterUtstilling(id, utstilling);
 		if (saved == null) {

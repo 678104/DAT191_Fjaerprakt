@@ -240,50 +240,50 @@
         </div>
         <!--/*@thymesVar id="paamelding" type="no.hvl.peristeri.feature.paamelding.Paamelding"*/-->
         <div th:fragment="redigerRingnumre" th:object="${paamelding}" id="endre-due-liste">
-            <h1>Rediger ringnumre</h1>
+      <h1>Rediger ringnumre</h1>
             <table class="striped">
                 <thead>
                 <tr>
-                    <th>Ringnummer (løpenr.)</th>
-                    <th>Ringnummer (år)</th>
-                    <th>Rase</th>
-                    <th>Farge</th>
-                    <th>Variant</th>
+          <th>Ringnummer (løpenr.)</th>
+          <th>Ringnummer (år)</th>
+          <th>Rase</th>
+          <th>Farge</th>
+          <th>Variant</th>
                     <th>Kjønn</th>
                     <th>Alder</th>
                     <th>Ikke Eget</th>
-                    <th>Lagre</th>
+          <th>Lagre</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="d : *{duer}">
-                    <td>
-                        <label th:for="|lopenr-${d.id}|" style="position:absolute;left:-10000px;">Ringnummer løpenummer</label>
-                        <input th:id="|lopenr-${d.id}|" th:value="${d.lopenummer}" name="lopenr" placeholder="f.eks. 1234" aria-label="Ringnummer løpenummer">
-                    </td>
-                    <td>
-                        <label th:for="|aarstall-${d.id}|" style="position:absolute;left:-10000px;">Ringnummer årstall</label>
-                        <input th:id="|aarstall-${d.id}|" th:value="${d.aarstall}" name="aarstall" placeholder="f.eks. 25" aria-label="Ringnummer årstall">
-                    </td>
-                    <td th:text="${d.rase}">Rase</td>
-                    <td th:text="${d.farge}">Farge</td>
-                    <td th:text="${d.variant}">Variant</td>
-                    <td th:text="${d.kjonn} ? '1,0' : '0,1'">Kjønn</td>
-                    <td th:text="${d.alder} ? 'Eldre' : 'Ung'">Alder</td>
-                    <td th:text="${d.ikkeEget} ? 'Ikke eget avl' : 'Eget avl'">Ikke Eget</td>
-                    <td>
-                        <button th:hx-post="@{/due/endreRingnummer/{id}/rad(id=${d.id})}"
-                                hx-target="closest tr"
-                                hx-swap="outerHTML"
-                                hx-include="closest tr">
-                            Lagre
-                        </button>
-                    </td>
-                </tr>
+        <tr th:each="d : *{duer}">
+          <td>
+            <label th:for="|lopenr-${d.id}|" style="position:absolute;left:-10000px;">Ringnummer løpenummer</label>
+            <input th:id="|lopenr-${d.id}|" th:value="${d.lopenummer}" name="lopenr" placeholder="f.eks. 1234" aria-label="Ringnummer løpenummer">
+          </td>
+          <td>
+            <label th:for="|aarstall-${d.id}|" style="position:absolute;left:-10000px;">Ringnummer årstall</label>
+            <input th:id="|aarstall-${d.id}|" th:value="${d.aarstall}" name="aarstall" placeholder="f.eks. 25" aria-label="Ringnummer årstall">
+          </td>
+          <td th:text="${d.rase}">Rase</td>
+          <td th:text="${d.farge}">Farge</td>
+          <td th:text="${d.variant}">Variant</td>
+          <td th:text="${d.kjonn} ? '1,0' : '0,1'">Kjønn</td>
+          <td th:text="${d.alder} ? 'Eldre' : 'Ung'">Alder</td>
+          <td th:text="${d.ikkeEget} ? 'Ikke eget avl' : 'Eget avl'">Ikke Eget</td>
+          <td>
+            <button th:hx-post="@{/due/endreRingnummer/{id}/rad(id=${d.id})}"
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                hx-include="closest tr">
+              Lagre
+            </button>
+          </td>
+        </tr>
                 </tbody>
             </table>
 
-            <div class="grid">
+            <div class="grid" style="margin-top: 0.9rem;">
                 <button class=""
                         th:hx-get="@{/bruker/paamelding/{id}/dueliste(id=${paamelding.id})}"
                         hx-target="#endre-due-liste" hx-swap="outerHTML">
@@ -292,19 +292,7 @@
             </div>
 
         </div>
-        <table>
-            <!--/*@thymesVar id="due" type="no.hvl.peristeri.feature.due.Due"*/-->
-            <tr th:object="${due}" th:fragment="lagretRad">
-                <td th:text="*{ringnummer}">Ringnummer</td>
-                <td th:text="*{rase}">Rase</td>
-                <td th:text="*{farge}">Farge</td>
-                <td th:text="*{variant}">Variant</td>
-                <td th:text="*{kjonn} ? '1,0' : '0,1'">Kjønn</td>
-                <td th:text="*{alder} ? 'Eldre' : 'Ung'">Alder</td>
-                <td th:text="*{ikkeEget} ? 'Ikke eget avl' : 'Eget avl'">Ikke Eget</td>
-                <td></td>
-            </tr>
-        </table>
+
     </section>
 </main>
 <footer class="container">

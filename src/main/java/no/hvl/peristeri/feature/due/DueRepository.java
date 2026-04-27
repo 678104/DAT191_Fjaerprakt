@@ -52,4 +52,6 @@ public interface DueRepository extends JpaRepository<Due, Long> {
 	@Modifying
 	@Query("UPDATE Due d SET d.variant = :nyVariant WHERE d.id IN :idListe")
 	void updateVariantForIds(@Param("nyVariant") @Nullable String nyVariant, @Param("idListe") List<Long> idListe);
+
+	void deleteAllByPaamelding_Id(Long paameldingId);
 }

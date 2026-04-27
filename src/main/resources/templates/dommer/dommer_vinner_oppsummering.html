@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <title>Dommer - Vinneroppsummering</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+<body th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<header class="container">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+</header>
+<main class="container">
+    <section>
+        <div id="content">
+            <th:block th:replace="~{dommer/dommer_fragments :: vinnerOppsummering}"></th:block>
+        </div>
+    </section>
+</main>
+<footer class="container">
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+<script th:src="@{/js/minimal-theme-switcher.js}"></script>
+</body>
+</html>
+

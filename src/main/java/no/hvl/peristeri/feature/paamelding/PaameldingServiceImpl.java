@@ -7,6 +7,7 @@ import no.hvl.peristeri.common.exception.ResourceNotFoundException;
 import no.hvl.peristeri.feature.bruker.Bruker;
 import no.hvl.peristeri.feature.bruker.BrukerService;
 import no.hvl.peristeri.feature.due.Due;
+import no.hvl.peristeri.feature.due.DueRepository;
 import no.hvl.peristeri.feature.due.DueService;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
@@ -29,6 +30,7 @@ public class PaameldingServiceImpl implements PaameldingService {
 	private final BrukerService        brukerService;
 	private final UtstillingService    utstillingService;
 	private final DueService           dueService;
+	private final DueRepository        dueRepository;
 
 
 	/**
@@ -78,6 +80,50 @@ public class PaameldingServiceImpl implements PaameldingService {
 
 		logger.info("Paamelding opprettet: {}", savedPaamelding);
 		return savedPaamelding;
+	}
+
+	@Transactional
+	@Override
+	public Paamelding oppdaterPaamelding(Long paameldingId, Long utstillerId, DueDTOList duerDTO,
+	                                     BigDecimal paameldingsAvgift) {
+		if (paameldingId == null) {
+			throw new InvalidParameterException("paameldingId", "cannot be null");
+		}
+		if (utstillerId == null) {
+			throw new InvalidParameterException("utstillerId", "cannot be null");
+		}
+		if (duerDTO == null) {
+			throw new InvalidParameterException("duerDTO", "cannot be null");
+		}
+
+		Paamelding paamelding = hentPaamelding(paameldingId);
+		if (!utstillerId.equals(paamelding.getUtstiller().getId())) {
+			throw new InvalidParameterException("paameldingId", "Du har ikke tilgang til å endre denne påmeldingen.");
+		}
+
+		Map<String, List<Due>> eksisterendeDuerMedRingnummer = new java.util.HashMap<>();
+		for (Due d : paamelding.getDuer()) {
+			eksisterendeDuerMedRingnummer
+					.computeIfAbsent(lagDueNoekkel(d), ignored -> new ArrayList<>())
+					.add(d);
+		}
+
+		dueRepository.deleteAllByPaamelding_Id(paameldingId);
+
+		for (DueDTO dueDTO : duerDTO.getListe()) {
+			List<Due> nyeDuer = konverterDueDTOtilDue(dueDTO);
+			for (Due ny : nyeDuer) {
+				ny.setPaamelding(paamelding);
+				bevarRingnummerHvisMulig(ny, eksisterendeDuerMedRingnummer);
+				dueService.leggTilDue(ny);
+			}
+		}
+
+		paamelding.setPaameldingsAvgift(paameldingsAvgift);
+		// Paamelding er allerede managed i transaksjonen. Unngå save/merge her,
+		// ellers kan Hibernate forsøke å merge slettede Due-instanser.
+		logger.info("Paamelding oppdatert: {}", paamelding);
+		return paamelding;
 	}
 
 	/**
@@ -178,5 +224,37 @@ public class PaameldingServiceImpl implements PaameldingService {
 		}
 		return paameldingRepository.findByUtstillerAndUtstilling(bruker, utstilling)
 				.isPresent();
+	}
+
+	@Override
+	public List<Paamelding> hentPaameldingerForUtstilling(Long utstillingId) {
+		if (utstillingId == null) {
+			throw new InvalidParameterException("utstillingId", "cannot be null");
+		}
+		return paameldingRepository.findByUtstillingIdSortert(utstillingId);
+	}
+
+	private String lagDueNoekkel(Due due) {
+		return String.join("|",
+				safe(due.getRase()),
+				safe(due.getFarge()),
+				safe(due.getVariant()),
+				String.valueOf(Boolean.TRUE.equals(due.getIkkeEget())),
+				String.valueOf(Boolean.TRUE.equals(due.getKjonn())),
+				String.valueOf(Boolean.TRUE.equals(due.getAlder())));
+	}
+
+	private String safe(String verdi) {
+		return verdi == null ? "" : verdi;
+	}
+
+	private void bevarRingnummerHvisMulig(Due nyDue, Map<String, List<Due>> eksisterendeDuerMedRingnummer) {
+		List<Due> kandidater = eksisterendeDuerMedRingnummer.get(lagDueNoekkel(nyDue));
+		if (kandidater == null || kandidater.isEmpty()) {
+			return;
+		}
+		Due kandidat = kandidater.remove(0);
+		nyDue.setLopenummer(kandidat.getLopenummer());
+		nyDue.setAarstall(kandidat.getAarstall());
 	}
 }

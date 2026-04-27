@@ -1,6 +1,7 @@
 package no.hvl.peristeri.feature.due;
 
 import lombok.RequiredArgsConstructor;
+import no.hvl.peristeri.common.exception.InvalidParameterException;
 import no.hvl.peristeri.common.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ public class DueServiceImpl implements DueService {
 
 	@Override
 	public Due oppdaterRingnummer(Long id, String lopenr, String aarstall) {
+		validerRingnummer(lopenr, aarstall);
 		Due due = dueRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Due", id));
 		due.setLopenummer(lopenr);
 		due.setAarstall(aarstall);
@@ -93,6 +95,7 @@ public class DueServiceImpl implements DueService {
 		return dueRepository.save(due);
 	}
 
+
 	@Transactional
 	@Override
 	public void endreRasePaDuer(String nyRase, List<Long> dueIdListe) {
@@ -109,6 +112,23 @@ public class DueServiceImpl implements DueService {
 	@Override
 	public void endreVariantPaDuer(String nyVariant, List<Long> dueIdListe) {
 		dueRepository.updateVariantForIds(nyVariant, dueIdListe);
+	}
+
+	private void validerRingnummer(String lopenr, String aarstall) {
+		boolean tomLopenr = lopenr == null || lopenr.isBlank();
+		boolean tomAarstall = aarstall == null || aarstall.isBlank();
+		if (tomLopenr && tomAarstall) {
+			return;
+		}
+		if (tomLopenr || tomAarstall) {
+			throw new InvalidParameterException("ringnummer", "Både løpenummer og årstall må fylles ut.");
+		}
+		if (!lopenr.matches("\\d{1,10}")) {
+			throw new InvalidParameterException("lopenr", "Løpenummer må bestå av tall.");
+		}
+		if (!aarstall.matches("\\d{2,4}")) {
+			throw new InvalidParameterException("aarstall", "Årstall må bestå av 2-4 tall.");
+		}
 	}
 
 }

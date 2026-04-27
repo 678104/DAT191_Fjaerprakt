@@ -23,6 +23,10 @@ public interface PaameldingService {
 	Paamelding leggTilPaamelding(Long utstillerId, Long utstillingId, DueDTOList duerDTO,
 	                             BigDecimal paameldingsAvgift);
 
+	@Transactional
+	Paamelding oppdaterPaamelding(Long paameldingId, Long utstillerId, DueDTOList duerDTO,
+	                              BigDecimal paameldingsAvgift);
+
 	/**
 	 * Henter påmeldinger til en bruker, og deler dem opp i kommende og tidligere påmeldinger
 	 *
@@ -43,4 +47,6 @@ public interface PaameldingService {
 	Paamelding erBrukerPaameldtUtstilling(Bruker bruker, Utstilling utstilling);
 
 	boolean sjekkOmBrukerAlleredeErPaameldt(Bruker bruker, Utstilling utstilling);
+
+	List<Paamelding> hentPaameldingerForUtstilling(Long utstillingId);
 }

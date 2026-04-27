@@ -54,12 +54,6 @@
                         <small class="feiltekst" th:if="${#fields.hasErrors('paameldingsFrist')}" th:errors="*{paameldingsFrist}"></small>
                     </fieldset>
                     <fieldset class="grid">
-                        <label for="redigeringsFrist"><b>Frist for å kunne redigere egen påmelding</b>
-                            <input type="date" id="redigeringsFrist" th:field="*{redigeringsFrist}" required>
-                        </label>
-                        <small class="feiltekst" th:if="${#fields.hasErrors('redigeringsFrist')}" th:errors="*{redigeringsFrist}"></small>
-                    </fieldset>
-                    <fieldset class="grid">
                         <label for="startDato"><b>Startdato for utstilling</b>
                             <input type="date" id="startDato" th:field="*{datoRange.startDate}"
                                    placeholder="Datoen utstillingen begynner" required>

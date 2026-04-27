@@ -37,6 +37,7 @@ public interface DueService {
 
 	Due oppdaterDueInfo(Long dueId, String rase, String farge, String variant);
 
+
 	@Transactional
 	void endreRasePaDuer(String nyRase, List<Long> dueIdListe);
 
