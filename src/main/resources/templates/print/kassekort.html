@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="no">
+<head>
+    <meta charset="UTF-8" />
+    <title>Kassekort</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #1b1f23;
+            margin: 18px;
+        }
+
+        h1, h2 {
+            margin: 0 0 8px 0;
+        }
+
+        h1 {
+            font-size: 20px;
+        }
+
+        h2 {
+            font-size: 14px;
+            margin-top: 18px;
+        }
+
+        .meta {
+            color: #4a5568;
+            margin-bottom: 12px;
+        }
+
+        .box {
+            border: 1px solid #d9e2ec;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .grid {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .grid td {
+            padding: 4px 6px;
+            vertical-align: top;
+        }
+
+        .grid td:first-child {
+            width: 36%;
+            font-weight: bold;
+        }
+
+        table.duer {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        table.duer th,
+        table.duer td {
+            border: 1px solid #cbd5e0;
+            padding: 6px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        table.duer th {
+            background: #f4f7fb;
+            font-weight: bold;
+        }
+
+        .empty {
+            font-style: italic;
+            color: #6b7280;
+        }
+
+        .kassekort {
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 12px;
+        }
+
+        .kassekort-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .kassekort-title {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .sidebryt {
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body>
+<h1>Kassekort</h1>
+<div class="meta">Generert: <span th:text="${generertTidspunkt}">dd.MM.yyyy HH:mm</span></div>
+
+<div class="box">
+    <h2>Utstilling</h2>
+    <table class="grid">
+        <tr>
+            <td>Navn</td>
+            <td th:text="${paamelding.utstilling != null && paamelding.utstilling.tittel != null && !paamelding.utstilling.tittel.isBlank() ? paamelding.utstilling.tittel : '-'}">-</td>
+        </tr>
+        <tr>
+            <td>Arrangør</td>
+            <td th:text="${paamelding.utstilling != null && paamelding.utstilling.arrangoer != null && !paamelding.utstilling.arrangoer.isBlank() ? paamelding.utstilling.arrangoer : '-'}">-</td>
+        </tr>
+        <tr>
+            <td>Sted</td>
+            <td th:text="${paamelding.utstilling != null && paamelding.utstilling.adresse != null && !paamelding.utstilling.adresse.isBlank() ? paamelding.utstilling.adresse : '-'}">-</td>
+        </tr>
+    </table>
+</div>
+
+<div class="box">
+    <h2>Oppdretter</h2>
+    <table class="grid">
+        <tr>
+            <td>Navn</td>
+            <td th:text="${paamelding.utstiller != null ? paamelding.utstiller.navn : '-'}">-</td>
+        </tr>
+        <tr>
+            <td>E-post</td>
+            <td th:text="${paamelding.utstiller != null && paamelding.utstiller.epost != null && !paamelding.utstiller.epost.isBlank() ? paamelding.utstiller.epost : '-'}">-</td>
+        </tr>
+        <tr>
+            <td>Forening</td>
+            <td th:text="${paamelding.utstiller != null && paamelding.utstiller.forening != null && !paamelding.utstiller.forening.isBlank() ? paamelding.utstiller.forening : '-'}">-</td>
+        </tr>
+    </table>
+</div>
+
+<div class="box">
+    <h2>Betalingsinformasjon</h2>
+    <table class="grid">
+        <tr>
+            <td>Antall duer</td>
+            <td th:text="${antallDuer}">0</td>
+        </tr>
+        <tr>
+            <td>Pris per due</td>
+            <td th:text="${#numbers.formatDecimal(prisPerDue, 1, 2)} + ' kr'">0,00 kr</td>
+        </tr>
+        <tr>
+            <td>Total sum</td>
+            <td th:text="${#numbers.formatDecimal(totalAvgift, 1, 2)} + ' kr'">0,00 kr</td>
+        </tr>
+    </table>
+</div>
+
+<h2>Kassekort per rase</h2>
+<div th:if="${!#lists.isEmpty(kassekort)}">
+    <div th:each="kort, iter : ${kassekort}" th:classappend="${!iter.last ? 'sidebryt' : ''}">
+        <section class="kassekort">
+            <div class="kassekort-header">
+                <span class="kassekort-title" th:text="'Kassekort #' + ${iter.count} + ' - ' + ${kort.rase}">Kassekort #1</span>
+                <span th:text="${'Antall duer: ' + #lists.size(kort.duer)}">Antall duer</span>
+            </div>
+
+            <div><strong>Gruppe:</strong> <span th:text="${kort.gruppe}">-</span></div>
+            <div><strong>Rase:</strong> <span th:text="${kort.rase}">-</span></div>
+
+            <table class="duer">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Farge</th>
+                    <th>Variant</th>
+                    <th>Kjønn/Alder</th>
+                    <th>Avlstatus</th>
+                    <th>Ringnummer</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="due, dueIter : ${kort.duer}">
+                    <td th:text="${dueIter.count}">1</td>
+                    <td th:text="${due.farge}">-</td>
+                    <td th:text="${due.variant}">-</td>
+                    <td th:text="${due.kjonnAlder}">-</td>
+                    <td th:text="${due.avlstatus}">-</td>
+                    <td th:text="${due.ringnummer}">-</td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</div>
+
+<p class="empty" th:if="${#lists.isEmpty(kassekort)}">Ingen duer registrert i denne påmeldingen.</p>
+</body>
+</html>
+

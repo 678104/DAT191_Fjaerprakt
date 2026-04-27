@@ -560,6 +560,20 @@
                        role="button">Åpne katalog-editor</a>
                 </footer>
             </article>
+            <article th:hx-get="@{/admin/{id}/kassekort(id=*{id})}"
+                     hx-target="#main-content"
+                     hx-swap="outerHTML"
+                     hx-push-url="false">
+                <header>
+                    <b>Kassekort</b>
+                </header>
+                <div>
+                    <p>Last ned kassekort (PDF) for en påmelding med oppdretter- og duelisteinformasjon.</p>
+                </div>
+                <footer>
+                    <button class="fill-parent">Åpne kassekort</button>
+                </footer>
+            </article>
         </div>
         <div>
             <br>
@@ -570,6 +584,80 @@
             </a>
         </div>
     </section>
+
+    <section th:fragment="kassekortListe" id="main-content" th:object="${utstilling}">
+        <h2>Kassekort</h2>
+        <p>Kassekort vises direkte under. For hver påmelding opprettes ett kassekort per rase, med alle duer i rasen samlet.</p>
+
+        <div th:if="${#lists.isEmpty(paameldinger)}">
+            <article>Ingen påmeldinger funnet for denne utstillingen.</article>
+        </div>
+
+        <div th:each="p : ${paameldinger}" style="margin-bottom: 1rem;">
+            <article>
+                <header>
+                    <strong th:text="${p.utstiller != null ? p.utstiller.navn : 'Ukjent oppdretter'}">Oppdretter</strong>
+                </header>
+                <div><strong>E-post:</strong> <span th:text="${p.utstiller != null ? p.utstiller.epost : '-'}">-</span></div>
+                <div><strong>Forening:</strong> <span th:text="${p.utstiller != null ? p.utstiller.forening : '-'}">-</span></div>
+                <div><strong>Antall duer:</strong> <span th:text="${p.duer != null ? #lists.size(p.duer) : 0}">0</span></div>
+                <div><strong>Total:</strong> <span th:text="${p.paameldingsAvgift != null ? #numbers.formatDecimal(p.paameldingsAvgift, 1, 2) + ' kr' : '-'}">0,00 kr</span></div>
+                <div><strong>Antall kassekort:</strong>
+                    <span th:text="${kassekortPerPaamelding[p.id] != null ? #lists.size(kassekortPerPaamelding[p.id]) : 0}">0</span>
+                </div>
+                <div style="margin-top: 0.6rem;">
+                    <a th:href="@{/admin/kassekort/{paameldingId}(paameldingId=${p.id})}" role="button" class="secondary">Last ned PDF</a>
+                </div>
+            </article>
+
+            <div th:if="${kassekortPerPaamelding[p.id] == null or #lists.isEmpty(kassekortPerPaamelding[p.id])}">
+                <article>Ingen duer registrert i denne påmeldingen.</article>
+            </div>
+
+            <div th:each="kort, iter : ${kassekortPerPaamelding[p.id]}">
+                <article>
+                    <header>
+                        <strong th:text="'Kassekort #' + ${iter.count} + ' - ' + ${kort.rase}">Kassekort</strong>
+                    </header>
+                    <div><strong>Utstilling:</strong> <span th:text="${utstilling.tittel}">Utstilling</span></div>
+                    <div><strong>Oppdretter:</strong> <span th:text="${p.utstiller != null ? p.utstiller.navn : '-'}">Oppdretter</span></div>
+                    <div><strong>Gruppe:</strong> <span th:text="${kort.gruppe}">-</span></div>
+                    <div><strong>Rase:</strong> <span th:text="${kort.rase}">-</span></div>
+
+                    <table class="striped" style="margin-top: 0.5rem;">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Farge</th>
+                            <th>Variant</th>
+                            <th>Kjønn/Alder</th>
+                            <th>Avlstatus</th>
+                            <th>Ringnummer</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="dueLinje, dueIter : ${kort.duer}">
+                            <td th:text="${dueIter.count}">1</td>
+                            <td th:text="${dueLinje.farge}">-</td>
+                            <td th:text="${dueLinje.variant}">-</td>
+                            <td th:text="${dueLinje.kjonnAlder}">-</td>
+                            <td th:text="${dueLinje.avlstatus}">-</td>
+                            <td th:text="${dueLinje.ringnummer}">-</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </article>
+            </div>
+        </div>
+
+        <button th:hx-get="@{/admin/{id}(id=*{id})}"
+                hx-target="#main-content"
+                hx-swap="outerHTML"
+                class="secondary">
+            Tilbake til handlingsoversikt
+        </button>
+    </section>
+
     <div th:fragment="adminUtstillingListe">
         <!--/*@thymesVar id="kommendeUtstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
         <!--/*@thymesVar id="tidligereUtstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->

@@ -47,4 +47,6 @@ public interface PaameldingService {
 	Paamelding erBrukerPaameldtUtstilling(Bruker bruker, Utstilling utstilling);
 
 	boolean sjekkOmBrukerAlleredeErPaameldt(Bruker bruker, Utstilling utstilling);
+
+	List<Paamelding> hentPaameldingerForUtstilling(Long utstillingId);
 }

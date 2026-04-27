@@ -16,4 +16,7 @@ public interface PaameldingRepository extends JpaRepository<Paamelding, Long> {
 	@Query("select p from Paamelding p where p.utstiller = ?1 and p.utstilling = ?2")
 	Optional<Paamelding> findByUtstillerAndUtstilling(@NonNull Bruker utstiller, @NonNull Utstilling utstilling);
 
+	@Query("select p from Paamelding p where p.utstilling.id = ?1 order by p.utstiller.etternavn asc, p.utstiller.fornavn asc")
+	List<Paamelding> findByUtstillingIdSortert(Long utstillingId);
+
 }

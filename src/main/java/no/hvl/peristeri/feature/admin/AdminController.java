@@ -19,6 +19,9 @@ import no.hvl.peristeri.feature.due.DueService;
 import no.hvl.peristeri.feature.duekatalog.DueKatalogService;
 import no.hvl.peristeri.feature.kontaktperson.Kontaktperson;
 import no.hvl.peristeri.feature.kontaktperson.KontaktpersonService;
+import no.hvl.peristeri.feature.paamelding.Paamelding;
+import no.hvl.peristeri.feature.paamelding.KassekortService;
+import no.hvl.peristeri.feature.paamelding.PaameldingService;
 import no.hvl.peristeri.feature.utstilling.KatalogPdfService;
 import no.hvl.peristeri.feature.utstilling.Utstilling;
 import no.hvl.peristeri.feature.utstilling.UtstillingService;
@@ -57,6 +60,8 @@ public class AdminController {
 	private final StandardKommentarService standardKommentarService;
 	private final DueKatalogService dueKatalogService;
 	private final KatalogPdfService katalogPdfService;
+	private final KassekortService kassekortService;
+	private final PaameldingService paameldingService;
 	private final KontaktpersonService kontaktpersonService;
 
 	@GetMapping
@@ -627,6 +632,37 @@ public class AdminController {
 		                     .body(pdf);
 	}
 
+	@HxRequest
+	@GetMapping("/{utstillingId}/kassekort")
+	public String getKassekortListeHtmx(@PathVariable Long utstillingId, Model model) {
+		Utstilling utstilling = utstillingService.finnUtstillingMedId(utstillingId);
+		List<Paamelding> paameldinger = paameldingService.hentPaameldingerForUtstilling(utstillingId);
+		Map<Long, List<KassekortService.KassekortRaseKort>> kassekortPerPaamelding = new LinkedHashMap<>();
+		for (Paamelding paamelding : paameldinger) {
+			kassekortPerPaamelding.put(paamelding.getId(), kassekortService.byggKassekortPerRase(paamelding));
+		}
+		model.addAttribute("utstilling", utstilling);
+		model.addAttribute("paameldinger", paameldinger);
+		model.addAttribute("kassekortPerPaamelding", kassekortPerPaamelding);
+		return "admin/admin_fragments :: kassekortListe";
+	}
+
+	@GetMapping("/kassekort/{paameldingId}")
+	public ResponseEntity<byte[]> hentKassekortPdf(@PathVariable Long paameldingId) {
+		Paamelding paamelding = paameldingService.hentPaamelding(paameldingId);
+		byte[] pdf = kassekortService.genererKassekortPdf(paameldingId);
+
+		String utstillingTittel = paamelding.getUtstilling() != null ? paamelding.getUtstilling().getTittel() : "utstilling";
+		String oppdretterNavn = paamelding.getUtstiller() != null ? paamelding.getUtstiller().getNavn() : "oppdretter";
+		String filnavn = "kassekort-" + lagFilnavn(utstillingTittel + "-" + oppdretterNavn) + ".pdf";
+		ContentDisposition disposition = ContentDisposition.attachment().filename(filnavn).build();
+
+		return ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+				.contentType(MediaType.APPLICATION_PDF)
+				.body(pdf);
+	}
+
 	@GetMapping("/katalog-pdf")
 	public String getKatalogPdfBuilder(@RequestParam(required = false) Long utstillingId,
 	                                  @RequestParam(required = false) String forsideTittel,
@@ -750,6 +786,7 @@ public class AdminController {
 		}
 		return verdi.trim();
 	}
+
 
 	@HxRequest
 	@GetMapping("/{utstillingId}/bulkdueendring")

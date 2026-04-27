@@ -226,6 +226,14 @@ public class PaameldingServiceImpl implements PaameldingService {
 				.isPresent();
 	}
 
+	@Override
+	public List<Paamelding> hentPaameldingerForUtstilling(Long utstillingId) {
+		if (utstillingId == null) {
+			throw new InvalidParameterException("utstillingId", "cannot be null");
+		}
+		return paameldingRepository.findByUtstillingIdSortert(utstillingId);
+	}
+
 	private String lagDueNoekkel(Due due) {
 		return String.join("|",
 				safe(due.getRase()),
