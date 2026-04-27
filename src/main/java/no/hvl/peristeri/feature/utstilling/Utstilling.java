@@ -53,6 +53,10 @@ public class Utstilling {
 	@Column(name = "manuell_paamelding_status")
 	private Boolean manuellPaameldingStatus;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "utstilling_type")
+	private UtstillingType utstillingType = UtstillingType.HOSTUTSTILLING;
+
 	private String arrangoer;
 	private String adresse;
 	private String postnummer;

@@ -78,7 +78,7 @@ public class KatalogPdfService {
 
 		List<Due> gullmedaljer = alleDuer.stream()
 		                                 .filter(d -> d.getBedommelse() != null && d.getBedommelse().getPoeng() != null)
-		                                 .filter(d -> d.getBedommelse().getPoeng() >= 97)
+		                                 .filter(d -> Boolean.TRUE.equals(d.getBedommelse().getGullmedalje()))
 		                                 .sorted(poengSortering())
 		                                 .toList();
 

@@ -43,6 +43,14 @@
                     <label for="duePris"><b>Pris per due</b>
                         <input type="number" id="duePris" th:field="*{duePris}" placeholder="Pris per due" step="any" required>
                     </label>
+                    <label for="utstillingType"><b>Utstillingstype</b>
+                        <select id="utstillingType" th:field="*{utstillingType}" required>
+                            <option th:each="type : ${T(no.hvl.peristeri.feature.utstilling.UtstillingType).values()}"
+                                    th:value="${type}"
+                                    th:text="${type.visningsnavn}">
+                            </option>
+                        </select>
+                    </label>
                     <fieldset class="grid">
                         <label for="paameldingStartDato"><b>Startdato for påmelding</b>
                             <input type="date" id="paameldingStartDato" th:field="*{paameldingStartDato}" required>
@@ -164,6 +172,11 @@
                     <div>
                         <b>Arangør</b>
                         <div th:text="*{arrangoer}">Peristeri Test</div>
+                    </div>
+                    <hr/>
+                    <div>
+                        <b>Utstillingstype</b>
+                        <div th:text="${utstilling.utstillingType != null ? utstilling.utstillingType.visningsnavn : '-'}">-</div>
                     </div>
                     <hr/>
                     <div>
@@ -308,6 +321,17 @@
                         <div>
                             <label><b>Arangør</b>
                                 <input type="text" th:value="*{arrangoer}" name="arrangoer">
+                            </label>
+                        </div>
+                        <hr/>
+                        <div>
+                            <label><b>Utstillingstype</b>
+                                <select name="utstillingType" th:field="*{utstillingType}" required>
+                                    <option th:each="type : ${T(no.hvl.peristeri.feature.utstilling.UtstillingType).values()}"
+                                            th:value="${type}"
+                                            th:text="${type.visningsnavn}">
+                                    </option>
+                                </select>
                             </label>
                         </div>
                         <hr/>

@@ -485,7 +485,7 @@
                     <b>Fordel raser til dommere</b>
                 </header>
                 <div>
-                    <p>Her kan du velge hvilken dommer som skal få hvilken due på utstillingen.</p>
+                    <p>Her kan du velge hvilken dommer som skal få hvilken rase på utstillingen.</p>
                 </div>
                 <footer>
                     <button class="fill-parent">
@@ -580,7 +580,7 @@
             <a href="/admin"
                role="button"
                class="secondary">
-                Tilbake
+                ← Velg annen utstilling
             </a>
         </div>
     </section>
@@ -617,7 +617,7 @@
             <div th:each="kort, iter : ${kassekortPerPaamelding[p.id]}">
                 <article>
                     <header>
-                        <strong th:text="'Kassekort #' + ${iter.count} + ' - ' + ${kort.rase}">Kassekort</strong>
+                        <strong th:text="${'Kassekort #' + iter.count + ' - ' + kort.rase}">Kassekort</strong>
                     </header>
                     <div><strong>Utstilling:</strong> <span th:text="${utstilling.tittel}">Utstilling</span></div>
                     <div><strong>Oppdretter:</strong> <span th:text="${p.utstiller != null ? p.utstiller.navn : '-'}">Oppdretter</span></div>
@@ -662,17 +662,19 @@
         <!--/*@thymesVar id="kommendeUtstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
         <!--/*@thymesVar id="tidligereUtstillinger" type="java.util.List<no.hvl.peristeri.feature.utstilling.Utstilling>"*/-->
         <section id="kommendeListe">
-            <h2>Kommende utstillinger</h2>
-            <div class="overflow-auto">
+            <h2>Kommende og pågående utstillinger</h2>
+            <p th:if="${#lists.isEmpty(kommendeUtstillinger)}">Ingen kommende eller pågående utstillinger er registrert.</p>
+            <div class="overflow-auto" th:unless="${#lists.isEmpty(kommendeUtstillinger)}">
                 <table class="striped">
                     <thead>
                     <tr>
                         <th scope="col">Tittel</th>
                         <th scope="col">Arrangør</th>
                         <th scope="col">Sted</th>
-                        <th scope="col">Start Dato</th>
+                        <th scope="col">Dato</th>
+                        <th scope="col">Status</th>
                         <th scope="col">Påmeldings frist</th>
-                        <th scope="col">Link</th>
+                        <th scope="col"></th>
                     </tr>
                     </thead>
                     <tbody th:each="u : ${kommendeUtstillinger}">
@@ -680,7 +682,11 @@
                         <td th:text="${u.tittel}">Peristeri tittel test</td>
                         <td th:text="${u.arrangoer}">Peristeri</td>
                         <td th:text="${u.adresse}">Bergen</td>
-                        <td th:text="${u.datoRange.startDate}">12/12/2024</td>
+                        <td th:text="${u.datoRange.penString()}">12/12/2024</td>
+                        <td>
+                            <span th:if="${u.aktiv}" style="color: var(--pico-color-green-500);">● Aktiv</span>
+                            <span th:unless="${u.aktiv}" style="color: var(--pico-color-slate-400);">Inaktiv</span>
+                        </td>
                         <td><span th:classappend="${u.paameldingAApnet} ? 'aapen-paamelding' : 'lukket-paamelding'"
                                   th:text="${u.paameldingsFrist}"></span></td>
                         <td>
@@ -688,7 +694,7 @@
                                     hx-target="#main-content"
                                     hx-swap="outerHTML"
                                     hx-push-url="true"
-                            >Velg denne
+                            >Administrer
                             </button>
                         </td>
                     </tr>
@@ -707,7 +713,7 @@
                         <th scope="col">Sted</th>
                         <th scope="col">Start Dato</th>
                         <th scope="col">Slutt Dato</th>
-                        <th scope="col">Link</th>
+                        <th scope="col"></th>
                     </tr>
                     </thead>
                     <tbody th:each="u : ${tidligereUtstillinger}">
@@ -722,7 +728,7 @@
                                     hx-target="#main-content"
                                     hx-swap="outerHTML"
                                     hx-push-url="true"
-                            >Velg denne
+                            >Administrer
                             </button>
                         </td>
                     </tr>
@@ -1226,6 +1232,9 @@
         <a href="/admin" role="button" class="secondary">Tilbake til admin panel</a>
     </section>
 
+
 </main>
 </body>
 </html>
+
+

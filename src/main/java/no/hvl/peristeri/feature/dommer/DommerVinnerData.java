@@ -3,6 +3,7 @@ package no.hvl.peristeri.feature.dommer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import no.hvl.peristeri.feature.due.Due;
+import no.hvl.peristeri.feature.utstilling.UtstillingType;
 
 import java.util.List;
 import java.util.Map;
@@ -11,9 +12,12 @@ import java.util.Map;
 @AllArgsConstructor
 public class DommerVinnerData {
 	private final boolean klarForVinnerkaring;
+	private final UtstillingType utstillingType;
+	private final UtstillingKaaringRegler kaaringRegler;
 	private final Map<String, List<Due>> kandidaterPerRase;
 	private final Map<String, List<Due>> kandidaterPerGruppe;
 	private final List<Due> alleKandidater;
+	private final List<Due> gullmedaljer;
 	private final Map<Long, String> oppdretterKandidater;
 	private final Map<String, Long> valgteRasevinnere;
 	private final Map<String, Long> valgteGruppevinnere;
@@ -21,5 +25,8 @@ public class DommerVinnerData {
 	private final Long valgtNorgesmesterOppdrett1Id;
 	private final Long valgtNorgesmesterOppdrett2Id;
 	private final Long valgtNorgesmesterOppdrett3Id;
+	private final Long valgtNorgesmesterTrioSeniorDueId;
+	private final Long valgtNorgesmesterParJuniorDueId;
+	private final Long valgtEePlakettDueId;
 }
 

@@ -953,4 +953,5 @@ public class AdminController {
 	private void leggTilKontaktpersonModel(Model model) {
 		model.addAttribute("kontaktpersoner", kontaktpersonService.hentAlle());
 	}
+
 }

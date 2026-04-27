@@ -163,7 +163,7 @@
     <div th:each="kort, iter : ${kassekort}" th:classappend="${!iter.last ? 'sidebryt' : ''}">
         <section class="kassekort">
             <div class="kassekort-header">
-                <span class="kassekort-title" th:text="'Kassekort #' + ${iter.count} + ' - ' + ${kort.rase}">Kassekort #1</span>
+                            <span class="kassekort-title" th:text="${'Kassekort #' + iter.count + ' - ' + kort.rase}">Kassekort #1</span>
                 <span th:text="${'Antall duer: ' + #lists.size(kort.duer)}">Antall duer</span>
             </div>
 

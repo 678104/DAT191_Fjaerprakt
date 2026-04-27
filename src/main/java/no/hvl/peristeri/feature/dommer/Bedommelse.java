@@ -31,6 +31,8 @@ public class Bedommelse {
     private String fordeler;
     private String onsker;
     private String    feil;
+      @Column(name = "gullmedalje")
+      private Boolean gullmedalje = false;
     private LocalDateTime bedommelsesTidspunkt;
 
     @ElementCollection(fetch = FetchType.EAGER)

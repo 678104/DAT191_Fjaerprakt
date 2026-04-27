@@ -87,6 +87,11 @@ public class DueServiceImpl implements DueService {
 	}
 
 	@Override
+	public Due saveDue(Due due) {
+		return dueRepository.save(due);
+	}
+
+	@Override
 	public Due oppdaterDueInfo(Long dueId, String rase, String farge, String variant) {
 		Due due = dueRepository.findById(dueId).orElseThrow(() -> new ResourceNotFoundException("Due", dueId));
 		due.setRase(rase);

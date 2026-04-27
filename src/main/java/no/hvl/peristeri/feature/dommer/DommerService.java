@@ -64,5 +64,8 @@ public interface DommerService {
 	                 Long bisVinnerDueId,
 	                 Long norgesmesterOppdrett1BrukerId,
 	                 Long norgesmesterOppdrett2BrukerId,
-	                 Long norgesmesterOppdrett3BrukerId);
+	                 Long norgesmesterOppdrett3BrukerId,
+	                 Long norgesmesterTrioSeniorDueId,
+	                 Long norgesmesterParJuniorDueId,
+	                 Long eePlakettDueId);
 }
